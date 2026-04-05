@@ -91,6 +91,7 @@ export default function StudyQuizApp() {
   const [score, setScore] = useState(null);
   const [essayScores, setEssayScores] = useState({});
   const [gradingEssay, setGradingEssay] = useState(false);
+  const [badImages, setBadImages] = useState([]); // 인식 불가 이미지 인덱스 목록
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
@@ -186,13 +187,50 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
 
   const generateQuiz = async () => {
     if (!hasContent) { setError("이미지를 올리거나 텍스트를 입력해주세요."); return; }
-    setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({});
+    setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
+
     try {
+      // 이미지가 여러 장이면 각각 인식 가능 여부 확인
+      let validImages = [...uploadedImages];
+      const newBadImages = [];
+
+      if (uploadedImages.length > 1) {
+        for (let i = 0; i < uploadedImages.length; i++) {
+          const img = uploadedImages[i];
+          const checkResp = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              images: [{ base64: img.base64, type: img.type }],
+              prompt: "이 이미지가 학습 자료(교재, 노트, 문제집 등)인지 확인해주세요. 텍스트나 학습 내용이 있으면 {"ok": true}, 없거나 인식 불가면 {"ok": false, "reason": "이유"}만 JSON으로 응답하세요.",
+              isGrading: true
+            })
+          });
+          const checkData = await checkResp.json();
+          if (checkData.ok === false) {
+            newBadImages.push(i);
+          }
+        }
+
+        if (newBadImages.length > 0) {
+          setBadImages(newBadImages);
+          validImages = uploadedImages.filter((_, i) => !newBadImages.includes(i));
+
+          // 유효한 이미지가 하나도 없으면 중단
+          if (validImages.length === 0 && !textInput.trim()) {
+            setError(`모든 이미지를 인식할 수 없습니다. 교재 사진을 다시 찍어주세요.`);
+            setStep("config");
+            return;
+          }
+        }
+      }
+
+      // 유효한 이미지로만 출제
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          images: uploadedImages.map(img => ({ base64: img.base64, type: img.type })),
+          images: validImages.map(img => ({ base64: img.base64, type: img.type })),
           subject, difficulty, questionCount,
           prompt: buildPrompt()
         })
@@ -200,9 +238,8 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       if (!data.questions || data.questions.length === 0) {
-        throw new Error("문제를 생성할 수 없습니다. 이미지가 흐리거나 학습 내용이 아닌 사진일 수 있어요. 교재 사진을 다시 찍어주세요.");
+        throw new Error("문제를 생성할 수 없습니다. 교재 사진을 다시 찍어주세요.");
       }
-      // 문제 순서도 랜덤하게 섞기
       let qs = (data.questions || []).map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
       for (let i = qs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -254,7 +291,7 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
   const reset = () => {
     setStep("upload"); setUploadedImages([]); setTextInput(""); setShowTextInput(false);
     setQuizData(null); setSelectedAnswers({}); setShowAnswers(false);
-    setScore(null); setError(null); setEssayScores({});
+    setScore(null); setError(null); setEssayScores({}); setBadImages([]);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
@@ -488,6 +525,25 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
                 <span style={{ background:diff.color+"33", color:diff.color, padding:"4px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:"700", border:`1px solid ${diff.color}44` }}>{diff.emoji} {diff.label}</span>
               </div>
             </div>
+
+            {/* 인식 불가 이미지 경고 */}
+            {badImages.length > 0 && (
+              <div style={{ background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:"14px", padding:"14px 16px" }}>
+                <p style={{ color:"#fbbf24", fontSize:"13px", fontWeight:"700", margin:"0 0 8px" }}>⚠️ 일부 이미지를 인식하지 못했어요</p>
+                <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"8px" }}>
+                  {badImages.map(i => (
+                    <div key={i} style={{ position:"relative" }}>
+                      <img src={uploadedImages[i]?.url} alt={`인식불가${i+1}`} style={{ width:"52px", height:"52px", objectFit:"cover", borderRadius:"8px", opacity:0.5, border:"2px solid #f59e0b" }} />
+                      <div style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(0,0,0,0.4)", borderRadius:"8px" }}>
+                        <span style={{ fontSize:"18px" }}>✕</span>
+                      </div>
+                      <p style={{ color:"#fbbf24", fontSize:"10px", textAlign:"center", margin:"3px 0 0" }}>{i+1}번</p>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ color:"#fde68a", fontSize:"12px", margin:0 }}>나머지 이미지로 문제를 출제했어요. 해당 사진은 더 밝고 선명하게 다시 찍어주세요.</p>
+              </div>
+            )}
 
             {showAnswers && score && (
               <div style={{ background:"linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,197,94,0.1))", border:"1px solid rgba(74,222,128,0.3)", borderRadius:"14px", padding:"20px" }}>
