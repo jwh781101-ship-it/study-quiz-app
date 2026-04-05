@@ -250,13 +250,8 @@ export default function StudyQuizApp() {
             <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>시험 문제 생성기</h1>
             <p style={{ margin:0, fontSize:11, color:"#999" }}>AI가 맞춤 문제를 만들어드려요</p>
           </div>
-          {/* 영어학습 버튼 */}
-          <button onClick={()=>setShowEnglish(true)} style={{ marginLeft:"auto", width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#3b82f6,#6366f1)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }} title="영어 학습">
-            🇺🇸
-          </button>
-
           {/* 스텝 인디케이터 */}
-          <div style={{ marginLeft:8, display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
             {["upload","config","result"].map((s,i) => (
               <div key={s} style={{ display:"flex", alignItems:"center", gap:4 }}>
                 <div style={{ width:24, height:24, borderRadius:"50%", background: step===s?"#6366f1":(["upload","config","result"].indexOf(step)>i?"#c7d2fe":"#e8e9ef"), color: step===s?"#fff":(["upload","config","result"].indexOf(step)>i?"#6366f1":"#bbb"), fontSize:11, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>{i+1}</div>
@@ -272,7 +267,15 @@ export default function StudyQuizApp() {
         {/* ── STEP 1: UPLOAD ── */}
         {step==="upload" && (
           <div className="fade-up">
-            <div style={{ textAlign:"center", padding:"24px 0 20px" }}>
+            <div style={{ textAlign:"center", padding:"24px 0 20px", position:"relative" }}>
+              {/* 영어학습 버튼 - 우측 상단 */}
+              <button onClick={()=>setShowEnglish(true)} style={{ position:"absolute", top:20, right:0, display:"flex", flexDirection:"column", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", padding:0 }}>
+                <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, boxShadow:"0 4px 14px rgba(99,102,241,0.35)" }}>
+                  🇺🇸
+                </div>
+                <span style={{ fontSize:11, fontWeight:700, color:"#6366f1" }}>영어학습</span>
+              </button>
+
               <div style={{ fontSize:52, marginBottom:8 }}>📚</div>
               <h2 style={{ margin:"0 0 6px", fontSize:22, fontWeight:900, color:"#1a1a2e" }}>학습 자료를 올려주세요</h2>
               <p style={{ margin:0, fontSize:13, color:"#999" }}>사진, 갤러리, 텍스트 중 하나 또는 여러 개를 선택하세요</p>
