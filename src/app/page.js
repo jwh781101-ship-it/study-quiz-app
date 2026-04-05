@@ -146,6 +146,9 @@ export default function StudyQuizApp() {
 
     return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.
 
+[중요] 만약 이미지가 흐리거나, 학습 내용과 무관하거나, 텍스트를 인식할 수 없는 경우에는 문제를 억지로 만들지 말고 반드시 아래 형식으로 오류를 반환하세요:
+{"error": "이미지를 인식할 수 없습니다. 교재나 학습자료 사진을 다시 찍어주세요."}
+
 [출제 대상]
 - 학년: ${gradeInfo.full}
 - 과목: ${subject}
@@ -162,7 +165,7 @@ ${scopeText}${textSection}
 3. 매력적인 오답(함정 선지)을 포함하되, 정답과 혼동되어서는 안 됩니다.
 4. ${gradeInfo.full} 교육과정에 맞는 어휘와 개념을 사용하세요.
 5. 해설에는 정답인 이유 + 각 오답이 틀린 명확한 이유를 설명하세요.
-6. 문제 순서를 반드시 랜덤하게 배치하세요. 입력된 내용의 앞부분에서만 출제하지 말고 전체 범위에서 골고루 섞어서 출제하세요.
+6. 문제 순서를 반드시 랜덤하게 배치하세요. 전체 범위에서 골고루 섞어서 출제하세요.
 ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
 
 반드시 JSON 형식으로만 응답하세요:
@@ -196,6 +199,9 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
+      if (!data.questions || data.questions.length === 0) {
+        throw new Error("문제를 생성할 수 없습니다. 이미지가 흐리거나 학습 내용이 아닌 사진일 수 있어요. 교재 사진을 다시 찍어주세요.");
+      }
       // 문제 순서도 랜덤하게 섞기
       let qs = (data.questions || []).map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
       for (let i = qs.length - 1; i > 0; i--) {
