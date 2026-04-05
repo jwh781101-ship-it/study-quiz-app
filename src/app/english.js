@@ -85,9 +85,9 @@ export default function EnglishLearning({ onBack }) {
   const [today] = useState(new Date().toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' }));
 
   const callAI = async (prompt) => {
-    const resp = await fetch("/api/generate", {
+    const resp = await fetch("/api/english", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ images:[], prompt, isGrading:true })
+      body: JSON.stringify({ prompt })
     });
     return resp.json();
   };
