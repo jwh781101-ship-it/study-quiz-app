@@ -149,7 +149,7 @@ ${scopeText}${textSection}
 3. 매력적인 오답(함정 선지)을 포함하되, 정답과 혼동되어서는 안 됩니다.
 4. ${gradeInfo.full} 교육과정에 맞는 어휘와 개념을 사용하세요.
 5. 해설에는 정답인 이유 + 각 오답이 틀린 명확한 이유를 설명하세요.
-6. 문제 난이도를 쉬운 것부터 어려운 순서로 배분하세요.
+6. 문제 순서를 반드시 랜덤하게 배치하세요. 입력된 내용의 앞부분에서만 출제하지 말고 전체 범위에서 골고루 섞어서 출제하세요.
 ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
 
 반드시 JSON 형식으로만 응답하세요:
@@ -183,7 +183,13 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      const shuffled = { ...data, questions: data.questions.map(shuffleOptions) };
+      // 문제 순서도 랜덤하게 섞기
+      const qs = data.questions.map(shuffleOptions);
+      for (let i = qs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [qs[i], qs[j]] = [qs[j], qs[i]];
+      }
+      const shuffled = { ...data, questions: qs };
       setQuizData(shuffled); setStep("result");
     } catch (err) { setError("문제 생성 중 오류가 발생했습니다: " + err.message); setStep("config"); }
   };
