@@ -1,6 +1,7 @@
 export async function POST(request) {
   try {
-    const { imageBase64, prompt } = await request.json();
+    const { imageBase64, imageType, prompt } = await request.json();
+    const mediaType = imageType || 'image/jpeg';
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -14,7 +15,7 @@ export async function POST(request) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+            { type: 'image', source: { type: 'base64', media_type: mediaType, data: imageBase64 } },
             { type: 'text', text: prompt }
           ]
         }]
