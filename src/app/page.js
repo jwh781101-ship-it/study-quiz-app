@@ -6,6 +6,19 @@ const DIFFICULTY_CONFIG = {
   medium: { label:"보통", emoji:"📚", desc:"개념 적용 및 이해", color:"#f59e0b", prompt:"중간 수준으로, 개념을 이해하고 적용하는 문제를 출제해주세요. 객관식과 단답형을 섞어서 구성해주세요." },
   hard: { label:"어려움", emoji:"🔥", desc:"심화 응용 및 서술", color:"#f43f5e", prompt:"어려운 수준으로, 깊은 이해와 응용, 추론이 필요한 문제를 출제해주세요. 단답형과 서술형 문제를 포함해주세요." }
 };
+
+const GRADES = [
+  { label:"초4", full:"초등학교 4학년" },
+  { label:"초5", full:"초등학교 5학년" },
+  { label:"초6", full:"초등학교 6학년" },
+  { label:"중1", full:"중학교 1학년" },
+  { label:"중2", full:"중학교 2학년" },
+  { label:"중3", full:"중학교 3학년" },
+  { label:"고1", full:"고등학교 1학년" },
+  { label:"고2", full:"고등학교 2학년" },
+  { label:"고3", full:"고등학교 3학년" },
+];
+
 const SUBJECTS = ["국어","영어","수학","과학","사회","역사","기술·가정","도덕","기타"];
 
 export default function StudyQuizApp() {
@@ -13,6 +26,7 @@ export default function StudyQuizApp() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [imageType, setImageType] = useState(null);
+  const [grade, setGrade] = useState("중2");
   const [subject, setSubject] = useState("국어");
   const [difficulty, setDifficulty] = useState("medium");
   const [questionCount, setQuestionCount] = useState(5);
@@ -41,7 +55,8 @@ export default function StudyQuizApp() {
   const generateQuiz = async () => {
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null);
     const diff = DIFFICULTY_CONFIG[difficulty];
-    const prompt = `당신은 중학교 ${subject} 과목 전문 교사입니다. 아래 교재/문제집 이미지를 분석하여 예상 시험 문제를 만들어주세요.\n\n조건:\n- 과목: ${subject} (중학교 수준)\n- 문제 수: ${questionCount}개\n- 난이도: ${diff.label} - ${diff.prompt}\n- 반드시 JSON 형식으로만 응답해주세요\n\nJSON 형식:\n{\n  "topic": "학습 주제",\n  "questions": [\n    {\n      "id": 1,\n      "type": "객관식",\n      "question": "문제",\n      "options": ["①","②","③","④"],\n      "answer": "정답",\n      "explanation": "해설"\n    }\n  ]\n}`;
+    const gradeInfo = GRADES.find(g => g.label === grade);
+    const prompt = `당신은 ${gradeInfo.full} ${subject} 과목 전문 교사입니다. 아래 교재/문제집 이미지를 분석하여 예상 시험 문제를 만들어주세요.\n\n조건:\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 문제 수: ${questionCount}개\n- 난이도: ${diff.label} - ${diff.prompt}\n- 반드시 ${gradeInfo.full} 수준에 맞는 어휘와 개념으로 출제해주세요\n- 반드시 JSON 형식으로만 응답해주세요\n\nJSON 형식:\n{\n  "topic": "학습 주제",\n  "questions": [\n    {\n      "id": 1,\n      "type": "객관식",\n      "question": "문제",\n      "options": ["①","②","③","④"],\n      "answer": "정답",\n      "explanation": "해설"\n    }\n  ]\n}`;
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -111,17 +126,32 @@ export default function StudyQuizApp() {
 
         {step==="config" && (
           <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
+            {/* 미리보기 */}
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"16px", display:"flex", gap:"16px", alignItems:"center", border:"1px solid rgba(167,139,250,0.2)" }}>
               <img src={uploadedImage} alt="업로드" style={{ width:"80px", height:"80px", objectFit:"cover", borderRadius:"10px" }} />
               <div style={{ flex:1 }}><p style={{ color:"#a78bfa", fontSize:"12px", margin:"0 0 4px" }}>업로드 완료 ✓</p><p style={{ color:"#e2e8f0", fontSize:"14px", margin:0 }}>AI가 분석할 준비가 됐어요</p></div>
               <button onClick={reset} style={{ background:"none", border:"none", color:"#94a3b8", cursor:"pointer", fontSize:"22px" }}>×</button>
             </div>
+
+            {/* 학년 선택 */}
+            <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(255,255,255,0.08)" }}>
+              <p style={{ color:"#a78bfa", fontSize:"13px", fontWeight:"700", margin:"0 0 12px", textTransform:"uppercase", letterSpacing:"1px" }}>학년 선택</p>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
+                {GRADES.map(g => (
+                  <button key={g.label} onClick={()=>setGrade(g.label)} style={{ padding:"8px 14px", borderRadius:"20px", border:"none", cursor:"pointer", background:grade===g.label?"#7c3aed":"rgba(255,255,255,0.1)", color:grade===g.label?"#fff":"#94a3b8", fontSize:"13px", fontWeight:grade===g.label?"700":"400", transition:"all 0.15s" }}>{g.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* 과목 선택 */}
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(255,255,255,0.08)" }}>
               <p style={{ color:"#a78bfa", fontSize:"13px", fontWeight:"700", margin:"0 0 12px", textTransform:"uppercase", letterSpacing:"1px" }}>과목 선택</p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
                 {SUBJECTS.map(s => <button key={s} onClick={()=>setSubject(s)} style={{ padding:"8px 14px", borderRadius:"20px", border:"none", cursor:"pointer", background:subject===s?"#7c3aed":"rgba(255,255,255,0.1)", color:subject===s?"#fff":"#94a3b8", fontSize:"13px", fontWeight:subject===s?"700":"400" }}>{s}</button>)}
               </div>
             </div>
+
+            {/* 난이도 */}
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(255,255,255,0.08)" }}>
               <p style={{ color:"#a78bfa", fontSize:"13px", fontWeight:"700", margin:"0 0 12px", textTransform:"uppercase", letterSpacing:"1px" }}>난이도</p>
               <div style={{ display:"flex", gap:"10px" }}>
@@ -134,11 +164,14 @@ export default function StudyQuizApp() {
                 ))}
               </div>
             </div>
+
+            {/* 문제 수 */}
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(255,255,255,0.08)" }}>
               <p style={{ color:"#a78bfa", fontSize:"13px", fontWeight:"700", margin:"0 0 12px", textTransform:"uppercase", letterSpacing:"1px" }}>문제 수: <span style={{ color:"#e2e8f0" }}>{questionCount}개</span></p>
               <input type="range" min={3} max={10} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#7c3aed" }} />
               <div style={{ display:"flex", justifyContent:"space-between", color:"#64748b", fontSize:"12px", marginTop:"4px" }}><span>3개</span><span>10개</span></div>
             </div>
+
             {error && <div style={{ background:"rgba(244,63,94,0.1)", border:"1px solid rgba(244,63,94,0.3)", borderRadius:"12px", padding:"12px 16px", color:"#f43f5e", fontSize:"14px" }}>⚠️ {error}</div>}
             <button onClick={generateQuiz} style={{ width:"100%", padding:"18px", borderRadius:"16px", border:"none", background:"linear-gradient(135deg,#7c3aed,#a855f7)", color:"#fff", fontSize:"17px", fontWeight:"800", cursor:"pointer", boxShadow:"0 8px 32px rgba(124,58,237,0.4)" }}>✨ AI 문제 생성하기</button>
           </div>
@@ -157,17 +190,20 @@ export default function StudyQuizApp() {
           <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
             <div style={{ background:"rgba(124,58,237,0.2)", borderRadius:"14px", padding:"16px 20px", border:"1px solid rgba(167,139,250,0.3)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"8px" }}>
               <div><p style={{ color:"#a78bfa", fontSize:"12px", margin:"0 0 2px" }}>분석 결과</p><p style={{ color:"#e2e8f0", fontSize:"16px", fontWeight:"700", margin:0 }}>{quizData.topic}</p></div>
-              <div style={{ display:"flex", gap:"8px" }}>
+              <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
+                <span style={{ background:"#6d28d9", color:"#fff", padding:"4px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:"700" }}>{grade}</span>
                 <span style={{ background:"#7c3aed", color:"#fff", padding:"4px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:"700" }}>{subject}</span>
                 <span style={{ background:diff.color+"33", color:diff.color, padding:"4px 10px", borderRadius:"20px", fontSize:"12px", fontWeight:"700", border:`1px solid ${diff.color}44` }}>{diff.emoji} {diff.label}</span>
               </div>
             </div>
+
             {showAnswers && score && (
               <div style={{ background:"linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,197,94,0.1))", border:"1px solid rgba(74,222,128,0.3)", borderRadius:"14px", padding:"20px", textAlign:"center" }}>
                 <p style={{ color:"#4ade80", fontSize:"32px", fontWeight:"900", margin:"0 0 4px" }}>{score.correct} / {score.total}</p>
                 <p style={{ color:"#86efac", fontSize:"14px", margin:0 }}>객관식 정답 ({score.total>0?Math.round(score.correct/score.total*100):0}%)</p>
               </div>
             )}
+
             {quizData.questions.map((q,idx) => {
               const isCorrect = showAnswers&&q.type==="객관식"&&selectedAnswers[q.id]===q.answer;
               const isWrong = showAnswers&&q.type==="객관식"&&selectedAnswers[q.id]&&selectedAnswers[q.id]!==q.answer;
@@ -196,6 +232,7 @@ export default function StudyQuizApp() {
                 </div>
               );
             })}
+
             <div style={{ display:"flex", gap:"10px", paddingBottom:"24px" }}>
               {!showAnswers&&<button onClick={handleSubmit} style={{ flex:1, padding:"16px", borderRadius:"14px", border:"none", background:"linear-gradient(135deg,#059669,#10b981)", color:"#fff", fontSize:"15px", fontWeight:"800", cursor:"pointer" }}>📝 채점하기</button>}
               <button onClick={()=>{setStep("config");setSelectedAnswers({});setShowAnswers(false);setScore(null);}} style={{ flex:1, padding:"16px", borderRadius:"14px", background:"rgba(124,58,237,0.3)", border:"1px solid rgba(167,139,250,0.3)", color:"#a78bfa", fontSize:"15px", fontWeight:"700", cursor:"pointer" }}>🔄 다시 생성</button>
