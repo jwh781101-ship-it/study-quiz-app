@@ -24,7 +24,7 @@ const MAX_IMAGES = 10;
 
 export default function StudyQuizApp() {
   const [step, setStep] = useState("upload");
-  const [uploadedImages, setUploadedImages] = useState([]); // [{url, base64, type}]
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [grade, setGrade] = useState("중2");
   const [subject, setSubject] = useState("국어");
   const [difficulty, setDifficulty] = useState("medium");
@@ -57,21 +57,10 @@ export default function StudyQuizApp() {
     });
   }, [uploadedImages]);
 
-  const handleGalleryChange = (e) => {
-    processFiles(e.target.files);
-    e.target.value = "";
-  };
-  const handleCameraChange = (e) => {
-    processFiles(e.target.files);
-    e.target.value = "";
-  };
-  const handleDrop = (e) => {
-    e.preventDefault(); setDragOver(false);
-    processFiles(e.dataTransfer.files);
-  };
-  const removeImage = (idx) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== idx));
-  };
+  const handleGalleryChange = (e) => { processFiles(e.target.files); e.target.value = ""; };
+  const handleCameraChange = (e) => { processFiles(e.target.files); e.target.value = ""; };
+  const handleDrop = (e) => { e.preventDefault(); setDragOver(false); processFiles(e.dataTransfer.files); };
+  const removeImage = (idx) => setUploadedImages(prev => prev.filter((_, i) => i !== idx));
 
   const generateQuiz = async () => {
     if (uploadedImages.length === 0) { setError("이미지를 먼저 올려주세요."); return; }
@@ -123,20 +112,27 @@ export default function StudyQuizApp() {
     } catch (err) { setError("문제 생성 중 오류가 발생했습니다: " + err.message); setStep("config"); }
   };
 
-  const handleSelectAnswer = (qid, answer) => { if (!showAnswers) setSelectedAnswers(prev => ({ ...prev, [qid]: answer })); };
+  const handleSelectAnswer = (qid, answer) => {
+    if (!showAnswers) setSelectedAnswers(prev => ({ ...prev, [qid]: answer }));
+  };
+
   const handleSubmit = () => {
     if (!quizData) return;
     let correct = 0;
-    quizData.questions.forEach(q => { if (q.type === "객관식" && selectedAnswers[q.id] === q.answer) correct++; });
+    quizData.questions.forEach(q => {
+      if (q.type === "객관식" && selectedAnswers[q.id] === q.answer) correct++;
+    });
     const total = quizData.questions.filter(q => q.type === "객관식").length;
     setScore({ correct, total }); setShowAnswers(true);
   };
+
   const reset = () => {
     setStep("upload"); setUploadedImages([]); setQuizData(null);
     setSelectedAnswers({}); setShowAnswers(false); setScore(null); setError(null);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
+
   const diff = DIFFICULTY_CONFIG[difficulty];
 
   return (
@@ -160,7 +156,6 @@ export default function StudyQuizApp() {
 
       <div style={{ width:"100%", maxWidth:"640px" }}>
 
-        {/* STEP 1: UPLOAD */}
         {step==="upload" && (
           <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
             <button onClick={() => cameraInputRef.current&&cameraInputRef.current.click()} style={{ display:"flex", alignItems:"center", gap:"18px", width:"100%", padding:"22px 24px", borderRadius:"20px", border:"none", cursor:"pointer", textAlign:"left", background:"linear-gradient(135deg,#7c3aed,#a855f7)", boxShadow:"0 8px 28px rgba(124,58,237,0.45)", color:"#fff" }}>
@@ -177,7 +172,6 @@ export default function StudyQuizApp() {
               🖥️ PC에서는 이미지를 여기에 끌어다 놓으세요 (여러 장 가능)
             </div>
 
-            {/* 업로드된 이미지 미리보기 */}
             {uploadedImages.length > 0 && (
               <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"16px", border:"1px solid rgba(167,139,250,0.2)" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"12px" }}>
@@ -199,12 +193,10 @@ export default function StudyQuizApp() {
                 </button>
               </div>
             )}
-
             {error && <div style={{ background:"rgba(244,63,94,0.1)", border:"1px solid rgba(244,63,94,0.3)", borderRadius:"12px", padding:"12px 16px", color:"#f43f5e", fontSize:"14px" }}>⚠️ {error}</div>}
           </div>
         )}
 
-        {/* STEP 2: CONFIG */}
         {step==="config" && (
           <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"16px", border:"1px solid rgba(167,139,250,0.2)" }}>
@@ -259,7 +251,6 @@ export default function StudyQuizApp() {
           </div>
         )}
 
-        {/* LOADING */}
         {step==="loading" && (
           <div style={{ textAlign:"center", padding:"80px 24px" }}>
             <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
@@ -269,7 +260,6 @@ export default function StudyQuizApp() {
           </div>
         )}
 
-        {/* STEP 3: RESULT */}
         {step==="result" && quizData && (
           <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
             <div style={{ background:"rgba(124,58,237,0.2)", borderRadius:"14px", padding:"16px 20px", border:"1px solid rgba(167,139,250,0.3)", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"8px" }}>
@@ -298,6 +288,7 @@ export default function StudyQuizApp() {
                     <span style={{ background:"rgba(255,255,255,0.1)", color:"#94a3b8", borderRadius:"6px", padding:"2px 8px", fontSize:"11px" }}>{q.type}</span>
                   </div>
                   <p style={{ color:"#e2e8f0", fontSize:"15px", fontWeight:"600", margin:"0 0 14px", lineHeight:"1.6" }}>{q.question}</p>
+
                   {q.type==="객관식"&&q.options&&(
                     <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
                       {q.options.map((opt,oi) => {
@@ -307,11 +298,25 @@ export default function StudyQuizApp() {
                       })}
                     </div>
                   )}
+
                   {(q.type==="단답형"||q.type==="서술형")&&(
-                    <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"10px", border:"1px solid rgba(255,255,255,0.1)", padding:"12px", color:"#94a3b8", fontSize:"13px", minHeight:"60px" }}>
-                      {showAnswers?<div><p style={{ color:"#a78bfa", fontSize:"11px", margin:"0 0 6px", fontWeight:"700" }}>모범 답안</p><p style={{ color:"#e2e8f0", margin:0 }}>{q.answer}</p></div>:<span>여기에 답을 써보세요 ✏️</span>}
+                    <div>
+                      <textarea
+                        disabled={showAnswers}
+                        value={selectedAnswers[q.id]||""}
+                        onChange={e=>handleSelectAnswer(q.id,e.target.value)}
+                        placeholder="여기에 답을 써보세요 ✏️"
+                        style={{ width:"100%", minHeight:"80px", background:"rgba(255,255,255,0.05)", borderRadius:"10px", border:"1px solid rgba(255,255,255,0.15)", padding:"12px", color:"#e2e8f0", fontSize:"14px", resize:"vertical", boxSizing:"border-box", fontFamily:"inherit" }}
+                      />
+                      {showAnswers&&(
+                        <div style={{ marginTop:"10px", padding:"12px", borderRadius:"10px", background:"rgba(74,222,128,0.08)", border:"1px solid rgba(74,222,128,0.2)" }}>
+                          <p style={{ color:"#4ade80", fontSize:"11px", margin:"0 0 6px", fontWeight:"700" }}>✅ 모범 답안</p>
+                          <p style={{ color:"#e2e8f0", margin:0, fontSize:"14px" }}>{q.answer}</p>
+                        </div>
+                      )}
                     </div>
                   )}
+
                   {showAnswers&&<div style={{ marginTop:"12px", padding:"12px", borderRadius:"10px", background:"rgba(167,139,250,0.08)", border:"1px solid rgba(167,139,250,0.2)" }}><p style={{ color:"#a78bfa", fontSize:"11px", margin:"0 0 4px", fontWeight:"700" }}>💡 해설</p><p style={{ color:"#cbd5e1", fontSize:"13px", margin:0, lineHeight:"1.5" }}>{q.explanation}</p></div>}
                 </div>
               );
