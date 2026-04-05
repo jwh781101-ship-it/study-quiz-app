@@ -97,22 +97,39 @@ export default function StudyQuizApp() {
 
   const hasContent = uploadedImages.length > 0 || textInput.trim().length > 0;
 
+  // 이미지 압축 함수 - 최대 1024px, 품질 0.7로 압축
+  const compressImage = (file) => new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const MAX_SIZE = 1024;
+      let { width, height } = img;
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
+        else { width = Math.round(width * MAX_SIZE / height); height = MAX_SIZE; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      const compressed = canvas.toDataURL("image/jpeg", 0.7);
+      const base64 = compressed.split(",")[1];
+      resolve({ url, base64, type: "image/jpeg" });
+    };
+    img.src = url;
+  });
+
   const processFiles = useCallback((files) => {
     const fileArr = Array.from(files).slice(0, MAX_IMAGES - uploadedImages.length);
     if (fileArr.length === 0) return;
     setError(null);
-    fileArr.forEach(file => {
+    fileArr.forEach(async file => {
       if (!file.type.startsWith("image/")) return;
-      const url = URL.createObjectURL(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target.result.split(",")[1];
-        setUploadedImages(prev => {
-          if (prev.length >= MAX_IMAGES) return prev;
-          return [...prev, { url, base64, type: file.type }];
-        });
-      };
-      reader.readAsDataURL(file);
+      const compressed = await compressImage(file);
+      setUploadedImages(prev => {
+        if (prev.length >= MAX_IMAGES) return prev;
+        return [...prev, compressed];
+      });
     });
   }, [uploadedImages]);
 
@@ -190,42 +207,70 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
 
     try {
-      // 이미지가 여러 장이면 각각 인식 가능 여부 확인
+      // 이미지를 한 장씩 시도해서 문제 생성, 실패한 이미지는 제외
       let validImages = [...uploadedImages];
       const newBadImages = [];
 
       if (uploadedImages.length > 1) {
+        // 전체 이미지로 먼저 시도
+        const fullResp = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            images: uploadedImages.map(img => ({ base64: img.base64, type: img.type })),
+            subject, difficulty, questionCount,
+            prompt: buildPrompt()
+          })
+        });
+        const fullData = await fullResp.json();
+
+        // 전체 성공하면 바로 결과 표시
+        if (!fullData.error && fullData.questions && fullData.questions.length > 0) {
+          let qs = fullData.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
+          for (let i = qs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [qs[i], qs[j]] = [qs[j], qs[i]];
+          }
+          setQuizData({ ...fullData, questions: qs });
+          setStep("result");
+          return;
+        }
+
+        // 전체 실패 시 이미지를 하나씩 빼면서 어떤 게 문제인지 찾기
         for (let i = 0; i < uploadedImages.length; i++) {
-          const img = uploadedImages[i];
-          const checkResp = await fetch("/api/generate", {
+          const testImages = uploadedImages.filter((_, idx) => idx !== i);
+          if (testImages.length === 0) continue;
+          const testResp = await fetch("/api/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              images: [{ base64: img.base64, type: img.type }],
-              prompt: "이 이미지가 학습 자료(교재, 노트, 문제집 등)인지 확인해주세요. 텍스트나 학습 내용이 있으면 {"ok": true}, 없거나 인식 불가면 {"ok": false, "reason": "이유"}만 JSON으로 응답하세요.",
-              isGrading: true
+              images: testImages.map(img => ({ base64: img.base64, type: img.type })),
+              subject, difficulty, questionCount,
+              prompt: buildPrompt()
             })
           });
-          const checkData = await checkResp.json();
-          if (checkData.ok === false) {
+          const testData = await testResp.json();
+          if (!testData.error && testData.questions && testData.questions.length > 0) {
+            // i번째 이미지가 문제
             newBadImages.push(i);
-          }
-        }
-
-        if (newBadImages.length > 0) {
-          setBadImages(newBadImages);
-          validImages = uploadedImages.filter((_, i) => !newBadImages.includes(i));
-
-          // 유효한 이미지가 하나도 없으면 중단
-          if (validImages.length === 0 && !textInput.trim()) {
-            setError(`모든 이미지를 인식할 수 없습니다. 교재 사진을 다시 찍어주세요.`);
-            setStep("config");
+            validImages = testImages;
+            setBadImages([i]);
+            let qs = testData.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
+            for (let j = qs.length - 1; j > 0; j--) {
+              const k = Math.floor(Math.random() * (j + 1));
+              [qs[j], qs[k]] = [qs[k], qs[j]];
+            }
+            setQuizData({ ...testData, questions: qs });
+            setStep("result");
             return;
           }
         }
+
+        // 모든 조합 실패
+        throw new Error("이미지를 인식할 수 없습니다. 교재 사진을 더 밝고 선명하게 다시 찍어주세요.");
       }
 
-      // 유효한 이미지로만 출제
+      // 이미지 1장 또는 텍스트만인 경우
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -238,15 +283,15 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       if (!data.questions || data.questions.length === 0) {
-        throw new Error("문제를 생성할 수 없습니다. 교재 사진을 다시 찍어주세요.");
+        throw new Error("문제를 생성할 수 없습니다. 교재 사진을 더 밝고 선명하게 다시 찍어주세요.");
       }
-      let qs = (data.questions || []).map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
+      let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
       for (let i = qs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [qs[i], qs[j]] = [qs[j], qs[i]];
       }
-      const shuffled = { ...data, questions: qs };
-      setQuizData(shuffled); setStep("result");
+      setQuizData({ ...data, questions: qs });
+      setStep("result");
     } catch (err) { setError("문제 생성 중 오류가 발생했습니다: " + err.message); setStep("config"); }
   };
 
