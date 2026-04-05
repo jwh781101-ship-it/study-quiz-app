@@ -34,29 +34,42 @@ const SCOPE_OPTIONS = [
 ];
 
 function shuffleOptions(question) {
-  if (question.type !== "객관식" || !question.options) return question;
-  const options = [...question.options];
-  const answerText = question.answer;
-  for (let i = options.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [options[i], options[j]] = [options[j], options[i]];
+  try {
+    if (question.type !== "객관식" || !question.options || question.options.length === 0) return question;
+    const nums = ["①","②","③","④","⑤"];
+
+    // 선지에서 번호 제거하고 내용만 추출
+    const stripNum = (str) => {
+      if (!str) return str;
+      for (const n of nums) {
+        if (str.startsWith(n)) return str.slice(n.length).trim();
+      }
+      // ①②③ 외에 1. 2. 형식도 처리
+      return str.replace(/^[①②③④⑤0-9]+[.)]\s*/, "").trim();
+    };
+
+    const answerContent = stripNum(question.answer);
+    const options = [...question.options];
+
+    // 섞기
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+
+    // 새 번호 붙이기
+    const newOptions = options.map((opt, i) => {
+      const content = stripNum(opt);
+      return nums[i] ? nums[i] + " " + content : opt;
+    });
+
+    // 정답 찾기
+    const newAnswer = newOptions.find(opt => stripNum(opt) === answerContent) || question.answer;
+
+    return { ...question, options: newOptions, answer: newAnswer };
+  } catch(e) {
+    return question; // 오류 시 원본 반환
   }
-  const nums = ["①","②","③","④","⑤"];
-  let answerContent = answerText;
-  for (const n of nums) {
-    if (answerText.startsWith(n)) { answerContent = answerText.slice(n.length).trim(); break; }
-  }
-  const newOptions = options.map((opt, i) => {
-    let content = opt;
-    for (const n of nums) { if (opt.startsWith(n)) { content = opt.slice(n.length).trim(); break; } }
-    return nums[i] + " " + content;
-  });
-  const newAnswer = newOptions.find(opt => {
-    let content = opt;
-    for (const n of nums) { if (opt.startsWith(n)) { content = opt.slice(n.length).trim(); break; } }
-    return content === answerContent;
-  }) || newOptions[0];
-  return { ...question, options: newOptions, answer: newAnswer };
 }
 
 export default function StudyQuizApp() {
@@ -184,7 +197,7 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
       const data = await response.json();
       if (data.error) throw new Error(data.error);
       // 문제 순서도 랜덤하게 섞기
-      const qs = data.questions.map(shuffleOptions);
+      let qs = (data.questions || []).map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
       for (let i = qs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [qs[i], qs[j]] = [qs[j], qs[i]];
