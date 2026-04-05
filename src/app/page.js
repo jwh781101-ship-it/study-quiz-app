@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useCallback } from "react";
+import EnglishLearning from "./english";
 
 const DIFFICULTY_CONFIG = {
   easy: { label:"쉬움", emoji:"🌱", desc:"기본 개념 확인", color:"#10b981", bg:"#ecfdf5", prompt:"기초 개념을 확인하는 수준으로, 교과서 핵심 내용을 정확히 이해했는지 묻는 문제를 출제하세요." },
@@ -86,6 +87,7 @@ export default function StudyQuizApp() {
   const [essayScores, setEssayScores] = useState({});
   const [gradingEssay, setGradingEssay] = useState(false);
   const [badImages, setBadImages] = useState([]);
+  const [showEnglish, setShowEnglish] = useState(false);
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
@@ -226,6 +228,8 @@ export default function StudyQuizApp() {
 
   const diff = DIFFICULTY_CONFIG[difficulty];
 
+  if (showEnglish) return <EnglishLearning onBack={()=>setShowEnglish(false)} />;
+
   return (
     <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", paddingBottom: 40 }}>
       <style>{CSS}</style>
@@ -240,8 +244,13 @@ export default function StudyQuizApp() {
             <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>시험 문제 생성기</h1>
             <p style={{ margin:0, fontSize:11, color:"#999" }}>AI가 맞춤 문제를 만들어드려요</p>
           </div>
+          {/* 영어학습 버튼 */}
+          <button onClick={()=>setShowEnglish(true)} style={{ marginLeft:"auto", width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#3b82f6,#6366f1)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }} title="영어 학습">
+            🇺🇸
+          </button>
+
           {/* 스텝 인디케이터 */}
-          <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
+          <div style={{ marginLeft:8, display:"flex", alignItems:"center", gap:6 }}>
             {["upload","config","result"].map((s,i) => (
               <div key={s} style={{ display:"flex", alignItems:"center", gap:4 }}>
                 <div style={{ width:24, height:24, borderRadius:"50%", background: step===s?"#6366f1":(["upload","config","result"].indexOf(step)>i?"#c7d2fe":"#e8e9ef"), color: step===s?"#fff":(["upload","config","result"].indexOf(step)>i?"#6366f1":"#bbb"), fontSize:11, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.3s" }}>{i+1}</div>
