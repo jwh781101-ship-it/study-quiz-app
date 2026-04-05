@@ -482,7 +482,7 @@ export default function StudyQuizApp() {
               {/* 강아지 실제 사진 */}
               <div style={{ position:"absolute", bottom:0, left:"50%", animation:"dogBounce 1.3s ease-in-out infinite", zIndex:2 }}>
                 <img
-                  src="/비솜.jpg"
+                  src="/dog.jpg"
                   alt="비솜"
                   style={{ width:150, height:150, objectFit:"cover", borderRadius:"50%", border:"5px solid #fff", boxShadow:"0 10px 30px rgba(0,0,0,0.15)", display:"block", animation:"dogShake 2.6s ease-in-out infinite" }}
                 />
