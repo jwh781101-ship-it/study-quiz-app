@@ -12,6 +12,7 @@ export default function StudyQuizApp() {
   const [step, setStep] = useState("upload");
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
+  const [imageType, setImageType] = useState(null);
   const [subject, setSubject] = useState("국어");
   const [difficulty, setDifficulty] = useState("medium");
   const [questionCount, setQuestionCount] = useState(5);
@@ -28,6 +29,7 @@ export default function StudyQuizApp() {
     if (!file) return;
     if (!file.type.startsWith("image/")) { setError("이미지 파일만 업로드 가능합니다."); return; }
     setError(null);
+    setImageType(file.type);
     setUploadedImage(URL.createObjectURL(file));
     const reader = new FileReader();
     reader.onload = (e) => { setImageBase64(e.target.result.split(",")[1]); setStep("config"); };
@@ -44,7 +46,7 @@ export default function StudyQuizApp() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64, subject, difficulty, questionCount, prompt })
+        body: JSON.stringify({ imageBase64, imageType, subject, difficulty, questionCount, prompt })
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -61,7 +63,7 @@ export default function StudyQuizApp() {
     setScore({ correct, total }); setShowAnswers(true);
   };
   const reset = () => {
-    setStep("upload"); setUploadedImage(null); setImageBase64(null); setQuizData(null);
+    setStep("upload"); setUploadedImage(null); setImageBase64(null); setImageType(null); setQuizData(null);
     setSelectedAnswers({}); setShowAnswers(false); setScore(null); setError(null);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
