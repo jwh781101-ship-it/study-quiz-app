@@ -166,31 +166,37 @@ export default function StudyQuizApp() {
     if (!hasContent) { setError("이미지를 올리거나 텍스트를 입력해주세요."); return; }
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
     try {
-      let validImages = [...uploadedImages];
       const prompt = buildPrompt();
 
-      // 전체로 먼저 시도
-      const fullData = await callAPI(validImages, prompt);
-      if (!fullData.error && fullData.questions?.length > 0) {
-        let qs = fullData.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
+      // 한 번만 시도
+      const data = await callAPI(uploadedImages, prompt);
+
+      // 성공
+      if (!data.error && data.questions?.length > 0) {
+        let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
         for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [qs[i],qs[j]]=[qs[j],qs[i]]; }
-        setQuizData({ ...fullData, questions: qs }); setStep("result"); return;
+        setQuizData({ ...data, questions: qs }); setStep("result"); return;
       }
 
-      // 실패 시 이미지 하나씩 빼면서 시도
+      // 실패 시 - 이미지가 여러 장이면 어떤 이미지가 문제인지 AI 진단
       if (uploadedImages.length > 1) {
-        for (let i = 0; i < uploadedImages.length; i++) {
-          const testImages = uploadedImages.filter((_, idx) => idx !== i);
-          const testData = await callAPI(testImages, prompt);
-          if (!testData.error && testData.questions?.length > 0) {
-            setBadImages([i]);
-            let qs = testData.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
-            for (let j = qs.length - 1; j > 0; j--) { const k = Math.floor(Math.random()*(j+1)); [qs[j],qs[k]]=[qs[k],qs[j]]; }
-            setQuizData({ ...testData, questions: qs }); setStep("result"); return;
+        const diagPrompt = `아래 이미지들 중 학습 자료로 인식할 수 없는 이미지 번호를 찾아주세요. (1번부터 시작)
+흐리거나, 학습 내용이 아니거나, 텍스트를 읽을 수 없으면 문제 있는 이미지입니다.
+반드시 JSON만 응답: {"bad_indices":[문제번호들],"reason":"이유"}`;
+        try {
+          const diagData = await callAPI(uploadedImages, diagPrompt);
+          if (diagData.bad_indices?.length > 0) {
+            const badIdxs = diagData.bad_indices.map(n => n - 1);
+            setBadImages(badIdxs);
+            const badNames = badIdxs.map(i => `${i+1}번 이미지`).join(', ');
+            throw new Error(`${badNames}를 인식할 수 없어요. 해당 사진을 제거하거나 더 선명하게 다시 찍어주세요.`);
           }
+        } catch(diagErr) {
+          if (diagErr.message.includes("번 이미지")) throw diagErr;
         }
       }
-      throw new Error("이미지를 인식할 수 없어요. 더 밝고 선명하게 다시 찍어주세요.");
+
+      throw new Error(data.error || "문제를 생성할 수 없어요. 교재 사진을 더 밝고 선명하게 다시 찍어주세요.");
     } catch(err) { setError(err.message); setStep("config"); }
   };
 
