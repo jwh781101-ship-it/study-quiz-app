@@ -1,15 +1,23 @@
 export async function POST(request) {
   try {
-    const { images, prompt } = await request.json();
+    const { images, prompt, isGrading } = await request.json();
 
-    const imageContents = images.map(img => ({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: img.type || 'image/jpeg',
-        data: img.base64
-      }
-    }));
+    const content = [];
+
+    if (!isGrading && images && images.length > 0) {
+      images.forEach(img => {
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: img.type || 'image/jpeg',
+            data: img.base64
+          }
+        });
+      });
+    }
+
+    content.push({ type: 'text', text: prompt });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -21,13 +29,7 @@ export async function POST(request) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            ...imageContents,
-            { type: 'text', text: prompt }
-          ]
-        }]
+        messages: [{ role: 'user', content }]
       })
     });
 
