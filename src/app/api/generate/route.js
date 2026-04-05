@@ -35,8 +35,44 @@ export async function POST(request) {
 
     const data = await response.json();
     if (data.error) return Response.json({ error: data.error.message }, { status: 500 });
+
     const text = data.content.map(i => i.text || '').join('');
-    const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+    // JSON 추출 - 여러 패턴 시도
+    let parsed = null;
+    let lastError = '';
+
+    // 1. ```json ... ``` 블록 추출
+    const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonBlockMatch) {
+      try { parsed = JSON.parse(jsonBlockMatch[1]); } catch(e) { lastError = e.message; }
+    }
+
+    // 2. ``` ... ``` 블록 추출
+    if (!parsed) {
+      const codeBlockMatch = text.match(/```\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch) {
+        try { parsed = JSON.parse(codeBlockMatch[1]); } catch(e) { lastError = e.message; }
+      }
+    }
+
+    // 3. { ... } 로 감싸진 JSON 추출
+    if (!parsed) {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try { parsed = JSON.parse(jsonMatch[0]); } catch(e) { lastError = e.message; }
+      }
+    }
+
+    // 4. 전체 텍스트 파싱 시도
+    if (!parsed) {
+      try { parsed = JSON.parse(text.trim()); } catch(e) { lastError = e.message; }
+    }
+
+    if (!parsed) {
+      return Response.json({ error: `JSON 파싱 실패: ${lastError}` }, { status: 500 });
+    }
+
     return Response.json(parsed);
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
