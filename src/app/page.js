@@ -1,4 +1,4 @@
-‘use client’;
+‘use 'use client';
 import { useState, useRef, useCallback } from “react”;
 
 const DIFFICULTY_CONFIG = {
