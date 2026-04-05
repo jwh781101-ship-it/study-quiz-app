@@ -540,8 +540,8 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
 
             <div style={{ background:"rgba(255,255,255,0.05)", borderRadius:"16px", padding:"20px", border:"1px solid rgba(255,255,255,0.08)" }}>
               <p style={{ color:"#a78bfa", fontSize:"13px", fontWeight:"700", margin:"0 0 12px", textTransform:"uppercase", letterSpacing:"1px" }}>문제 수: <span style={{ color:"#e2e8f0" }}>{questionCount}개</span></p>
-              <input type="range" min={3} max={10} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#7c3aed" }} />
-              <div style={{ display:"flex", justifyContent:"space-between", color:"#64748b", fontSize:"12px", marginTop:"4px" }}><span>3개</span><span>10개</span></div>
+              <input type="range" min={3} max={30} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#7c3aed" }} />
+              <div style={{ display:"flex", justifyContent:"space-between", color:"#64748b", fontSize:"12px", marginTop:"4px" }}><span>3개</span><span>30개</span></div>
             </div>
 
             {error && <div style={{ background:"rgba(244,63,94,0.1)", border:"1px solid rgba(244,63,94,0.3)", borderRadius:"12px", padding:"12px 16px", color:"#f43f5e", fontSize:"14px" }}>⚠️ {error}</div>}
