@@ -244,8 +244,11 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
     setGradingEssay(true);
     const essayQs = quizData.questions.filter(q => q.type === "서술형" || q.type === "단답형");
     for (const q of essayQs) {
-      if (selectedAnswers[q.id]) {
+      if (selectedAnswers[q.id] && selectedAnswers[q.id].trim() !== "") {
         await gradeEssay(q, selectedAnswers[q.id]);
+      } else {
+        // 아무것도 안 쓰면 0점 처리
+        setEssayScores(prev => ({ ...prev, [q.id]: { result: "오답", score: 0, feedback: "답안을 작성하지 않았습니다." } }));
       }
     }
     setGradingEssay(false);
@@ -420,10 +423,47 @@ ${subject === "영어" ? `\n[영어 문제 유형]\n${typeGuide}` : ""}
             </div>
 
             {showAnswers && score && (
-              <div style={{ background:"linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,197,94,0.1))", border:"1px solid rgba(74,222,128,0.3)", borderRadius:"14px", padding:"20px", textAlign:"center" }}>
-                <p style={{ color:"#4ade80", fontSize:"32px", fontWeight:"900", margin:"0 0 4px" }}>{score.correct} / {score.total}</p>
-                <p style={{ color:"#86efac", fontSize:"14px", margin:0 }}>객관식 정답 ({score.total>0?Math.round(score.correct/score.total*100):0}%)</p>
-                {gradingEssay && <p style={{ color:"#fbbf24", fontSize:"13px", margin:"8px 0 0" }}>✨ 서술형 채점 중...</p>}
+              <div style={{ background:"linear-gradient(135deg,rgba(74,222,128,0.15),rgba(34,197,94,0.1))", border:"1px solid rgba(74,222,128,0.3)", borderRadius:"14px", padding:"20px" }}>
+                {score.total > 0 && (
+                  <div style={{ textAlign:"center", marginBottom: quizData.questions.filter(q=>q.type==="서술형"||q.type==="단답형").length > 0 ? "14px" : 0, paddingBottom: quizData.questions.filter(q=>q.type==="서술형"||q.type==="단답형").length > 0 ? "14px" : 0, borderBottom: quizData.questions.filter(q=>q.type==="서술형"||q.type==="단답형").length > 0 ? "1px solid rgba(74,222,128,0.2)" : "none" }}>
+                    <p style={{ color:"#94a3b8", fontSize:"12px", margin:"0 0 4px", fontWeight:"700" }}>객관식</p>
+                    <p style={{ color:"#4ade80", fontSize:"28px", fontWeight:"900", margin:"0 0 2px" }}>{score.correct} / {score.total}</p>
+                    <p style={{ color:"#86efac", fontSize:"13px", margin:0 }}>{Math.round(score.correct/score.total*100)}%</p>
+                  </div>
+                )}
+                {quizData.questions.filter(q=>q.type==="서술형"||q.type==="단답형").length > 0 && (
+                  <div>
+                    <p style={{ color:"#94a3b8", fontSize:"12px", margin:"0 0 10px", fontWeight:"700", textAlign:"center" }}>서술형</p>
+                    <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
+                      {quizData.questions.filter(q=>q.type==="서술형"||q.type==="단답형").map((q,i) => {
+                        const er = essayScores[q.id];
+                        return (
+                          <div key={q.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"8px 12px", borderRadius:"10px", background:"rgba(255,255,255,0.05)" }}>
+                            <span style={{ color:"#cbd5e1", fontSize:"13px" }}>서술형 {i+1}번</span>
+                            {gradingEssay && !er ? (
+                              <span style={{ color:"#fbbf24", fontSize:"12px" }}>채점 중...</span>
+                            ) : er ? (
+                              <span style={{ color:er.result==="정답"?"#4ade80":er.result==="부분정답"?"#fbbf24":"#f43f5e", fontSize:"13px", fontWeight:"700" }}>
+                                {er.result} ({er.score}점)
+                              </span>
+                            ) : (
+                              <span style={{ color:"#64748b", fontSize:"12px" }}>미채점</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {!gradingEssay && Object.keys(essayScores).length > 0 && (
+                      <div style={{ marginTop:"10px", textAlign:"center" }}>
+                        <p style={{ color:"#fbbf24", fontSize:"20px", fontWeight:"900", margin:"0 0 2px" }}>
+                          {Math.round(Object.values(essayScores).reduce((s,r)=>s+r.score,0)/Object.values(essayScores).length)}점
+                        </p>
+                        <p style={{ color:"#fde68a", fontSize:"12px", margin:0 }}>서술형 평균</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {gradingEssay && <p style={{ color:"#fbbf24", fontSize:"13px", margin:"10px 0 0", textAlign:"center" }}>✨ 서술형 AI 채점 중...</p>}
               </div>
             )}
 
