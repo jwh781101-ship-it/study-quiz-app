@@ -5,6 +5,7 @@ const LEVELS = [
   { id:"low", label:"하", emoji:"🌱", desc:"초급", color:"#10b981", bg:"#ecfdf5" },
   { id:"mid", label:"중", emoji:"📚", desc:"중급", color:"#6366f1", bg:"#eef2ff" },
   { id:"high", label:"상", emoji:"🔥", desc:"고급", color:"#ef4444", bg:"#fef2f2" },
+  { id:"top", label:"최상", emoji:"⚡", desc:"최고급", color:"#7c3aed", bg:"#f5f3ff" },
 ];
 
 const TABS = [
@@ -71,6 +72,7 @@ export default function EnglishLearning({ onBack }) {
   const [loadingGrammar, setLoadingGrammar] = useState(false);
   const [fillAnswers, setFillAnswers] = useState({});
   const [fillChecked, setFillChecked] = useState(false);
+  const [grammarInput, setGrammarInput] = useState(""); // 사용자가 직접 입력한 문법 주제
   // 퀴즈
   const [quiz, setQuiz] = useState(null);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
@@ -112,7 +114,7 @@ export default function EnglishLearning({ onBack }) {
   const loadWords = async () => {
     setLoadingWords(true); setWords([]); setExpandedWord(null);
     try {
-      const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":"중학교 고급~고등학교";
+      const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":level==="high"?"중학교 고급~고등학교":"고등학교 심화~수능/토익 수준";
       const {topic, seed, dateStr, weekday} = getRandCtx();
       const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] 오늘의 영어 단어 8개를 ${lvDesc} 수준으로 선정해주세요.
 주제: "${topic}" 관련 단어를 중심으로 선정하되, 이 주제에만 국한되지 않고 다양하게 구성하세요.
@@ -127,7 +129,7 @@ export default function EnglishLearning({ onBack }) {
   const loadTalk = async () => {
     setLoadingTalk(true); setTalk(null); setShownLines(0);
     try {
-      const lvDesc = level==="low"?"아주 기초적인 (초등 수준, 쉬운 단어)":level==="mid"?"중급 (중학교 수준)":"심화 (고등학교 수준)";
+      const lvDesc = level==="low"?"아주 기초적인 (초등 수준, 쉬운 단어)":level==="mid"?"중급 (중학교 수준)":level==="high"?"심화 (고등학교 수준)":"최고급 (수능/토익/원어민 수준, 자연스러운 구어체와 관용표현 포함)";
       const situations = [
         "학교 교실에서","식당에서 주문할 때","친구 생일파티에서","도서관에서","쇼핑몰에서",
         "버스정류장에서","방과후 카페에서","병원 접수처에서","공항에서","영화관에서",
@@ -146,14 +148,18 @@ export default function EnglishLearning({ onBack }) {
     setLoadingTalk(false);
   };
 
-  const loadGrammar = async () => {
+  const loadGrammar = async (customTopic="") => {
     setLoadingGrammar(true); setGrammar(null); setFillAnswers({}); setFillChecked(false);
     try {
-      const lvDesc = level==="low"?"초급 (명사 복수형, be동사, 기초 문장)":level==="mid"?"중급 (현재진행형, 과거형, 조동사)":"고급 (비교급최상급, 수동태, 관계대명사)";
+      const lvDesc = level==="low"?"초급 (명사 복수형, be동사, 기초 문장)":level==="mid"?"중급 (현재진행형, 과거형, 조동사)":level==="high"?"고급 (비교급최상급, 수동태, 관계대명사)":"최고급 (가정법, 도치, 분사구문, 수능/토익 고난도 문법)";
       const {grammar: gTopic, seed, dateStr, weekday} = getRandCtx();
-      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 영어 문법 포인트를 알려주세요.
-이번엔 "${gTopic}" 관련 문법을 다뤄주세요. 매번 다른 문법 포인트와 예문을 사용하세요.
-아이들이 자주 틀리는 실수를 중심으로 재미있게 설명하고, 빈칸 문제도 다양한 상황의 문장으로 만들어주세요.
+      const topic = customTopic || gTopic;
+      const topicNote = customTopic
+        ? `사용자가 "${customTopic}"을 배우고 싶다고 요청했습니다. 이 문법을 중심으로 다양한 각도에서 설명해주세요.`
+        : `이번엔 "${topic}" 관련 문법을 다뤄주세요.`;
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 영어 문법을 알려주세요.
+${topicNote}
+매번 다른 예문과 빈칸 문제를 사용하세요. 아이들이 자주 틀리는 실수를 중심으로 재미있게 설명하고, 빈칸 문제도 다양한 상황의 문장으로 만들어주세요.
 반드시 JSON만 응답:
 {"point":"문법포인트제목","description":"쉬운설명 1-2문장","wrong":"틀린예문","right":"맞는예문","wrong_reason":"왜틀렸는지","tip":"재미있는기억팁","exercises":[{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"}]}`);
       if (data.point) setGrammar(data);
@@ -164,7 +170,7 @@ export default function EnglishLearning({ onBack }) {
   const loadQuiz = async () => {
     setLoadingQuiz(true); setQuiz(null); setQuizAnswer(null);
     try {
-      const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":"중학교 고급~고등학교";
+      const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":level==="high"?"중학교 고급~고등학교":"고등학교 심화~수능/토익 수준";
       const wordList = words.length>0 ? `오늘 배운 단어: ${words.slice(0,5).map(w=>w.word).join(', ')}` : "";
       const {topic, seed, dateStr, weekday} = getRandCtx();
       const quizTypes = ["단어 뜻 맞히기","빈칸 채우기","문법 오류 찾기","올바른 단어 선택","동의어 찾기","반의어 찾기","문장 완성하기","대화 완성하기"];
@@ -182,7 +188,7 @@ ${wordList}
   const loadStory = async () => {
     setLoadingStory(true); setStory(null); setShowTranslation({});
     try {
-      const lvDesc = level==="low"?"아주 쉬운 (초등 수준, 짧은 문장 4개)":level==="mid"?"중간 (중학교 수준, 5문장)":"조금 어려운 (고등 초급, 5-6문장)";
+      const lvDesc = level==="low"?"아주 쉬운 (초등 수준, 짧은 문장 4개)":level==="mid"?"중간 (중학교 수준, 5문장)":level==="high"?"조금 어려운 (고등 초급, 5-6문장)":"어려운 (수능/토익 수준, 6-7문장, 다양한 문법 구조 포함)";
       const {topic, seed, dateStr, weekday} = getRandCtx();
       const genres = ["일상 에피소드","짧은 동화","유머러스한 이야기","모험 이야기","우정 이야기","가족 이야기","학교 생활","동물 이야기","여행 이야기","미래 이야기"];
       const genre = genres[seed % genres.length];
@@ -375,9 +381,35 @@ ${wordList}
         {/* ── 오늘의 문법 ── */}
         {activeTab==="grammar" && (
           <div className="fade-up">
+            {/* 직접 입력 */}
+            <div className="card" style={{ padding:"14px 16px", marginBottom:12 }}>
+              <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📝 배우고 싶은 문법을 직접 입력하세요</p>
+              <div style={{ display:"flex", gap:8 }}>
+                <input
+                  value={grammarInput}
+                  onChange={e=>setGrammarInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&grammarInput.trim()&&loadGrammar(grammarInput.trim())}
+                  placeholder="예) 현재완료, 수동태, to부정사, 관계대명사..."
+                  style={{ flex:1, padding:"10px 14px", borderRadius:12, border:"1.5px solid #c7d2fe", fontSize:14, fontFamily:"inherit", outline:"none", background:"#f8f8fc", color:"#1a1a2e" }}
+                />
+                <button
+                  onClick={()=>grammarInput.trim() ? loadGrammar(grammarInput.trim()) : loadGrammar()}
+                  className="eng-btn"
+                  style={{ padding:"10px 16px", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:13, fontWeight:800, flexShrink:0 }}>
+                  생성
+                </button>
+              </div>
+              {grammarInput && (
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
+                  <span style={{ fontSize:12, color:"#6366f1", fontWeight:700 }}>🎯 "{grammarInput}" 위주로 생성해요 · 🔄 누를 때마다 새로운 예문!</span>
+                  <button onClick={()=>{setGrammarInput(""); setGrammar(null);}} style={{ background:"none", border:"none", color:"#bbb", fontSize:12, cursor:"pointer" }}>초기화</button>
+                </div>
+              )}
+            </div>
+
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <p style={{ margin:0, fontSize:13, color:"#666" }}>규칙을 발견하는 재미! 🔍</p>
-              <button onClick={loadGrammar} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 문법</button>
+              <p style={{ margin:0, fontSize:13, color:"#666" }}>{grammarInput ? `"${grammarInput}" 문법 연습 중 🔍` : "규칙을 발견하는 재미! 🔍"}</p>
+              <button onClick={()=>loadGrammar(grammarInput.trim())} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 예문</button>
             </div>
             {loadingGrammar ? (
               <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>문법 생성 중...</p></div>
