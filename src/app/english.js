@@ -94,12 +94,31 @@ export default function EnglishLearning({ onBack }) {
 
   const lv = LEVELS.find(l => l.id === level);
 
+  // 매번 다른 결과를 위한 랜덤 컨텍스트
+  const getRandCtx = () => {
+    const topics = ["동물","음식","여행","스포츠","학교생활","날씨","쇼핑","음악","영화","자연","직업","가족","건강","기술","역사","문화","감정","색깔","숫자","시간"];
+    const grammarTopics = ["be동사","일반동사","현재진행형","과거형","미래형","조동사(can/will/must)","비교급","최상급","수동태","현재완료","관계대명사","접속사","전치사","관사","명사복수형","형용사","부사","의문문","부정문","감탄문"];
+    const t = topics[Math.floor(Math.random()*topics.length)];
+    const g = grammarTopics[Math.floor(Math.random()*grammarTopics.length)];
+    const seed = Math.floor(Math.random()*10000);
+    // 날짜+시간 정보 (분 단위까지 - 같은 분 안에 눌러도 다른 seed로 구분)
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()} ${now.getHours()}시${now.getMinutes()}분`;
+    const weekdays = ["일","월","화","수","목","금","토"];
+    const weekday = weekdays[now.getDay()];
+    return { topic: t, grammar: g, seed, dateStr, weekday };
+  };
+
   const loadWords = async () => {
     setLoadingWords(true); setWords([]); setExpandedWord(null);
     try {
       const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":"중학교 고급~고등학교";
-      const data = await callAI(`오늘의 영어 단어 8개를 ${lvDesc} 수준으로 선정해주세요. 반드시 JSON만 응답:
-{"theme":"오늘주제","words":[{"word":"단어","pronunciation":"한글발음","meaning":"뜻","example":"예문","example_kr":"예문해석","tip":"암기팁"}]}`);
+      const {topic, seed, dateStr, weekday} = getRandCtx();
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] 오늘의 영어 단어 8개를 ${lvDesc} 수준으로 선정해주세요.
+주제: "${topic}" 관련 단어를 중심으로 선정하되, 이 주제에만 국한되지 않고 다양하게 구성하세요.
+이전에 자주 나오는 단어(apple, book, school, happy 등 기초 단어)는 피하고 새롭고 유용한 단어를 선택하세요.
+반드시 JSON만 응답:
+{"theme":"오늘주제(${topic} 관련)","words":[{"word":"단어","pronunciation":"한글발음","meaning":"뜻","example":"자연스러운예문","example_kr":"예문해석","tip":"재미있는암기팁"}]}`);
       if (data.words) setWords(data.words);
     } catch(e) {}
     setLoadingWords(false);
@@ -109,10 +128,19 @@ export default function EnglishLearning({ onBack }) {
     setLoadingTalk(true); setTalk(null); setShownLines(0);
     try {
       const lvDesc = level==="low"?"아주 기초적인 (초등 수준, 쉬운 단어)":level==="mid"?"중급 (중학교 수준)":"심화 (고등학교 수준)";
-      const situations = ["학교 교실에서","식당에서 주문할 때","친구 생일파티에서","도서관에서","쇼핑몰에서","버스정류장에서","방과후 카페에서"];
-      const sit = situations[Math.floor(Math.random()*situations.length)];
-      const data = await callAI(`${lvDesc} 영어 회화를 만들어주세요. 상황: ${sit}. A와 B가 6~8줄 대화. 반드시 JSON만 응답:
-{"situation":"${sit}","situation_desc":"상황 한줄 설명","level_hint":"이 레벨 포인트","lines":[{"speaker":"A","en":"영어대사","kr":"한국어해석","key":"핵심표현"}]}`);
+      const situations = [
+        "학교 교실에서","식당에서 주문할 때","친구 생일파티에서","도서관에서","쇼핑몰에서",
+        "버스정류장에서","방과후 카페에서","병원 접수처에서","공항에서","영화관에서",
+        "체육관에서","동물원에서","서점에서","편의점에서","학교 운동장에서",
+        "친구 집에서","온라인 게임 중에","학교 급식실에서","은행에서","호텔에서"
+      ];
+      const {seed, dateStr, weekday} = getRandCtx();
+      const sit = situations[seed % situations.length];
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 영어 회화를 만들어주세요.
+상황: ${sit}. A와 B가 6~8줄 대화.
+매번 다른 내용과 표현을 사용하고, 실생활에서 자주 쓰는 자연스러운 표현을 포함하세요.
+반드시 JSON만 응답:
+{"situation":"${sit}","situation_desc":"상황 한줄 설명","level_hint":"이 레벨 핵심 표현 포인트","lines":[{"speaker":"A","en":"영어대사","kr":"한국어해석","key":"핵심표현(있을때만)"}]}`);
       if (data.lines) { setTalk(data); setShownLines(1); }
     } catch(e) {}
     setLoadingTalk(false);
@@ -122,8 +150,12 @@ export default function EnglishLearning({ onBack }) {
     setLoadingGrammar(true); setGrammar(null); setFillAnswers({}); setFillChecked(false);
     try {
       const lvDesc = level==="low"?"초급 (명사 복수형, be동사, 기초 문장)":level==="mid"?"중급 (현재진행형, 과거형, 조동사)":"고급 (비교급최상급, 수동태, 관계대명사)";
-      const data = await callAI(`${lvDesc} 영어 문법 포인트 하나를 재미있게 알려주세요. 반드시 JSON만 응답:
-{"point":"문법포인트제목","description":"쉬운설명 1-2문장","wrong":"틀린예문","right":"맞는예문","wrong_reason":"왜틀렸는지","tip":"기억팁","exercises":[{"sentence":"빈칸____있는문장","answer":"정답단어","hint":"힌트"},{"sentence":"빈칸____있는문장","answer":"정답단어","hint":"힌트"},{"sentence":"빈칸____있는문장","answer":"정답단어","hint":"힌트"}]}`);
+      const {grammar: gTopic, seed, dateStr, weekday} = getRandCtx();
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 영어 문법 포인트를 알려주세요.
+이번엔 "${gTopic}" 관련 문법을 다뤄주세요. 매번 다른 문법 포인트와 예문을 사용하세요.
+아이들이 자주 틀리는 실수를 중심으로 재미있게 설명하고, 빈칸 문제도 다양한 상황의 문장으로 만들어주세요.
+반드시 JSON만 응답:
+{"point":"문법포인트제목","description":"쉬운설명 1-2문장","wrong":"틀린예문","right":"맞는예문","wrong_reason":"왜틀렸는지","tip":"재미있는기억팁","exercises":[{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"}]}`);
       if (data.point) setGrammar(data);
     } catch(e) {}
     setLoadingGrammar(false);
@@ -134,8 +166,14 @@ export default function EnglishLearning({ onBack }) {
     try {
       const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":"중학교 고급~고등학교";
       const wordList = words.length>0 ? `오늘 배운 단어: ${words.slice(0,5).map(w=>w.word).join(', ')}` : "";
-      const data = await callAI(`${lvDesc} 수준 영어 퀴즈 1문제. ${wordList}. 반드시 JSON만:
-{"type":"퀴즈유형","question":"문제","options":["①보기","②보기","③보기","④보기"],"answer":"①보기","explanation":"해설"}`);
+      const {topic, seed, dateStr, weekday} = getRandCtx();
+      const quizTypes = ["단어 뜻 맞히기","빈칸 채우기","문법 오류 찾기","올바른 단어 선택","동의어 찾기","반의어 찾기","문장 완성하기","대화 완성하기"];
+      const qType = quizTypes[seed % quizTypes.length];
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 수준 영어 퀴즈 1문제를 "${qType}" 유형으로 내주세요.
+${wordList}
+주제: ${topic}. 매번 새롭고 다양한 문제를 내주세요. 정답 위치도 ①②③④ 중 랜덤하게 배치하세요.
+반드시 JSON만:
+{"type":"${qType}","question":"문제","options":["①보기","②보기","③보기","④보기"],"answer":"②보기(정답위치랜덤)","explanation":"왜 정답인지 + 오답 이유"}`);
       if (data.question) setQuiz(data);
     } catch(e) {}
     setLoadingQuiz(false);
@@ -145,8 +183,14 @@ export default function EnglishLearning({ onBack }) {
     setLoadingStory(true); setStory(null); setShowTranslation({});
     try {
       const lvDesc = level==="low"?"아주 쉬운 (초등 수준, 짧은 문장 4개)":level==="mid"?"중간 (중학교 수준, 5문장)":"조금 어려운 (고등 초급, 5-6문장)";
-      const data = await callAI(`${lvDesc} 영어 짧은 이야기. 재미있는 일상 에피소드. 반드시 JSON만:
-{"title":"제목","title_kr":"한국어제목","sentences":[{"en":"영어문장","kr":"해석","key_word":"핵심단어","key_meaning":"뜻"}]}`);
+      const {topic, seed, dateStr, weekday} = getRandCtx();
+      const genres = ["일상 에피소드","짧은 동화","유머러스한 이야기","모험 이야기","우정 이야기","가족 이야기","학교 생활","동물 이야기","여행 이야기","미래 이야기"];
+      const genre = genres[seed % genres.length];
+      const data = await callAI(`[랜덤시드:${seed}][${dateStr}(${weekday}요일)] ${lvDesc} 영어 짧은 이야기를 써주세요.
+장르: "${genre}", 주제 키워드: "${topic}".
+매번 완전히 다른 새로운 이야기를 만들고, 주인공 이름도 다양하게 바꿔주세요.
+반드시 JSON만:
+{"title":"이야기제목","title_kr":"한국어제목","sentences":[{"en":"영어문장","kr":"해석","key_word":"핵심단어","key_meaning":"뜻"}]}`);
       if (data.sentences) setStory(data);
     } catch(e) {}
     setLoadingStory(false);
