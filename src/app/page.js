@@ -268,16 +268,14 @@ export default function StudyQuizApp() {
 
             {/* 시험문제 생성기 */}
             <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(99,102,241,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
-              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(99,102,241,0.2)";}}
-              onMouseOut={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 20px rgba(99,102,241,0.12)";}}>
+>
               <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}>
                 📖
               </div>
               <div>
                 <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험문제</p>
                 <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>생성기</p>
-                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>교재 사진 찍으면{"
-"}AI가 문제 출제</p>
+                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>교재 사진 찍으면 AI가 문제 출제</p>
               </div>
               <div style={{ background:"#eef2ff", borderRadius:20, padding:"4px 14px" }}>
                 <span style={{ fontSize:12, color:"#6366f1", fontWeight:700 }}>바로 시작 →</span>
@@ -286,16 +284,14 @@ export default function StudyQuizApp() {
 
             {/* 영어 학습 */}
             <button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(59,130,246,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
-              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(59,130,246,0.2)";}}
-              onMouseOut={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 20px rgba(59,130,246,0.12)";}}>
+>
               <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(59,130,246,0.35)" }}>
                 🇺🇸
               </div>
               <div>
                 <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>영어</p>
                 <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>학습</p>
-                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>단어·문법·회화{"
-"}AI 맞춤 학습</p>
+                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>단어·문법·회화 AI 맞춤 학습</p>
               </div>
               <div style={{ background:"#eff6ff", borderRadius:20, padding:"4px 14px" }}>
                 <span style={{ fontSize:12, color:"#3b82f6", fontWeight:700 }}>바로 시작 →</span>
