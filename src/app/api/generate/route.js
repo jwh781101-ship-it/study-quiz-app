@@ -7,19 +7,14 @@ export async function POST(request) {
 
     if (!isGrading && images && images.length > 0) {
       for (const img of images) {
-        // HEIC 등 지원 안되는 형식은 jpeg로 강제 변환
         const mediaType = (() => {
           const t = (img.type || '').toLowerCase();
           if (t.includes('png')) return 'image/png';
           if (t.includes('gif')) return 'image/gif';
           if (t.includes('webp')) return 'image/webp';
-          return 'image/jpeg'; // 기본값
+          return 'image/jpeg';
         })();
-
-        content.push({
-          type: 'image',
-          source: { type: 'base64', media_type: mediaType, data: img.base64 }
-        });
+        content.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img.base64 } });
       }
     }
 
@@ -34,7 +29,7 @@ export async function POST(request) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 8000,
+        max_tokens: 16000,
         messages: [{ role: 'user', content }]
       })
     });
@@ -45,20 +40,11 @@ export async function POST(request) {
     }
 
     const data = await response.json();
-
-    if (data.error) {
-      return Response.json({ error: data.error.message }, { status: 500 });
-    }
-
-    if (!data.content || data.content.length === 0) {
-      return Response.json({ error: 'AI 응답이 비어있습니다' }, { status: 500 });
-    }
+    if (data.error) return Response.json({ error: data.error.message }, { status: 500 });
+    if (!data.content || data.content.length === 0) return Response.json({ error: 'AI 응답이 비어있습니다' }, { status: 500 });
 
     const text = data.content.map(i => i.text || '').join('');
-
-    if (!text.trim()) {
-      return Response.json({ error: 'AI 응답 텍스트가 비어있습니다' }, { status: 500 });
-    }
+    if (!text.trim()) return Response.json({ error: 'AI 응답 텍스트가 비어있습니다' }, { status: 500 });
 
     // JSON 추출 - 4단계 시도
     let parsed = null;
@@ -91,15 +77,38 @@ export async function POST(request) {
       try { parsed = JSON.parse(text.trim()); } catch(e) { lastError = e.message; }
     }
 
+    // 5. JSON이 잘린 경우 복구 시도
     if (!parsed) {
-      // 디버깅용: 실제 AI 응답 앞부분 반환
+      try {
+        const jsonStart = text.indexOf('{');
+        if (jsonStart !== -1) {
+          let partial = text.slice(jsonStart);
+          // 열린 괄호 수만큼 닫기
+          const openB = (partial.split('[').length - 1);
+          const closeB = (partial.split(']').length - 1);
+          const openC = (partial.split('{').length - 1);
+          const closeC = (partial.split('}').length - 1);
+          partial += ']'.repeat(Math.max(0, openB - closeB));
+          partial += '}'.repeat(Math.max(0, openC - closeC));
+          parsed = JSON.parse(partial);
+          // 마지막 문제가 불완전하면 제거
+          if (parsed.questions && parsed.questions.length > 0) {
+            const last = parsed.questions[parsed.questions.length - 1];
+            if (!last.answer || !last.explanation || !last.question) {
+              parsed.questions.pop();
+            }
+          }
+        }
+      } catch(e2) { lastError = e2.message; }
+    }
+
+    if (!parsed) {
       return Response.json({
         error: `JSON 파싱 실패. AI 응답: ${text.slice(0, 200)}`
       }, { status: 500 });
     }
 
     return Response.json(parsed);
-
   } catch (err) {
     return Response.json({ error: `서버 오류: ${err.message}` }, { status: 500 });
   }
