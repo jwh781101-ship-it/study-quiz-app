@@ -88,6 +88,7 @@ export default function StudyQuizApp() {
   const [gradingEssay, setGradingEssay] = useState(false);
   const [badImages, setBadImages] = useState([]);
   const [showEnglish, setShowEnglish] = useState(false);
+  const [showHome, setShowHome] = useState(true); // 홈 화면 (앱 선택)
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
@@ -227,14 +228,91 @@ export default function StudyQuizApp() {
   const reset = () => {
     setStep("upload"); setUploadedImages([]); setTextInput(""); setShowTextInput(false);
     setQuizData(null); setSelectedAnswers({}); setShowAnswers(false);
-    setScore(null); setError(null); setEssayScores({}); setBadImages([]);
+    setScore(null); setError(null); setEssayScores({}); setBadImages([]); setShowHome(true);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   };
 
   const diff = DIFFICULTY_CONFIG[difficulty];
 
-  if (showEnglish) return <EnglishLearning onBack={()=>setShowEnglish(false)} />;
+  if (showEnglish) return <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />;
+
+  if (showHome) return (
+    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
+      <style>{`
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .fade-up { animation: fadeUp 0.4s ease both; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+      `}</style>
+
+      {/* 헤더 */}
+      <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"20px 24px 18px" }}>
+        <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center" }}>
+          <h1 style={{ margin:0, fontSize:22, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
+          <p style={{ margin:"4px 0 0", fontSize:13, color:"#999" }}>무엇을 공부할까요?</p>
+        </div>
+      </div>
+
+      {/* 메인 카드 영역 */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
+        <div style={{ width:"100%", maxWidth:640 }}>
+
+          {/* 비솜이 */}
+          <div style={{ textAlign:"center", marginBottom:32 }} className="fade-up">
+            <img src="/dog.jpg" alt="비솜" style={{ width:90, height:90, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite" }} />
+            <p style={{ margin:"12px 0 0", fontSize:14, color:"#666", fontWeight:600 }}>오늘도 열심히 공부해보자! 💪</p>
+          </div>
+
+          {/* 두 개 카드 - 좌우 배치 */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }} className="fade-up">
+
+            {/* 시험문제 생성기 */}
+            <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(99,102,241,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
+              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(99,102,241,0.2)";}}
+              onMouseOut={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 20px rgba(99,102,241,0.12)";}}>
+              <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}>
+                📖
+              </div>
+              <div>
+                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험문제</p>
+                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>생성기</p>
+                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>교재 사진 찍으면{"
+"}AI가 문제 출제</p>
+              </div>
+              <div style={{ background:"#eef2ff", borderRadius:20, padding:"4px 14px" }}>
+                <span style={{ fontSize:12, color:"#6366f1", fontWeight:700 }}>바로 시작 →</span>
+              </div>
+            </button>
+
+            {/* 영어 학습 */}
+            <button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(59,130,246,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
+              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(59,130,246,0.2)";}}
+              onMouseOut={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="0 4px 20px rgba(59,130,246,0.12)";}}>
+              <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(59,130,246,0.35)" }}>
+                🇺🇸
+              </div>
+              <div>
+                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>영어</p>
+                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>학습</p>
+                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>단어·문법·회화{"
+"}AI 맞춤 학습</p>
+              </div>
+              <div style={{ background:"#eff6ff", borderRadius:20, padding:"4px 14px" }}>
+                <span style={{ fontSize:12, color:"#3b82f6", fontWeight:700 }}>바로 시작 →</span>
+              </div>
+            </button>
+          </div>
+
+          {/* 하단 태그 */}
+          <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:24, flexWrap:"wrap" }} className="fade-up">
+            {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
+              <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"6px 12px", fontSize:12, color:"#666", fontWeight:500 }}>{tag}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", paddingBottom: 40 }}>
@@ -245,6 +323,7 @@ export default function StudyQuizApp() {
       {/* 헤더 */}
       <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"16px 20px 14px", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ maxWidth:640, margin:"0 auto", display:"flex", alignItems:"center", gap:12 }}>
+          <button onClick={()=>{ setShowHome(true); setStep("upload"); setUploadedImages([]); setTextInput(""); setQuizData(null); setError(null); }} style={{ width:36, height:36, borderRadius:10, border:"1.5px solid #e8e9ef", background:"#fff", cursor:"pointer", fontSize:18, flexShrink:0 }}>←</button>
           <div style={{ width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>📖</div>
           <div>
             <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>시험 문제 생성기</h1>
@@ -268,14 +347,6 @@ export default function StudyQuizApp() {
         {step==="upload" && (
           <div className="fade-up">
             <div style={{ textAlign:"center", padding:"24px 0 20px", position:"relative" }}>
-              {/* 영어학습 버튼 - 우측 상단 */}
-              <button onClick={()=>setShowEnglish(true)} style={{ position:"absolute", top:20, right:0, display:"flex", flexDirection:"column", alignItems:"center", gap:4, background:"none", border:"none", cursor:"pointer", padding:0 }}>
-                <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:24, boxShadow:"0 4px 14px rgba(99,102,241,0.35)" }}>
-                  🇺🇸
-                </div>
-                <span style={{ fontSize:11, fontWeight:700, color:"#6366f1" }}>영어학습</span>
-              </button>
-
               <div style={{ fontSize:52, marginBottom:8 }}>📚</div>
               <h2 style={{ margin:"0 0 6px", fontSize:22, fontWeight:900, color:"#1a1a2e" }}>학습 자료를 올려주세요</h2>
               <p style={{ margin:0, fontSize:13, color:"#999" }}>사진, 갤러리, 텍스트 중 하나 또는 여러 개를 선택하세요</p>
