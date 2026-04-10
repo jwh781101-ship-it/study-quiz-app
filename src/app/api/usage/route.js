@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js' 
 
 const LIMITS = {
-  guest: 3,
-  free: 5,
+  guest: 999,
+  free: 999,
   premium: 999
 }
 
