@@ -91,7 +91,8 @@ export default function StudyQuizApp() {
   const [showEnglish, setShowEnglish] = useState(false);
   const [showHome, setShowHome] = useState(true);
   const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true); // 홈 화면 (앱 선택)
+  const [authLoading, setAuthLoading] = useState(true);
+  const [usage, setUsage] = useState({ plan:'guest', used:0, limit:3, canUse:true }); // 홈 화면 (앱 선택)
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
@@ -100,13 +101,38 @@ export default function StudyQuizApp() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
+      checkUsage(session?.user ?? null);
     });
     // 로그인/로그아웃 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      checkUsage(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkUsage = async (currentUser) => {
+    try {
+      const headers = {};
+      if (currentUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+      const resp = await fetch('/api/usage', { headers });
+      const data = await resp.json();
+      setUsage(data);
+    } catch(e) {}
+  };
+
+  const incrementUsage = async () => {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) headers['Authorization'] = `Bearer ${session.access_token}`;
+      await fetch('/api/usage', { method: 'POST', headers });
+      await checkUsage(user);
+    } catch(e) {}
+  };
 
   const signInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -193,6 +219,15 @@ export default function StudyQuizApp() {
 
   const generateQuiz = async () => {
     if (!hasContent) { setError("이미지를 올리거나 텍스트를 입력해주세요."); return; }
+    // 사용량 체크
+    await checkUsage(user);
+    if (!usage.canUse) {
+      const msg = user
+        ? `오늘 사용 한도(${usage.limit}회)를 초과했어요. 내일 다시 시도하거나 프리미엄으로 업그레이드하세요! 🌟`
+        : `비회원은 하루 ${usage.limit}회까지 사용 가능해요. 구글 로그인하면 더 많이 사용할 수 있어요!`;
+      setError(msg);
+      return;
+    }
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
     try {
       const prompt = buildPrompt();
@@ -204,7 +239,7 @@ export default function StudyQuizApp() {
       if (!data.error && data.questions?.length > 0) {
         let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
         for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [qs[i],qs[j]]=[qs[j],qs[i]]; }
-        setQuizData({ ...data, questions: qs }); setStep("result"); return;
+        setQuizData({ ...data, questions: qs }); setStep("result"); incrementUsage(); return;
       }
 
       // 실패 시 - 이미지가 여러 장이면 어떤 이미지가 문제인지 AI 진단
@@ -311,6 +346,17 @@ export default function StudyQuizApp() {
           <div style={{ textAlign:"center", marginBottom:32 }} className="fade-up">
             <img src="/dog.jpg" alt="비솜" style={{ width:90, height:90, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite" }} />
             <p style={{ margin:"12px 0 0", fontSize:14, color:"#666", fontWeight:600 }}>오늘도 열심히 공부해보자! 💪</p>
+          {/* 사용량 표시 */}
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, marginTop:10, background:"#fff", borderRadius:20, padding:"6px 16px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)", border:"1px solid #f0f0f5" }}>
+            <div style={{ display:"flex", gap:4 }}>
+              {Array.from({length: usage.limit === 999 ? 5 : usage.limit}).map((_, i) => (
+                <div key={i} style={{ width:8, height:8, borderRadius:"50%", background: i < usage.used ? "#6366f1" : "#e8e9ef" }} />
+              ))}
+            </div>
+            <span style={{ fontSize:12, color:"#666", fontWeight:600 }}>
+              {usage.plan === 'premium' ? '✨ 프리미엄 무제한' : `오늘 ${usage.used}/${usage.limit}회 사용`}
+            </span>
+          </div>
           </div>
 
           {/* 두 개 카드 - 좌우 배치 */}
