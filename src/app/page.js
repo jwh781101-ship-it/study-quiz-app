@@ -335,17 +335,17 @@ export default function StudyQuizApp() {
       <div style={{ width:"100%", maxWidth:500 }}>
 
         {/* 비솜이 + 말풍선 */}
-        <div style={{ display:"flex", justifyContent:"center", marginBottom:8 }} className="fade-up">
-          <div style={{ position:"relative", display:"inline-block" }}>
-            <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", display:"block" }} />
-            <div style={{ position:"absolute", left:"100%", top:-8, marginLeft:10, background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", width:190, boxShadow:"0 4px 16px rgba(99,102,241,0.15)" }}>
-              <div style={{ position:"absolute", left:-8, top:18, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
-              <div style={{ position:"absolute", left:-5, top:20, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
-              <p style={{ margin:"0 0 3px", fontSize:12, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
-              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
-            </div>
-          </div>
-        </div>
+<div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8, paddingLeft:20 }} className="fade-up">
+  <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", flexShrink:0 }} />
+  
+  {/* 말풍선 */}
+  <div style={{ background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.15)", position:"relative", maxWidth:"calc(100% - 140px)" }}>
+    <div style={{ position:"absolute", left:-8, top:16, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
+    <div style={{ position:"absolute", left:-5, top:18, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
+    <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
+    <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
+  </div>
+</div>
 
         <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
 
