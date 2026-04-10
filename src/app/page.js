@@ -301,110 +301,92 @@ export default function StudyQuizApp() {
   if (showEnglish) return <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />;
 
   if (showHome) return (
-    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
-      <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        .fade-up { animation: fadeUp 0.4s ease both; }
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-      `}</style>
+  <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+      @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+      @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+      .fade-up { animation: fadeUp 0.4s ease both; }
+    `}</style>
 
-      {/* 헤더 */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"16px 20px" }}>
-        <div style={{ maxWidth:640, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div>
-            <h1 style={{ margin:0, fontSize:20, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
-            <p style={{ margin:"2px 0 0", fontSize:12, color:"#999" }}>무엇을 공부할까요?</p>
-          </div>
-          {/* 로그인/로그아웃 */}
-          {authLoading ? (
-            <div style={{ width:32, height:32, borderRadius:"50%", background:"#f0f0f8" }} />
-          ) : user ? (
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <img src={user.user_metadata?.avatar_url} alt="프로필" style={{ width:32, height:32, borderRadius:"50%", border:"2px solid #e8e9ef" }} onError={e=>e.target.style.display='none'} />
-              <button onClick={signOut} style={{ background:"#f1f2f6", border:"none", borderRadius:10, padding:"6px 12px", fontSize:12, color:"#666", cursor:"pointer", fontWeight:600, fontFamily:"inherit" }}>로그아웃</button>
-            </div>
-          ) : (
-            <button onClick={signInWithGoogle} style={{ display:"flex", alignItems:"center", gap:6, background:"#fff", border:"1.5px solid #e8e9ef", borderRadius:12, padding:"8px 14px", fontSize:13, color:"#333", cursor:"pointer", fontWeight:700, fontFamily:"inherit", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              구글로 로그인
-            </button>
-          )}
-        </div>
-        {/* 로그인한 경우 환영 메시지 */}
-        {user && (
-          <div style={{ maxWidth:640, margin:"8px auto 0", textAlign:"center" }}>
-            <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:600 }}>👋 {user.user_metadata?.full_name || user.email}님 안녕하세요!</p>
-          </div>
-        )}
+    {/* 헤더 */}
+    <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"14px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      <div>
+        <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
+        <p style={{ margin:"2px 0 0", fontSize:11, color:"#aaa" }}>무엇을 공부할까요?</p>
       </div>
+      {authLoading ? (
+        <div style={{ width:32, height:32, borderRadius:"50%", background:"#f0f0f8" }} />
+      ) : user ? (
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <img src={user.user_metadata?.avatar_url} alt="프로필" style={{ width:32, height:32, borderRadius:"50%", border:"2px solid #e8e9ef" }} onError={e=>e.target.style.display='none'} />
+          <button onClick={signOut} style={{ background:"#f1f2f6", border:"none", borderRadius:10, padding:"6px 12px", fontSize:12, color:"#666", cursor:"pointer", fontWeight:600, fontFamily:"inherit" }}>로그아웃</button>
+        </div>
+      ) : (
+        <button onClick={signInWithGoogle} style={{ display:"flex", alignItems:"center", gap:6, background:"#fff", border:"1.5px solid #e8e9ef", borderRadius:12, padding:"8px 14px", fontSize:13, color:"#333", cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          구글로 로그인
+        </button>
+      )}
+    </div>
 
-      {/* 메인 카드 영역 */}
-      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
-        <div style={{ width:"100%", maxWidth:640 }}>
+    {/* 메인 */}
+    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
+      <div style={{ width:"100%", maxWidth:500 }}>
 
-          {/* 비솜이 */}
-          <div style={{ textAlign:"center", marginBottom:32 }} className="fade-up">
-            <img src="/dog.jpg" alt="비솜" style={{ width:90, height:90, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite" }} />
-            <p style={{ margin:"12px 0 0", fontSize:14, color:"#666", fontWeight:600 }}>오늘도 열심히 공부해보자! 💪</p>
-          {/* 사용량 표시 */}
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, marginTop:10, background:"#fff", borderRadius:20, padding:"6px 16px", boxShadow:"0 2px 8px rgba(0,0,0,0.06)", border:"1px solid #f0f0f5" }}>
-            <div style={{ display:"flex", gap:4 }}>
-              {Array.from({length: usage.limit === 999 ? 5 : usage.limit}).map((_, i) => (
-                <div key={i} style={{ width:8, height:8, borderRadius:"50%", background: i < usage.used ? "#6366f1" : "#e8e9ef" }} />
-              ))}
+        {/* 비솜이 + 말풍선 */}
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:8 }} className="fade-up">
+          <div style={{ position:"relative", display:"inline-block" }}>
+            <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", display:"block" }} />
+            <div style={{ position:"absolute", left:"100%", top:-8, marginLeft:10, background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", width:190, boxShadow:"0 4px 16px rgba(99,102,241,0.15)" }}>
+              <div style={{ position:"absolute", left:-8, top:18, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
+              <div style={{ position:"absolute", left:-5, top:20, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
+              <p style={{ margin:"0 0 3px", fontSize:12, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
+              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
             </div>
-            <span style={{ fontSize:12, color:"#666", fontWeight:600 }}>
-              {usage.plan === 'premium' ? '✨ 프리미엄 무제한' : `오늘 ${usage.used}/${usage.limit}회 사용`}
-            </span>
-          </div>
-          </div>
-
-          {/* 두 개 카드 - 좌우 배치 */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }} className="fade-up">
-
-            {/* 시험문제 생성기 */}
-            <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(99,102,241,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
->
-              <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(99,102,241,0.35)" }}>
-                📖
-              </div>
-              <div>
-                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험문제</p>
-                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>생성기</p>
-                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>교재 사진 찍으면 AI가 문제 출제</p>
-              </div>
-              <div style={{ background:"#eef2ff", borderRadius:20, padding:"4px 14px" }}>
-                <span style={{ fontSize:12, color:"#6366f1", fontWeight:700 }}>바로 시작 →</span>
-              </div>
-            </button>
-
-            {/* 영어 학습 */}
-            <button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:24, border:"none", cursor:"pointer", padding:"28px 16px", textAlign:"center", boxShadow:"0 4px 20px rgba(59,130,246,0.12)", transition:"transform 0.15s, box-shadow 0.15s", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}
->
-              <div style={{ width:64, height:64, borderRadius:20, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:32, boxShadow:"0 4px 16px rgba(59,130,246,0.35)" }}>
-                🇺🇸
-              </div>
-              <div>
-                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>영어</p>
-                <p style={{ margin:0, fontSize:16, fontWeight:900, color:"#1a1a2e" }}>학습</p>
-                <p style={{ margin:"6px 0 0", fontSize:11, color:"#999", lineHeight:1.5 }}>단어·문법·회화 AI 맞춤 학습</p>
-              </div>
-              <div style={{ background:"#eff6ff", borderRadius:20, padding:"4px 14px" }}>
-                <span style={{ fontSize:12, color:"#3b82f6", fontWeight:700 }}>바로 시작 →</span>
-              </div>
-            </button>
-          </div>
-
-          {/* 하단 태그 */}
-          <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:24, flexWrap:"wrap" }} className="fade-up">
-            {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
-              <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"6px 12px", fontSize:12, color:"#666", fontWeight:500 }}>{tag}</span>
-            ))}
           </div>
         </div>
+
+        <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
+
+        {/* 카드 목록 */}
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }} className="fade-up">
+
+          {/* 시험문제 생성기 */}
+          <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:24, border:"1.5px solid #e0e7ff", boxShadow:"0 6px 28px rgba(99,102,241,0.15)", cursor:"pointer", padding:24, display:"flex", alignItems:"center", gap:20, position:"relative", overflow:"hidden", transition:"transform 0.15s", fontFamily:"inherit" }}
+            onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+            <div style={{ width:72, height:72, borderRadius:22, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:36, flexShrink:0, boxShadow:"0 6px 20px rgba(99,102,241,0.35)" }}>📖</div>
+            <div style={{ flex:1, textAlign:"left" }}>
+              <span style={{ display:"inline-block", background:"#ff4757", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:20, marginBottom:6 }}>🔥 HOT</span>
+              <p style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:"#1a1a2e" }}>시험문제 생성기</p>
+              <p style={{ margin:"0 0 14px", fontSize:13, color:"#444", fontWeight:700 }}>교재 사진 찍으면 AI가 문제 출제</p>
+              <div style={{ display:"inline-block", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", borderRadius:20, padding:"10px 22px", fontSize:14, fontWeight:900, boxShadow:"0 4px 14px rgba(99,102,241,0.35)" }}>바로 시작 →</div>
+            </div>
+          </button>
+
+          {/* 영어 학습 */}
+          <button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:24, border:"1.5px solid #dbeafe", boxShadow:"0 6px 28px rgba(59,130,246,0.12)", cursor:"pointer", padding:24, display:"flex", alignItems:"center", gap:20, position:"relative", overflow:"hidden", transition:"transform 0.15s", fontFamily:"inherit" }}
+            onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+            <div style={{ width:72, height:72, borderRadius:22, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:36, flexShrink:0, boxShadow:"0 6px 20px rgba(59,130,246,0.35)" }}>🇺🇸</div>
+            <div style={{ flex:1, textAlign:"left" }}>
+              <p style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:"#1a1a2e" }}>영어 학습</p>
+              <p style={{ margin:"0 0 14px", fontSize:13, color:"#444", fontWeight:700 }}>단어·문법·회화 AI 맞춤 학습</p>
+              <div style={{ display:"inline-block", background:"linear-gradient(135deg,#3b82f6,#6366f1)", color:"#fff", borderRadius:20, padding:"10px 22px", fontSize:14, fontWeight:900, boxShadow:"0 4px 14px rgba(59,130,246,0.3)" }}>바로 시작 →</div>
+            </div>
+          </button>
+        </div>
+
+        {/* 하단 태그 */}
+        <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
+          {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
+            <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#555", fontWeight:600 }}>{tag}</span>
+          ))}
+        </div>
+
       </div>
     </div>
-  );
+  </div>
+);
 
   return (
     <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", paddingBottom: 40 }}>
