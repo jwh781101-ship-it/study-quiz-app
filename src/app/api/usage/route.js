@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js' 
+
 const LIMITS = {
   guest: 3,
   free: 5,
