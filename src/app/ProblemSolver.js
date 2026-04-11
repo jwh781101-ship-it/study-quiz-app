@@ -64,6 +64,7 @@ export default function ProblemSolver({ onBack }) {
         body: JSON.stringify({
           images: images.map(img => ({ base64: img.base64, type: img.type })),
           prompt
+          isSolving: true 
         })
       });
       const data = await resp.json();
