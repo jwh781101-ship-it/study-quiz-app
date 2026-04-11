@@ -17,14 +17,18 @@ export default function SoundPlayer() {
   const nodesRef = useRef([]);
 
   const getCtx = () => {
-    if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      gainRef.current = ctxRef.current.createGain();
-      gainRef.current.gain.value = volume / 100;
-      gainRef.current.connect(ctxRef.current.destination);
-    }
-    return ctxRef.current;
-  };
+  if (!ctxRef.current) {
+    ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    gainRef.current = ctxRef.current.createGain();
+    gainRef.current.gain.value = volume / 100;
+    gainRef.current.connect(ctxRef.current.destination);
+  }
+  // iOS suspended 상태 체크
+  if (ctxRef.current.state === 'suspended') {
+    ctxRef.current.resume();
+  }
+  return ctxRef.current;
+};
 
   const stopAll = () => {
     nodesRef.current.forEach(n => { try { n.stop(); } catch(e){} });
@@ -94,10 +98,20 @@ export default function SoundPlayer() {
     else if (type === 'white') playWhite(c, gain);
   };
 
-  const togglePlay = () => {
-    if (!isPlaying) { startSound(current); setIsPlaying(true); }
-    else { stopAll(); setIsPlaying(false); }
-  };
+  const togglePlay = async () => {
+  if (!isPlaying) {
+    // iOS AudioContext resume 필요
+    const c = getCtx();
+    if (c.state === 'suspended') {
+      await c.resume();
+    }
+    startSound(current);
+    setIsPlaying(true);
+  } else {
+    stopAll();
+    setIsPlaying(false);
+  }
+};
 
   const selectSound = (id) => {
     setCurrent(id);
