@@ -1,7 +1,7 @@
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { images, prompt, isGrading } = body;
+    const { images, prompt, isGrading, isSolving } = body;
 
     const content = [];
 
@@ -20,6 +20,11 @@ export async function POST(request) {
 
     content.push({ type: 'text', text: prompt });
 
+    // 문제풀이/채점은 하이쿠, 나머지는 소넷
+    const model = (isSolving || isGrading)
+      ? 'claude-haiku-4-5-20251001'
+      : 'claude-sonnet-4-20250514';
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -28,7 +33,7 @@ export async function POST(request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model,
         max_tokens: 16000,
         messages: [{ role: 'user', content }]
       })
@@ -46,17 +51,14 @@ export async function POST(request) {
     const text = data.content.map(i => i.text || '').join('');
     if (!text.trim()) return Response.json({ error: 'AI 응답 텍스트가 비어있습니다' }, { status: 500 });
 
-    // JSON 추출 - 4단계 시도
     let parsed = null;
     let lastError = '';
 
-    // 1. ```json ... ``` 블록
     const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
     if (jsonBlockMatch) {
       try { parsed = JSON.parse(jsonBlockMatch[1]); } catch(e) { lastError = e.message; }
     }
 
-    // 2. ``` ... ``` 블록
     if (!parsed) {
       const codeBlockMatch = text.match(/```\s*([\s\S]*?)\s*```/);
       if (codeBlockMatch) {
@@ -64,7 +66,6 @@ export async function POST(request) {
       }
     }
 
-    // 3. { ... } JSON 추출
     if (!parsed) {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -72,18 +73,15 @@ export async function POST(request) {
       }
     }
 
-    // 4. 전체 텍스트
     if (!parsed) {
       try { parsed = JSON.parse(text.trim()); } catch(e) { lastError = e.message; }
     }
 
-    // 5. JSON이 잘린 경우 복구 시도
     if (!parsed) {
       try {
         const jsonStart = text.indexOf('{');
         if (jsonStart !== -1) {
           let partial = text.slice(jsonStart);
-          // 열린 괄호 수만큼 닫기
           const openB = (partial.split('[').length - 1);
           const closeB = (partial.split(']').length - 1);
           const openC = (partial.split('{').length - 1);
@@ -91,7 +89,6 @@ export async function POST(request) {
           partial += ']'.repeat(Math.max(0, openB - closeB));
           partial += '}'.repeat(Math.max(0, openC - closeC));
           parsed = JSON.parse(partial);
-          // 마지막 문제가 불완전하면 제거
           if (parsed.questions && parsed.questions.length > 0) {
             const last = parsed.questions[parsed.questions.length - 1];
             if (!last.answer || !last.explanation || !last.question) {
