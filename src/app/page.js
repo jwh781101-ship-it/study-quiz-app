@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useCallback, useEffect } from "react";
 import EnglishLearning from "./english";
+import ProblemSolver from "./ProblemSolver";
 import { supabase } from "./supabase";
 
 const DIFFICULTY_CONFIG = {
@@ -89,21 +90,20 @@ export default function StudyQuizApp() {
   const [gradingEssay, setGradingEssay] = useState(false);
   const [badImages, setBadImages] = useState([]);
   const [showEnglish, setShowEnglish] = useState(false);
+  const [showSolver, setShowSolver] = useState(false); // ← 추가
   const [showHome, setShowHome] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [usage, setUsage] = useState({ plan:'guest', used:0, limit:3, canUse:true }); // 홈 화면 (앱 선택)
+  const [usage, setUsage] = useState({ plan:'guest', used:0, limit:999, canUse:true });
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
   useEffect(() => {
-    // 현재 로그인 상태 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
       checkUsage(session?.user ?? null);
     });
-    // 로그인/로그아웃 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       checkUsage(session?.user ?? null);
@@ -219,7 +219,6 @@ export default function StudyQuizApp() {
 
   const generateQuiz = async () => {
     if (!hasContent) { setError("이미지를 올리거나 텍스트를 입력해주세요."); return; }
-    // 사용량 체크
     await checkUsage(user);
     if (!usage.canUse) {
       const msg = user
@@ -231,18 +230,12 @@ export default function StudyQuizApp() {
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
     try {
       const prompt = buildPrompt();
-
-      // 한 번만 시도
       const data = await callAPI(uploadedImages, prompt);
-
-      // 성공
       if (!data.error && data.questions?.length > 0) {
         let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
         for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [qs[i],qs[j]]=[qs[j],qs[i]]; }
         setQuizData({ ...data, questions: qs }); setStep("result"); incrementUsage(); return;
       }
-
-      // 실패 시 - 이미지가 여러 장이면 어떤 이미지가 문제인지 AI 진단
       if (uploadedImages.length > 1) {
         const diagPrompt = `아래 이미지들 중 학습 자료로 인식할 수 없는 이미지 번호를 찾아주세요. (1번부터 시작)
 흐리거나, 학습 내용이 아니거나, 텍스트를 읽을 수 없으면 문제 있는 이미지입니다.
@@ -259,7 +252,6 @@ export default function StudyQuizApp() {
           if (diagErr.message.includes("번 이미지")) throw diagErr;
         }
       }
-
       throw new Error(data.error || "문제를 생성할 수 없어요. 교재 사진을 더 밝고 선명하게 다시 찍어주세요.");
     } catch(err) { setError(err.message); setStep("config"); }
   };
@@ -298,122 +290,148 @@ export default function StudyQuizApp() {
 
   const diff = DIFFICULTY_CONFIG[difficulty];
 
+  // ── 영어 학습 화면 ──
   if (showEnglish) return <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />;
 
+  // ── 문제 풀이 도우미 화면 ── ← 추가
+  if (showSolver) return <ProblemSolver onBack={()=>{ setShowSolver(false); setShowHome(true); }} />;
+
+  // ── 홈 화면 ──
   if (showHome) return (
-  <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
-    <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-      @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-      @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-      .fade-up { animation: fadeUp 0.4s ease both; }
-    `}</style>
+    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        .fade-up { animation: fadeUp 0.4s ease both; }
+      `}</style>
 
-    {/* 헤더 */}
-    <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"14px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-      <div>
-        <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
-        <p style={{ margin:"2px 0 0", fontSize:11, color:"#aaa" }}>무엇을 공부할까요?</p>
+      {/* 헤더 */}
+      <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"14px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div>
+          <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
+          <p style={{ margin:"2px 0 0", fontSize:11, color:"#aaa" }}>무엇을 공부할까요?</p>
+        </div>
+        {authLoading ? (
+          <div style={{ width:32, height:32, borderRadius:"50%", background:"#f0f0f8" }} />
+        ) : user ? (
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <img src={user.user_metadata?.avatar_url} alt="프로필" style={{ width:32, height:32, borderRadius:"50%", border:"2px solid #e8e9ef" }} onError={e=>e.target.style.display='none'} />
+            <button onClick={signOut} style={{ background:"#f1f2f6", border:"none", borderRadius:10, padding:"6px 12px", fontSize:12, color:"#666", cursor:"pointer", fontWeight:600, fontFamily:"inherit" }}>로그아웃</button>
+          </div>
+        ) : (
+          <button onClick={signInWithGoogle} style={{ display:"flex", alignItems:"center", gap:6, background:"#fff", border:"1.5px solid #e8e9ef", borderRadius:12, padding:"8px 14px", fontSize:13, color:"#333", cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            구글로 로그인
+          </button>
+        )}
       </div>
-      {authLoading ? (
-        <div style={{ width:32, height:32, borderRadius:"50%", background:"#f0f0f8" }} />
-      ) : user ? (
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <img src={user.user_metadata?.avatar_url} alt="프로필" style={{ width:32, height:32, borderRadius:"50%", border:"2px solid #e8e9ef" }} onError={e=>e.target.style.display='none'} />
-          <button onClick={signOut} style={{ background:"#f1f2f6", border:"none", borderRadius:10, padding:"6px 12px", fontSize:12, color:"#666", cursor:"pointer", fontWeight:600, fontFamily:"inherit" }}>로그아웃</button>
+
+      {/* 메인 */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
+        <div style={{ width:"100%", maxWidth:500 }}>
+
+          {/* 비솜이 + 말풍선 */}
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8, paddingLeft:20 }} className="fade-up">
+            <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", flexShrink:0 }} />
+            <div style={{ background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.15)", position:"relative", maxWidth:"calc(100% - 140px)" }}>
+              <div style={{ position:"absolute", left:-8, top:16, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
+              <div style={{ position:"absolute", left:-5, top:18, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
+              <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
+              <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
+            </div>
+          </div>
+
+          <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
+
+          {/* 카드 목록 */}
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }} className="fade-up">
+
+            {/* 시험문제 생성기 */}
+            <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #6366f1", boxShadow:"0 4px 20px rgba(99,102,241,0.15)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
+              onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+              <svg width="68" height="68" viewBox="0 0 72 72" fill="none" style={{ flexShrink:0 }}>
+                <rect x="14" y="8" width="44" height="56" rx="6" fill="#c7d2fe" opacity="0.5"/>
+                <rect x="14" y="8" width="21" height="56" rx="6" fill="#818cf8"/>
+                <rect x="35" y="8" width="23" height="56" rx="6" fill="#6366f1"/>
+                <rect x="34" y="8" width="3" height="56" fill="#4338ca"/>
+                <line x1="20" y1="22" x2="32" y2="22" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="20" y1="30" x2="32" y2="30" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="20" y1="38" x2="32" y2="38" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="20" y1="46" x2="28" y2="46" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+                <line x1="39" y1="22" x2="52" y2="22" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="39" y1="30" x2="52" y2="30" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="39" y1="38" x2="52" y2="38" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="39" y1="46" x2="48" y2="46" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+                <path d="M14 60 Q35 54 35 54 Q35 54 58 60" stroke="#4338ca" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+              </svg>
+              <div style={{ flex:1, textAlign:"left" }}>
+                <span style={{ display:"inline-block", background:"#ff4757", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:20, marginBottom:6 }}>🔥 HOT</span>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>시험문제 생성기</p>
+                <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>교재 사진 찍으면 AI가 문제 출제</p>
+              </div>
+              <div style={{ width:34, height:34, borderRadius:"50%", background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </button>
+
+            {/* 영어 학습 */}
+            <button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #3b82f6", boxShadow:"0 4px 20px rgba(59,130,246,0.13)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
+              onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+              <svg width="68" height="68" viewBox="0 0 72 72" fill="none" style={{ flexShrink:0 }}>
+                <circle cx="36" cy="36" r="28" fill="#bfdbfe" opacity="0.5"/>
+                <circle cx="36" cy="36" r="28" stroke="#3b82f6" strokeWidth="2.5" fill="none"/>
+                <ellipse cx="36" cy="36" rx="12" ry="28" stroke="#3b82f6" strokeWidth="2.5" fill="none"/>
+                <line x1="8" y1="36" x2="64" y2="36" stroke="#3b82f6" strokeWidth="2" opacity="0.5"/>
+                <line x1="11" y1="24" x2="61" y2="24" stroke="#3b82f6" strokeWidth="1.5" opacity="0.4"/>
+                <line x1="11" y1="48" x2="61" y2="48" stroke="#3b82f6" strokeWidth="1.5" opacity="0.4"/>
+                <text x="36" y="43" fontFamily="Georgia, serif" fontSize="22" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
+              </svg>
+              <div style={{ flex:1, textAlign:"left" }}>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>영어 학습</p>
+                <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>단어·문법·회화 AI 맞춤 학습</p>
+              </div>
+              <div style={{ width:34, height:34, borderRadius:"50%", background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </button>
+
+            {/* 문제 풀이 도우미 ← 추가 */}
+            <button onClick={()=>{ setShowSolver(true); setShowHome(false); }} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #10b981", boxShadow:"0 4px 20px rgba(16,185,129,0.13)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
+              onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+              <svg width="68" height="68" viewBox="0 0 72 72" fill="none" style={{ flexShrink:0 }}>
+                <rect x="10" y="8" width="52" height="56" rx="8" fill="#d1fae5"/>
+                <rect x="10" y="8" width="52" height="56" rx="8" stroke="#10b981" strokeWidth="2.5" fill="none"/>
+                <line x1="22" y1="24" x2="50" y2="24" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="22" y1="34" x2="50" y2="34" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="22" y1="44" x2="38" y2="44" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round"/>
+                <circle cx="52" cy="52" r="12" fill="#10b981"/>
+                <text x="52" y="57" textAnchor="middle" fill="white" fontSize="14" fontWeight="900">?</text>
+              </svg>
+              <div style={{ flex:1, textAlign:"left" }}>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>문제 풀이 도우미</p>
+                <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>문제 사진 찍으면 AI가 풀어드려요</p>
+              </div>
+              <div style={{ width:34, height:34, borderRadius:"50%", background:"#d1fae5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              </div>
+            </button>
+
+          </div>
+
+          {/* 하단 태그 */}
+          <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
+            {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
+              <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#555", fontWeight:600 }}>{tag}</span>
+            ))}
+          </div>
+
         </div>
-      ) : (
-        <button onClick={signInWithGoogle} style={{ display:"flex", alignItems:"center", gap:6, background:"#fff", border:"1.5px solid #e8e9ef", borderRadius:12, padding:"8px 14px", fontSize:13, color:"#333", cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>
-          <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          구글로 로그인
-        </button>
-      )}
-    </div>
-
-    {/* 메인 */}
-    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
-      <div style={{ width:"100%", maxWidth:500 }}>
-
-        {/* 비솜이 + 말풍선 */}
-<div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8, paddingLeft:20 }} className="fade-up">
-  <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", flexShrink:0 }} />
-  
-  {/* 말풍선 */}
-  <div style={{ background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.15)", position:"relative", maxWidth:"calc(100% - 140px)" }}>
-    <div style={{ position:"absolute", left:-8, top:16, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
-    <div style={{ position:"absolute", left:-5, top:18, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
-    <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
-    <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
-  </div>
-</div>
-
-        <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
-
-        {/* 카드 목록 */}
-        <div style={{ display:"flex", flexDirection:"column", gap:14 }} className="fade-up">
-
-          {/* 시험문제 생성기 */}
-<button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #6366f1", boxShadow:"0 4px 20px rgba(99,102,241,0.15)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
-  onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
-  <svg width="68" height="68" viewBox="0 0 72 72" fill="none" style={{ flexShrink:0 }}>
-    <rect x="14" y="8" width="44" height="56" rx="6" fill="#c7d2fe" opacity="0.5"/>
-    <rect x="14" y="8" width="21" height="56" rx="6" fill="#818cf8"/>
-    <rect x="35" y="8" width="23" height="56" rx="6" fill="#6366f1"/>
-    <rect x="34" y="8" width="3" height="56" fill="#4338ca"/>
-    <line x1="20" y1="22" x2="32" y2="22" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="20" y1="30" x2="32" y2="30" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="20" y1="38" x2="32" y2="38" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="20" y1="46" x2="28" y2="46" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
-    <line x1="39" y1="22" x2="52" y2="22" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="39" y1="30" x2="52" y2="30" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="39" y1="38" x2="52" y2="38" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-    <line x1="39" y1="46" x2="48" y2="46" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
-    <path d="M14 60 Q35 54 35 54 Q35 54 58 60" stroke="#4338ca" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-  </svg>
-  <div style={{ flex:1, textAlign:"left" }}>
-    <span style={{ display:"inline-block", background:"#ff4757", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:20, marginBottom:6 }}>🔥 HOT</span>
-    <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>시험문제 생성기</p>
-    <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>교재 사진 찍으면 AI가 문제 출제</p>
-  </div>
-  <div style={{ width:34, height:34, borderRadius:"50%", background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-  </div>
-</button>
-
-{/* 영어 학습 */}
-<button onClick={()=>setShowEnglish(true)} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #3b82f6", boxShadow:"0 4px 20px rgba(59,130,246,0.13)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
-  onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
-  <svg width="68" height="68" viewBox="0 0 72 72" fill="none" style={{ flexShrink:0 }}>
-    <circle cx="36" cy="36" r="28" fill="#bfdbfe" opacity="0.5"/>
-    <circle cx="36" cy="36" r="28" stroke="#3b82f6" strokeWidth="2.5" fill="none"/>
-    <ellipse cx="36" cy="36" rx="12" ry="28" stroke="#3b82f6" strokeWidth="2.5" fill="none"/>
-    <line x1="8" y1="36" x2="64" y2="36" stroke="#3b82f6" strokeWidth="2" opacity="0.5"/>
-    <line x1="11" y1="24" x2="61" y2="24" stroke="#3b82f6" strokeWidth="1.5" opacity="0.4"/>
-    <line x1="11" y1="48" x2="61" y2="48" stroke="#3b82f6" strokeWidth="1.5" opacity="0.4"/>
-    <text x="36" y="43" fontFamily="Georgia, serif" fontSize="22" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
-  </svg>
-  <div style={{ flex:1, textAlign:"left" }}>
-    <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>영어 학습</p>
-    <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>단어·문법·회화 AI 맞춤 학습</p>
-  </div>
-  <div style={{ width:34, height:34, borderRadius:"50%", background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-  </div>
-</button>
-        </div>
-
-        {/* 하단 태그 */}
-        <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
-          {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
-            <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#555", fontWeight:600 }}>{tag}</span>
-          ))}
-        </div>
-
       </div>
     </div>
-  </div>
-);
+  );
 
+  // ── 시험문제 생성기 ──
   return (
     <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", paddingBottom: 40 }}>
       <style>{CSS}</style>
@@ -429,7 +447,6 @@ export default function StudyQuizApp() {
             <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>시험 문제 생성기</h1>
             <p style={{ margin:0, fontSize:11, color:"#999" }}>AI가 맞춤 문제를 만들어드려요</p>
           </div>
-          {/* 스텝 인디케이터 */}
           <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
             {["upload","config","result"].map((s,i) => (
               <div key={s} style={{ display:"flex", alignItems:"center", gap:4 }}>
@@ -443,7 +460,6 @@ export default function StudyQuizApp() {
 
       <div style={{ maxWidth:640, margin:"0 auto", padding:"16px 16px 0" }}>
 
-        {/* ── STEP 1: UPLOAD ── */}
         {step==="upload" && (
           <div className="fade-up">
             <div style={{ textAlign:"center", padding:"24px 0 20px", position:"relative" }}>
@@ -452,7 +468,6 @@ export default function StudyQuizApp() {
               <p style={{ margin:0, fontSize:13, color:"#999" }}>사진, 갤러리, 텍스트 중 하나 또는 여러 개를 선택하세요</p>
             </div>
 
-            {/* 카메라 */}
             <button onClick={() => cameraInputRef.current?.click()} style={{ width:"100%", padding:"18px 20px", borderRadius:20, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", display:"flex", alignItems:"center", gap:16, cursor:"pointer", marginBottom:10, boxShadow:"0 4px 20px rgba(99,102,241,0.3)", textAlign:"left" }}>
               <div style={{ width:48, height:48, borderRadius:14, background:"rgba(255,255,255,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26 }}>📷</div>
               <div style={{ flex:1 }}>
@@ -462,7 +477,6 @@ export default function StudyQuizApp() {
               <span style={{ fontSize:20, opacity:0.6 }}>›</span>
             </button>
 
-            {/* 갤러리 */}
             <button onClick={() => galleryInputRef.current?.click()} style={{ width:"100%", padding:"18px 20px", borderRadius:20, border:"2px solid #e8e9ef", background:"#fff", color:"#333", display:"flex", alignItems:"center", gap:16, cursor:"pointer", marginBottom:10, textAlign:"left" }}>
               <div style={{ width:48, height:48, borderRadius:14, background:"#f0f0f8", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26 }}>🖼️</div>
               <div style={{ flex:1 }}>
@@ -472,7 +486,6 @@ export default function StudyQuizApp() {
               <span style={{ fontSize:20, color:"#ccc" }}>›</span>
             </button>
 
-            {/* 텍스트 입력 토글 */}
             <button onClick={() => setShowTextInput(v=>!v)} style={{ width:"100%", padding:"18px 20px", borderRadius:20, border:`2px solid ${showTextInput?"#6366f1":"#e8e9ef"}`, background: showTextInput?"#f5f3ff":"#fff", color:"#333", display:"flex", alignItems:"center", gap:16, cursor:"pointer", marginBottom:10, textAlign:"left" }}>
               <div style={{ width:48, height:48, borderRadius:14, background: showTextInput?"#e0e7ff":"#f0f0f8", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26 }}>✏️</div>
               <div style={{ flex:1 }}>
@@ -494,13 +507,11 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* PC 드롭존 */}
             <div onDragOver={e=>{e.preventDefault();setDragOver(true);}} onDragLeave={()=>setDragOver(false)} onDrop={handleDrop}
               style={{ padding:16, borderRadius:16, textAlign:"center", border:`2px dashed ${dragOver?"#6366f1":"#dde"}`, background: dragOver?"#f5f3ff":"transparent", color: dragOver?"#6366f1":"#bbb", fontSize:12, transition:"all 0.2s", marginBottom:10 }}>
               🖥️ PC에서는 이미지를 여기에 끌어다 놓으세요
             </div>
 
-            {/* 업로드된 이미지 */}
             {uploadedImages.length > 0 && (
               <div className="card">
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
@@ -518,7 +529,6 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* 입력 요약 + 다음 버튼 */}
             {hasContent && (
               <div className="card" style={{ background:"linear-gradient(135deg,#f5f3ff,#ede9fe)", border:"1.5px solid #c7d2fe" }}>
                 <p style={{ margin:"0 0 8px", fontSize:12, color:"#6366f1", fontWeight:700 }}>✅ 출제 범위</p>
@@ -535,10 +545,8 @@ export default function StudyQuizApp() {
           </div>
         )}
 
-        {/* ── STEP 2: CONFIG ── */}
         {step==="config" && (
           <div className="fade-up">
-            {/* 범위 미리보기 */}
             <div className="card" style={{ background:"linear-gradient(135deg,#f5f3ff,#ede9fe)", border:"1.5px solid #c7d2fe", display:"flex", alignItems:"center", gap:12 }}>
               <div style={{ flex:1 }}>
                 <p style={{ margin:"0 0 6px", fontSize:12, color:"#6366f1", fontWeight:700 }}>출제 범위: {getSourceLabel()}</p>
@@ -550,7 +558,6 @@ export default function StudyQuizApp() {
               <button onClick={()=>setStep("upload")} style={{ background:"rgba(255,255,255,0.7)", border:"none", color:"#6366f1", borderRadius:10, padding:"6px 12px", fontSize:12, cursor:"pointer", fontWeight:700 }}>변경</button>
             </div>
 
-            {/* 출제 범위 설정 */}
             <div className="card">
               <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📎 출제 범위 설정</p>
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -567,7 +574,6 @@ export default function StudyQuizApp() {
               </div>
             </div>
 
-            {/* 학년 */}
             <div className="card">
               <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>🎓 학년 선택</p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
@@ -575,7 +581,6 @@ export default function StudyQuizApp() {
               </div>
             </div>
 
-            {/* 과목 */}
             <div className="card">
               <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📝 과목 선택</p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
@@ -583,7 +588,6 @@ export default function StudyQuizApp() {
               </div>
             </div>
 
-            {/* 영어 형식 */}
             {subject==="영어" && (
               <div className="card" style={{ border:"1.5px solid #bfdbfe" }}>
                 <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>🇺🇸 영어 문제 형식</p>
@@ -598,7 +602,6 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* 난이도 */}
             <div className="card">
               <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>⚡ 난이도</p>
               <div style={{ display:"flex", gap:8 }}>
@@ -612,7 +615,6 @@ export default function StudyQuizApp() {
               </div>
             </div>
 
-            {/* 문제 수 */}
             <div className="card">
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
                 <p style={{ margin:0, fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📋 문제 수</p>
@@ -628,7 +630,6 @@ export default function StudyQuizApp() {
           </div>
         )}
 
-        {/* ── LOADING ── */}
         {step==="loading" && (
           <div style={{ textAlign:"center", padding:"60px 24px" }} className="fade-up">
             <style>{`
@@ -640,8 +641,6 @@ export default function StudyQuizApp() {
               @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.35} 40%{transform:translateY(-10px);opacity:1} }
               @keyframes shadowAnim { 0%,100%{transform:scaleX(1);opacity:0.12} 50%{transform:scaleX(0.65);opacity:0.06} }
             `}</style>
-
-            {/* 말풍선 */}
             <div style={{ display:"inline-block", position:"relative", marginBottom:16, animation:"bubble 3s ease-in-out infinite" }}>
               <div style={{ background:"#fff", border:"2.5px solid #fde68a", borderRadius:20, padding:"12px 22px", boxShadow:"0 6px 20px rgba(251,191,36,0.2)" }}>
                 <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#d97706" }}>문제 열심히 만드는 중! ✍️</p>
@@ -650,16 +649,10 @@ export default function StudyQuizApp() {
               <div style={{ position:"absolute", bottom:-13, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"11px solid transparent", borderRight:"11px solid transparent", borderTop:"14px solid #fde68a" }} />
               <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"9px solid transparent", borderRight:"9px solid transparent", borderTop:"11px solid #fff" }} />
             </div>
-
-            {/* 강아지 이미지 + 소품 */}
             <div style={{ position:"relative", width:220, height:220, margin:"0 auto 16px" }}>
-
-              {/* 종이 */}
               <div style={{ position:"absolute", bottom:8, left:0, width:52, height:62, background:"#fff", borderRadius:10, border:"2px solid #fde68a", animation:"paperFloat 2s ease-in-out infinite", boxShadow:"0 4px 14px rgba(251,191,36,0.15)", zIndex:1 }}>
                 {[0,1,2,3].map(i => <div key={i} style={{ height:2.5, background:"#fde68a", margin:"10px 7px 0", borderRadius:3 }} />)}
               </div>
-
-              {/* 연필 */}
               <div style={{ position:"absolute", bottom:40, right:0, animation:"pencilMove 1.1s ease-in-out infinite", transformOrigin:"bottom center", zIndex:1 }}>
                 <div style={{ width:9, height:8, background:"#fda4af", borderRadius:"3px 3px 0 0", margin:"0 auto" }} />
                 <div style={{ width:9, height:46, background:"linear-gradient(180deg,#fbbf24,#f59e0b)", position:"relative" }}>
@@ -667,29 +660,17 @@ export default function StudyQuizApp() {
                   <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"4.5px solid transparent", borderRight:"4.5px solid transparent", borderTop:"11px solid #92400e" }} />
                 </div>
               </div>
-
-              {/* 강아지 실제 사진 */}
               <div style={{ position:"absolute", bottom:0, left:"50%", animation:"dogBounce 1.3s ease-in-out infinite", zIndex:2 }}>
-                <img
-                  src="/dog.jpg"
-                  alt="비솜"
-                  style={{ width:150, height:150, objectFit:"cover", borderRadius:"50%", border:"5px solid #fff", boxShadow:"0 10px 30px rgba(0,0,0,0.15)", display:"block", animation:"dogShake 2.6s ease-in-out infinite" }}
-                />
-                {/* 그림자 */}
+                <img src="/dog.jpg" alt="비솜" style={{ width:150, height:150, objectFit:"cover", borderRadius:"50%", border:"5px solid #fff", boxShadow:"0 10px 30px rgba(0,0,0,0.15)", display:"block", animation:"dogShake 2.6s ease-in-out infinite" }} />
                 <div style={{ width:120, height:12, background:"rgba(0,0,0,0.08)", borderRadius:"50%", margin:"4px auto 0", animation:"shadowAnim 1.3s ease-in-out infinite", filter:"blur(3px)" }} />
               </div>
             </div>
-
-            {/* 이름 태그 */}
             <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#fff", border:"2px solid #fde68a", borderRadius:20, padding:"6px 16px", marginBottom:12, boxShadow:"0 2px 8px rgba(251,191,36,0.2)" }}>
               <span style={{ fontSize:14 }}>🐾</span>
               <span style={{ fontSize:13, fontWeight:800, color:"#d97706" }}>비솜이가 문제 출제 중</span>
               <span style={{ fontSize:14 }}>🐾</span>
             </div>
-
             <p style={{ margin:"0 0 20px", fontSize:13, color:"#bbb" }}>{getSourceLabel()} 열심히 분석하고 있어요~</p>
-
-            {/* 로딩 도트 */}
             <div style={{ display:"flex", justifyContent:"center", gap:7 }}>
               {[0,1,2].map(i => (
                 <div key={i} style={{ width:11, height:11, borderRadius:"50%", background:"#fbbf24", animation:"dotBounce 1.2s ease-in-out infinite", animationDelay:`${i*0.18}s` }} />
@@ -699,10 +680,8 @@ export default function StudyQuizApp() {
           </div>
         )}
 
-        {/* ── STEP 3: RESULT ── */}
         {step==="result" && quizData && (
           <div className="fade-up">
-            {/* 주제 카드 */}
             <div className="card" style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", marginBottom:12 }}>
               <p style={{ margin:"0 0 4px", fontSize:12, opacity:0.8 }}>출제 범위: {getSourceLabel()}</p>
               <p style={{ margin:"0 0 12px", fontSize:18, fontWeight:900 }}>{quizData.topic}</p>
@@ -713,7 +692,6 @@ export default function StudyQuizApp() {
               </div>
             </div>
 
-            {/* 인식 불가 이미지 경고 */}
             {badImages.length > 0 && (
               <div style={{ background:"#fffbeb", border:"1.5px solid #fde68a", borderRadius:16, padding:"14px 16px", marginBottom:12 }}>
                 <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:700, color:"#d97706" }}>⚠️ {badImages.length}번 이미지를 인식하지 못해 제외했어요</p>
@@ -729,7 +707,6 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* 점수 카드 */}
             {showAnswers && score && (
               <div className="card" style={{ background:"linear-gradient(135deg,#ecfdf5,#d1fae5)", border:"1.5px solid #6ee7b7", marginBottom:12 }}>
                 {score.total > 0 && (
@@ -765,7 +742,6 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* 문제 목록 */}
             {quizData.questions.map((q,idx) => {
               const myAnswer = selectedAnswers[q.id];
               const isCorrect = showAnswers && q.type==="객관식" && myAnswer === q.answer;
@@ -780,7 +756,6 @@ export default function StudyQuizApp() {
                     {showAnswers && er && <span style={{ background: er.result==="정답"?"#d1fae5":er.result==="부분정답"?"#fef3c7":"#fee2e2", color: er.result==="정답"?"#059669":er.result==="부분정답"?"#d97706":"#ef4444", borderRadius:6, padding:"3px 8px", fontSize:11, fontWeight:700 }}>{er.result} ({er.score}점)</span>}
                   </div>
                   <p style={{ margin:"0 0 14px", fontSize:15, fontWeight:700, color:"#1a1a2e", lineHeight:1.6 }}>{q.question}</p>
-
                   {q.type==="객관식" && q.options && (
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                       {q.options.map((opt,oi) => {
@@ -804,7 +779,6 @@ export default function StudyQuizApp() {
                       )}
                     </div>
                   )}
-
                   {(q.type==="단답형"||q.type==="서술형") && (
                     <div>
                       <textarea disabled={showAnswers} value={myAnswer||""} onChange={e=>handleSelectAnswer(q.id,e.target.value)} placeholder="여기에 답을 써보세요 ✏️"
@@ -819,7 +793,6 @@ export default function StudyQuizApp() {
                       </div>}
                     </div>
                   )}
-
                   {showAnswers && <div style={{ marginTop:12, padding:"12px 14px", borderRadius:12, background:"#f5f3ff", border:"1px solid #ddd6fe" }}>
                     <p style={{ margin:"0 0 4px", fontSize:11, fontWeight:700, color:"#6366f1" }}>💡 해설</p>
                     <p style={{ margin:0, fontSize:13, color:"#374151", lineHeight:1.6 }}>{q.explanation}</p>
@@ -828,7 +801,6 @@ export default function StudyQuizApp() {
               );
             })}
 
-            {/* 액션 버튼 */}
             <div style={{ display:"flex", gap:8, paddingBottom:24 }}>
               {!showAnswers && <button onClick={handleSubmit} style={{ flex:1, padding:16, borderRadius:16, border:"none", background:"linear-gradient(135deg,#059669,#10b981)", color:"#fff", fontSize:15, fontWeight:800, cursor:"pointer", boxShadow:"0 4px 16px rgba(16,185,129,0.3)", fontFamily:"inherit" }}>📝 채점하기</button>}
               <button onClick={()=>{setStep("config");setSelectedAnswers({});setShowAnswers(false);setScore(null);setEssayScores({});}} style={{ flex:1, padding:16, borderRadius:16, border:"1.5px solid #c7d2fe", background:"#fff", color:"#6366f1", fontSize:15, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>🔄 다시 생성</button>
