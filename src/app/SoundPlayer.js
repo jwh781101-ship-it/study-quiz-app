@@ -16,6 +16,7 @@ export default function SoundPlayer() {
   const ctxRef = useRef(null);
   const gainRef = useRef(null);
   const nodesRef = useRef([]);
+  const fireAudioRef = useRef(null);
 
   const getCtx = async () => {
     if (!ctxRef.current) {
@@ -24,7 +25,6 @@ export default function SoundPlayer() {
       gainRef.current.gain.value = volume / 100;
       gainRef.current.connect(ctxRef.current.destination);
     }
-    // iOS Safari: suspended 상태면 resume
     if (ctxRef.current.state === 'suspended') {
       await ctxRef.current.resume();
     }
@@ -34,6 +34,11 @@ export default function SoundPlayer() {
   const stopAll = () => {
     nodesRef.current.forEach(n => { try { n.stop(); } catch(e){} });
     nodesRef.current = [];
+    // 장작 mp3 정지
+    if (fireAudioRef.current) {
+      fireAudioRef.current.pause();
+      fireAudioRef.current.currentTime = 0;
+    }
   };
 
   const playRain = (c, gain) => {
@@ -91,57 +96,26 @@ export default function SoundPlayer() {
     nodesRef.current.push(src);
   };
 
-  const playFire = (c, gain) => {
-    // 베이스 노이즈 (장작 타는 소리)
-    const bufferSize = c.sampleRate * 3;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
-    const src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
-
-    // 불꽃 느낌 필터
-    const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 800; f1.Q.value = 0.3;
-    const f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 2000;
-
-    // 불꽃 흔들림 LFO
-    const lfo = c.createOscillator(); const lfoGain = c.createGain();
-    lfo.frequency.value = 3; lfoGain.gain.value = 200;
-    lfo.connect(lfoGain); lfoGain.connect(f1.frequency); lfo.start();
-
-    src.connect(f1); f1.connect(f2); f2.connect(gain); src.start();
-    nodesRef.current.push(src); nodesRef.current.push(lfo);
-
-    // 탁탁 튀는 소리 (랜덤 크래클)
-    const crackle = () => {
-      if (nodesRef.current.length === 0) return;
-      const crackBuf = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate);
-      const crackData = crackBuf.getChannelData(0);
-      for (let i = 0; i < crackData.length; i++) {
-        crackData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.01));
-      }
-      const crackSrc = c.createBufferSource();
-      crackSrc.buffer = crackBuf;
-      const crackGain = c.createGain();
-      crackGain.gain.value = 0.3 + Math.random() * 0.4;
-      crackSrc.connect(crackGain); crackGain.connect(gain);
-      crackSrc.start();
-
-      // 다음 크래클 랜덤 스케줄
-      const next = 300 + Math.random() * 1200;
-      const timer = setTimeout(crackle, next);
-      nodesRef.current.push({ stop: () => clearTimeout(timer) });
-    };
-    crackle();
+  const playFire = () => {
+    if (!fireAudioRef.current) {
+      fireAudioRef.current = new Audio('/sounds/fire.mp3');
+      fireAudioRef.current.loop = true;
+    }
+    fireAudioRef.current.volume = volume / 100;
+    fireAudioRef.current.play().catch(e => console.log('fire audio error:', e));
   };
 
   const startSound = async (type) => {
+    if (type === 'fire') {
+      playFire();
+      return;
+    }
     const c = await getCtx();
     const gain = gainRef.current;
     if (type === 'rain') playRain(c, gain);
     else if (type === 'cafe') playCafe(c, gain);
     else if (type === 'wave') playWave(c, gain);
     else if (type === 'white') playWhite(c, gain);
-    else if (type === 'fire') playFire(c, gain);
   };
 
   const togglePlay = async () => {
@@ -165,6 +139,7 @@ export default function SoundPlayer() {
   const handleVolume = (val) => {
     setVolume(val);
     if (gainRef.current) gainRef.current.gain.value = val / 100;
+    if (fireAudioRef.current) fireAudioRef.current.volume = val / 100;
   };
 
   return (
