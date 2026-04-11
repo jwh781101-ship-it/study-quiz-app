@@ -2,128 +2,46 @@
 import { useRef, useState } from 'react';
 
 const SOUNDS = [
-  { id:'rain', emoji:'🌧️', label:'빗소리' },
-  { id:'cafe', emoji:'☕', label:'카페소음' },
-  { id:'wave', emoji:'🌊', label:'파도소리' },
-  { id:'white', emoji:'📻', label:'화이트노이즈' },
-  { id:'fire', emoji:'🔥', label:'장작소리' },
+  { id:'rain', emoji:'🌧️', label:'빗소리', src:'/sounds/rain.mp3' },
+  { id:'cafe', emoji:'☕', label:'카페소음', src:'/sounds/cafe.mp3' },
+  { id:'wave', emoji:'🌊', label:'파도소리', src:'/sounds/wave.mp3' },
+  { id:'waterfall', emoji:'💧', label:'폭포소리', src:'/sounds/waterfall.mp3' },
+  { id:'fire', emoji:'🔥', label:'장작소리', src:'/sounds/fire.mp3' },
 ];
 
 export default function SoundPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [current, setCurrent] = useState('rain');
   const [volume, setVolume] = useState(50);
-  const ctxRef = useRef(null);
-  const gainRef = useRef(null);
-  const nodesRef = useRef([]);
-  const fireAudioRef = useRef(null);
+  const audioRef = useRef(null);
 
-  const getCtx = async () => {
-    if (!ctxRef.current) {
-      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      gainRef.current = ctxRef.current.createGain();
-      gainRef.current.gain.value = volume / 100;
-      gainRef.current.connect(ctxRef.current.destination);
+  const playSound = async (src, vol) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
     }
-    if (ctxRef.current.state === 'suspended') {
-      await ctxRef.current.resume();
+    const audio = new Audio(src);
+    audio.loop = true;
+    audio.volume = vol / 100;
+    audioRef.current = audio;
+    try {
+      await audio.play();
+    } catch(e) {
+      console.log('audio play error:', e);
     }
-    return ctxRef.current;
-  };
-
-  const stopAll = () => {
-    nodesRef.current.forEach(n => { try { n.stop(); } catch(e){} });
-    nodesRef.current = [];
-    // 장작 mp3 정지
-    if (fireAudioRef.current) {
-      fireAudioRef.current.pause();
-      fireAudioRef.current.currentTime = 0;
-    }
-  };
-
-  const playRain = (c, gain) => {
-    const bufferSize = c.sampleRate * 3;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.4;
-    const src = c.createBufferSource();
-    src.buffer = buffer; src.loop = true;
-    const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 1200; f1.Q.value = 0.5;
-    const f2 = c.createBiquadFilter(); f2.type = 'highpass'; f2.frequency.value = 400;
-    src.connect(f1); f1.connect(f2); f2.connect(gain); src.start();
-    nodesRef.current.push(src);
-  };
-
-  const playCafe = (c, gain) => {
-    for (let i = 0; i < 6; i++) {
-      const osc = c.createOscillator(); const g = c.createGain();
-      osc.type = 'sine'; osc.frequency.value = 80 + Math.random() * 120;
-      g.gain.value = 0.03 + Math.random() * 0.02;
-      osc.connect(g); g.connect(gain); osc.start();
-      nodesRef.current.push(osc);
-    }
-    const bufferSize = c.sampleRate * 2;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.15;
-    const src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
-    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 600;
-    src.connect(f); f.connect(gain); src.start();
-    nodesRef.current.push(src);
-  };
-
-  const playWave = (c, gain) => {
-    const bufferSize = c.sampleRate * 4;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.3;
-    const src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
-    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 800;
-    const lfo = c.createOscillator(); const lfoGain = c.createGain();
-    lfo.frequency.value = 0.15; lfoGain.gain.value = 300;
-    lfo.connect(lfoGain); lfoGain.connect(f.frequency); lfo.start();
-    src.connect(f); f.connect(gain); src.start();
-    nodesRef.current.push(src); nodesRef.current.push(lfo);
-  };
-
-  const playWhite = (c, gain) => {
-    const bufferSize = c.sampleRate * 2;
-    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
-    src.connect(gain); src.start();
-    nodesRef.current.push(src);
-  };
-
-  const playFire = () => {
-    if (!fireAudioRef.current) {
-      fireAudioRef.current = new Audio('/sounds/fire.mp3');
-      fireAudioRef.current.loop = true;
-    }
-    fireAudioRef.current.volume = volume / 100;
-    fireAudioRef.current.play().catch(e => console.log('fire audio error:', e));
-  };
-
-  const startSound = async (type) => {
-    if (type === 'fire') {
-      playFire();
-      return;
-    }
-    const c = await getCtx();
-    const gain = gainRef.current;
-    if (type === 'rain') playRain(c, gain);
-    else if (type === 'cafe') playCafe(c, gain);
-    else if (type === 'wave') playWave(c, gain);
-    else if (type === 'white') playWhite(c, gain);
   };
 
   const togglePlay = async () => {
     if (!isPlaying) {
-      await startSound(current);
+      const sound = SOUNDS.find(s => s.id === current);
+      await playSound(sound.src, volume);
       setIsPlaying(true);
     } else {
-      stopAll();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current = null;
+      }
       setIsPlaying(false);
     }
   };
@@ -131,15 +49,14 @@ export default function SoundPlayer() {
   const selectSound = async (id) => {
     setCurrent(id);
     if (isPlaying) {
-      stopAll();
-      await startSound(id);
+      const sound = SOUNDS.find(s => s.id === id);
+      await playSound(sound.src, volume);
     }
   };
 
   const handleVolume = (val) => {
     setVolume(val);
-    if (gainRef.current) gainRef.current.gain.value = val / 100;
-    if (fireAudioRef.current) fireAudioRef.current.volume = val / 100;
+    if (audioRef.current) audioRef.current.volume = val / 100;
   };
 
   return (
