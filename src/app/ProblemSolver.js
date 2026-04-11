@@ -12,7 +12,7 @@ const CSS = `
 
 export default function ProblemSolver({ onBack }) {
   const [images, setImages] = useState([]);
-  const [step, setStep] = useState('upload'); // upload | loading | result
+  const [step, setStep] = useState('upload');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [hintOnly, setHintOnly] = useState(false);
@@ -115,6 +115,7 @@ export default function ProblemSolver({ onBack }) {
                 <p style={{ margin:0, fontSize:16, fontWeight:800 }}>카메라로 찍기</p>
                 <p style={{ margin:'3px 0 0', fontSize:12, opacity:0.8 }}>문제를 바로 촬영</p>
               </div>
+              <span style={{ fontSize:20, opacity:0.6 }}>›</span>
             </button>
 
             <button onClick={()=>galleryRef.current?.click()} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:'2px solid #e8e9ef', background:'#fff', color:'#333', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, textAlign:'left' }}>
@@ -123,6 +124,7 @@ export default function ProblemSolver({ onBack }) {
                 <p style={{ margin:0, fontSize:16, fontWeight:800, color:'#1a1a2e' }}>갤러리에서 선택</p>
                 <p style={{ margin:'3px 0 0', fontSize:12, color:'#999' }}>최대 5장</p>
               </div>
+              <span style={{ fontSize:20, color:'#ccc' }}>›</span>
             </button>
 
             {images.length > 0 && (
@@ -136,7 +138,7 @@ export default function ProblemSolver({ onBack }) {
                   ))}
                 </div>
 
-                {/* 힌트만 / 풀이 선택 */}
+                {/* 힌트 / 풀이 선택 */}
                 <div style={{ display:'flex', gap:8, marginBottom:14 }}>
                   <button onClick={()=>setHintOnly(false)} style={{ flex:1, padding:'12px 8px', borderRadius:14, border:`2px solid ${!hintOnly?'#10b981':'#e8e9ef'}`, background:!hintOnly?'#f0fdf4':'#fff', color:!hintOnly?'#10b981':'#888', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:13 }}>
                     📖 단계별 풀이
@@ -202,13 +204,11 @@ export default function ProblemSolver({ onBack }) {
             {/* 풀이 모드 */}
             {!hintOnly && (
               <>
-                {/* 정답 */}
                 <div style={{ background:'#fff', borderRadius:20, border:'2px solid #10b981', padding:20, marginBottom:12 }}>
                   <p style={{ margin:'0 0 8px', fontSize:13, fontWeight:700, color:'#10b981' }}>✅ 정답</p>
                   <p style={{ margin:0, fontSize:20, fontWeight:900, color:'#065f46', lineHeight:1.5 }}>{result.answer}</p>
                 </div>
 
-                {/* 단계별 풀이 */}
                 <div style={{ background:'#fff', borderRadius:20, border:'1.5px solid #e8e9ef', padding:20, marginBottom:12 }}>
                   <p style={{ margin:'0 0 16px', fontSize:15, fontWeight:900, color:'#1a1a2e' }}>📖 단계별 풀이</p>
                   {result.steps?.map((s, i) => (
@@ -222,7 +222,6 @@ export default function ProblemSolver({ onBack }) {
                   ))}
                 </div>
 
-                {/* 핵심 개념 */}
                 {result.key_concept && (
                   <div style={{ background:'#f5f3ff', borderRadius:16, border:'1px solid #ddd6fe', padding:'14px 16px', marginBottom:12 }}>
                     <p style={{ margin:'0 0 4px', fontSize:11, fontWeight:700, color:'#6366f1' }}>💡 핵심 개념</p>
@@ -230,7 +229,6 @@ export default function ProblemSolver({ onBack }) {
                   </div>
                 )}
 
-                {/* 시험 팁 */}
                 {result.tip && (
                   <div style={{ background:'#fffbeb', borderRadius:16, border:'1px solid #fde68a', padding:'14px 16px', marginBottom:12 }}>
                     <p style={{ margin:'0 0 4px', fontSize:11, fontWeight:700, color:'#d97706' }}>⭐ 시험 팁</p>
@@ -240,7 +238,6 @@ export default function ProblemSolver({ onBack }) {
               </>
             )}
 
-            {/* 버튼 */}
             <div style={{ display:'flex', gap:8, paddingBottom:24 }}>
               <button onClick={reset} style={{ flex:1, padding:16, borderRadius:16, border:'none', background:'linear-gradient(135deg,#10b981,#059669)', color:'#fff', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>🔄 다른 문제 풀기</button>
               <button onClick={onBack} style={{ padding:'16px 20px', borderRadius:16, border:'1.5px solid #e8e9ef', background:'#fff', color:'#999', fontSize:15, cursor:'pointer', fontFamily:'inherit' }}>🏠</button>
