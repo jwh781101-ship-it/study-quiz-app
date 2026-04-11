@@ -6,6 +6,7 @@ const SOUNDS = [
   { id:'cafe', emoji:'☕', label:'카페소음' },
   { id:'wave', emoji:'🌊', label:'파도소리' },
   { id:'white', emoji:'📻', label:'화이트노이즈' },
+  { id:'fire', emoji:'🔥', label:'장작소리' },
 ];
 
 export default function SoundPlayer() {
@@ -16,19 +17,19 @@ export default function SoundPlayer() {
   const gainRef = useRef(null);
   const nodesRef = useRef([]);
 
-  const getCtx = () => {
-  if (!ctxRef.current) {
-    ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    gainRef.current = ctxRef.current.createGain();
-    gainRef.current.gain.value = volume / 100;
-    gainRef.current.connect(ctxRef.current.destination);
-  }
-  // iOS suspended 상태 체크
-  if (ctxRef.current.state === 'suspended') {
-    ctxRef.current.resume();
-  }
-  return ctxRef.current;
-};
+  const getCtx = async () => {
+    if (!ctxRef.current) {
+      ctxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      gainRef.current = ctxRef.current.createGain();
+      gainRef.current.gain.value = volume / 100;
+      gainRef.current.connect(ctxRef.current.destination);
+    }
+    // iOS Safari: suspended 상태면 resume
+    if (ctxRef.current.state === 'suspended') {
+      await ctxRef.current.resume();
+    }
+    return ctxRef.current;
+  };
 
   const stopAll = () => {
     nodesRef.current.forEach(n => { try { n.stop(); } catch(e){} });
@@ -90,32 +91,75 @@ export default function SoundPlayer() {
     nodesRef.current.push(src);
   };
 
-  const startSound = (type) => {
-    const c = getCtx(); const gain = gainRef.current;
+  const playFire = (c, gain) => {
+    // 베이스 노이즈 (장작 타는 소리)
+    const bufferSize = c.sampleRate * 3;
+    const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+    const src = c.createBufferSource(); src.buffer = buffer; src.loop = true;
+
+    // 불꽃 느낌 필터
+    const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 800; f1.Q.value = 0.3;
+    const f2 = c.createBiquadFilter(); f2.type = 'lowpass'; f2.frequency.value = 2000;
+
+    // 불꽃 흔들림 LFO
+    const lfo = c.createOscillator(); const lfoGain = c.createGain();
+    lfo.frequency.value = 3; lfoGain.gain.value = 200;
+    lfo.connect(lfoGain); lfoGain.connect(f1.frequency); lfo.start();
+
+    src.connect(f1); f1.connect(f2); f2.connect(gain); src.start();
+    nodesRef.current.push(src); nodesRef.current.push(lfo);
+
+    // 탁탁 튀는 소리 (랜덤 크래클)
+    const crackle = () => {
+      if (nodesRef.current.length === 0) return;
+      const crackBuf = c.createBuffer(1, c.sampleRate * 0.05, c.sampleRate);
+      const crackData = crackBuf.getChannelData(0);
+      for (let i = 0; i < crackData.length; i++) {
+        crackData[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.01));
+      }
+      const crackSrc = c.createBufferSource();
+      crackSrc.buffer = crackBuf;
+      const crackGain = c.createGain();
+      crackGain.gain.value = 0.3 + Math.random() * 0.4;
+      crackSrc.connect(crackGain); crackGain.connect(gain);
+      crackSrc.start();
+
+      // 다음 크래클 랜덤 스케줄
+      const next = 300 + Math.random() * 1200;
+      const timer = setTimeout(crackle, next);
+      nodesRef.current.push({ stop: () => clearTimeout(timer) });
+    };
+    crackle();
+  };
+
+  const startSound = async (type) => {
+    const c = await getCtx();
+    const gain = gainRef.current;
     if (type === 'rain') playRain(c, gain);
     else if (type === 'cafe') playCafe(c, gain);
     else if (type === 'wave') playWave(c, gain);
     else if (type === 'white') playWhite(c, gain);
+    else if (type === 'fire') playFire(c, gain);
   };
 
   const togglePlay = async () => {
-  if (!isPlaying) {
-    // iOS AudioContext resume 필요
-    const c = getCtx();
-    if (c.state === 'suspended') {
-      await c.resume();
+    if (!isPlaying) {
+      await startSound(current);
+      setIsPlaying(true);
+    } else {
+      stopAll();
+      setIsPlaying(false);
     }
-    startSound(current);
-    setIsPlaying(true);
-  } else {
-    stopAll();
-    setIsPlaying(false);
-  }
-};
+  };
 
-  const selectSound = (id) => {
+  const selectSound = async (id) => {
     setCurrent(id);
-    if (isPlaying) { stopAll(); startSound(id); }
+    if (isPlaying) {
+      stopAll();
+      await startSound(id);
+    }
   };
 
   const handleVolume = (val) => {
@@ -126,12 +170,12 @@ export default function SoundPlayer() {
   return (
     <div style={{ background:"#fff", borderRadius:20, border:"1.5px solid #e0e7ff", boxShadow:"0 4px 20px rgba(99,102,241,0.08)", padding:"16px", marginTop:14 }}>
       <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#6366f1" }}>🎧 집중 사운드</p>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:14 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:6, marginBottom:14 }}>
         {SOUNDS.map(s => (
           <button key={s.id} onClick={()=>selectSound(s.id)}
             style={{ border:`1.5px solid ${current===s.id?"#6366f1":"#e8e9ef"}`, borderRadius:14, background: current===s.id?"#eef2ff":"#fff", padding:"10px 4px", cursor:"pointer", textAlign:"center", fontFamily:"inherit", transition:"all 0.15s" }}>
-            <span style={{ fontSize:22, display:"block", marginBottom:4 }}>{s.emoji}</span>
-            <span style={{ fontSize:11, color: current===s.id?"#6366f1":"#555", fontWeight:700 }}>{s.label}</span>
+            <span style={{ fontSize:20, display:"block", marginBottom:4 }}>{s.emoji}</span>
+            <span style={{ fontSize:10, color: current===s.id?"#6366f1":"#555", fontWeight:700 }}>{s.label}</span>
           </button>
         ))}
       </div>
