@@ -2,6 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import EnglishLearning from "./english";
 import ProblemSolver from "./ProblemSolver";
+import SoundPlayer from "./SoundPlayer";
 import { supabase } from "./supabase";
 
 const DIFFICULTY_CONFIG = {
@@ -418,7 +419,9 @@ export default function StudyQuizApp() {
             </button>
 
           </div>
-
+          {/* 집중 사운드 */}
+        <SoundPlayer />
+          
           {/* 하단 태그 */}
           <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
             {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
