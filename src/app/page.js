@@ -128,6 +128,10 @@ export default function StudyQuizApp() {
     // localStorage에서 캐릭터 불러오기
     const saved = localStorage.getItem('character');
     if (saved) setCharacter(saved);
+    const savedDday = localStorage.getItem('dday');
+    const savedDdayLabel = localStorage.getItem('ddayLabel');
+    if (savedDday) setDday(savedDday);
+    if (savedDdayLabel) setDdayLabel(savedDdayLabel);
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
