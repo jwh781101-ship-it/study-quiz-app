@@ -39,6 +39,13 @@ const DIRECTION_TAGS = {
   "기타": ["개념 정의","특징/성질","비교하기","원인과결과","순서/단계","계산문제"],
 };
 
+const CHARACTERS = [
+  { id:"dog", src:"/dog.jpg", name:"비솜이", desc:"강아지 🐶" },
+  { id:"cat", src:"/cat.png", name:"냥이", desc:"고양이 🐱" },
+  { id:"bear", src:"/bear.png", name:"곰이", desc:"곰 🐻" },
+  { id:"penguin", src:"/penguin.png", name:"펭귄이", desc:"펭귄 🐧" },
+];
+
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
   * { box-sizing: border-box; }
@@ -109,10 +116,16 @@ export default function StudyQuizApp() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [usage, setUsage] = useState({ plan:'guest', used:0, limit:999, canUse:true });
+  const [character, setCharacter] = useState("dog");
+  const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
   useEffect(() => {
+    // localStorage에서 캐릭터 불러오기
+    const saved = localStorage.getItem('character');
+    if (saved) setCharacter(saved);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
@@ -124,6 +137,14 @@ export default function StudyQuizApp() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  const selectCharacter = (id) => {
+    setCharacter(id);
+    localStorage.setItem('character', id);
+    setShowCharacterPicker(false);
+  };
+
+  const currentChar = CHARACTERS.find(c => c.id === character) || CHARACTERS[0];
 
   const checkUsage = async (currentUser) => {
     try {
@@ -226,7 +247,7 @@ export default function StudyQuizApp() {
     }
     const textSection = hasText ? `\n\n[텍스트 학습 내용]\n${textInput}` : "";
     const directionSection = direction.trim() ? `\n\n[출제 방향 - 최우선 적용]\n${direction.trim()}\n반드시 위 방향에 맞게 문제를 출제하세요.` : "";
-    return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.\n\n[중요] 이미지가 다소 흐리거나 기울어져 있어도 절대 포기하지 말고 최대한 내용을 파악해서 문제를 출제하세요. 이미지에서 읽을 수 있는 모든 텍스트를 활용하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${questionCount}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n반드시 JSON 형식으로만 응답:\n{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설"}]}`;
+    return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.\n\n[중요] 이미지가 다소 흐리거나 기울어져 있어도 절대 포기하지 말고 최대한 내용을 파악해서 문제를 출제하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${questionCount}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n반드시 JSON 형식으로만 응답:\n{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설"}]}`;
   };
 
   const callAPI = async (images, prompt) => {
@@ -242,8 +263,8 @@ export default function StudyQuizApp() {
     await checkUsage(user);
     if (!usage.canUse) {
       const msg = user
-        ? `오늘 사용 한도(${usage.limit}회)를 초과했어요. 내일 다시 시도하거나 프리미엄으로 업그레이드하세요! 🌟`
-        : `비회원은 하루 ${usage.limit}회까지 사용 가능해요. 구글 로그인하면 더 많이 사용할 수 있어요!`;
+        ? `오늘 사용 한도(${usage.limit}회)를 초과했어요.`
+        : `비회원은 하루 ${usage.limit}회까지 사용 가능해요.`;
       setError(msg);
       return;
     }
@@ -257,9 +278,7 @@ export default function StudyQuizApp() {
         setQuizData({ ...data, questions: qs }); setStep("result"); incrementUsage(); return;
       }
       if (uploadedImages.length > 1) {
-        const diagPrompt = `아래 이미지들 중 학습 자료로 인식할 수 없는 이미지 번호를 찾아주세요. (1번부터 시작)
-흐리거나, 학습 내용이 아니거나, 텍스트를 읽을 수 없으면 문제 있는 이미지입니다.
-반드시 JSON만 응답: {"bad_indices":[문제번호들],"reason":"이유"}`;
+        const diagPrompt = `아래 이미지들 중 학습 자료로 인식할 수 없는 이미지 번호를 찾아주세요.\n반드시 JSON만 응답: {"bad_indices":[문제번호들],"reason":"이유"}`;
         try {
           const diagData = await callAPI(uploadedImages, diagPrompt);
           if (diagData.bad_indices?.length > 0) {
@@ -319,9 +338,33 @@ export default function StudyQuizApp() {
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         .fade-up { animation: fadeUp 0.4s ease both; }
       `}</style>
 
+      {/* 캐릭터 선택 팝업 */}
+      {showCharacterPicker && (
+        <div onClick={()=>setShowCharacterPicker(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"flex-end", justifyContent:"center", animation:"fadeIn 0.2s ease" }}>
+          <div onClick={e=>e.stopPropagation()} style={{ background:"#fff", borderRadius:"24px 24px 0 0", padding:"24px 20px 40px", width:"100%", maxWidth:500 }}>
+            <div style={{ width:40, height:4, background:"#e8e9ef", borderRadius:2, margin:"0 auto 20px" }} />
+            <p style={{ margin:"0 0 6px", fontSize:17, fontWeight:900, color:"#1a1a2e", textAlign:"center" }}>나만의 캐릭터 선택</p>
+            <p style={{ margin:"0 0 20px", fontSize:12, color:"#999", textAlign:"center" }}>클릭하면 바로 바뀌어요!</p>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+              {CHARACTERS.map(c => (
+                <button key={c.id} onClick={()=>selectCharacter(c.id)}
+                  style={{ border:`2.5px solid ${character===c.id?"#6366f1":"#e8e9ef"}`, borderRadius:20, background: character===c.id?"#eef2ff":"#fff", padding:"12px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit", transition:"all 0.15s" }}>
+                  <img src={c.src} alt={c.name} style={{ width:60, height:60, borderRadius:"50%", objectFit:"cover", border:`3px solid ${character===c.id?"#6366f1":"#f0f0f5"}`, marginBottom:8, display:"block", margin:"0 auto 8px" }} />
+                  <p style={{ margin:"0 0 2px", fontSize:12, fontWeight:800, color: character===c.id?"#6366f1":"#1a1a2e" }}>{c.name}</p>
+                  <p style={{ margin:0, fontSize:10, color:"#999" }}>{c.desc}</p>
+                  {character===c.id && <div style={{ marginTop:6, fontSize:10, color:"#6366f1", fontWeight:700 }}>✓ 선택됨</div>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 헤더 */}
       <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"14px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div>
           <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
@@ -342,21 +385,32 @@ export default function StudyQuizApp() {
         )}
       </div>
 
+      {/* 메인 */}
       <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px 20px" }}>
         <div style={{ width:"100%", maxWidth:500 }}>
 
+          {/* 캐릭터 + 말풍선 */}
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8, paddingLeft:20 }} className="fade-up">
-            <img src="/dog.jpg" alt="비솜" style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", flexShrink:0 }} />
+            {/* 캐릭터 클릭하면 선택 팝업 */}
+            <div style={{ position:"relative", flexShrink:0 }} onClick={()=>setShowCharacterPicker(true)}>
+              <img src={currentChar.src} alt={currentChar.name}
+                style={{ width:88, height:88, borderRadius:"50%", objectFit:"cover", border:"4px solid #fff", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", animation:"float 3s ease-in-out infinite", cursor:"pointer", display:"block" }} />
+              {/* 변경 뱃지 */}
+              <div style={{ position:"absolute", bottom:2, right:2, width:22, height:22, borderRadius:"50%", background:"#6366f1", border:"2px solid #fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, cursor:"pointer" }}>
+                ✏️
+              </div>
+            </div>
             <div style={{ background:"#fff", border:"2px solid #6366f1", borderRadius:"16px 16px 16px 4px", padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.15)", position:"relative", maxWidth:"calc(100% - 140px)" }}>
               <div style={{ position:"absolute", left:-8, top:16, width:0, height:0, borderTop:"6px solid transparent", borderBottom:"6px solid transparent", borderRight:"8px solid #6366f1" }} />
               <div style={{ position:"absolute", left:-5, top:18, width:0, height:0, borderTop:"4px solid transparent", borderBottom:"4px solid transparent", borderRight:"6px solid #fff" }} />
-              <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 똑똑한 AI가<br/>시험도 공부도 도와줄게! 🔥</p>
+              <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:900, color:"#6366f1", lineHeight:1.4 }}>가장 Hot한 Claude가<br/>공부를 도와줄게! 🔥</p>
               <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>AI 구독 필요 No No! 🙅</p>
             </div>
           </div>
 
           <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
 
+          {/* 카드 목록 */}
           <div style={{ display:"flex", flexDirection:"column", gap:14 }} className="fade-up">
 
             <button onClick={()=>setShowHome(false)} style={{ background:"#fff", borderRadius:22, border:"2.5px solid #6366f1", boxShadow:"0 4px 20px rgba(99,102,241,0.15)", cursor:"pointer", padding:"22px 20px", display:"flex", alignItems:"center", gap:18, transition:"transform 0.15s", fontFamily:"inherit", width:"100%" }}
@@ -610,7 +664,6 @@ export default function StudyQuizApp() {
               </div>
             )}
 
-            {/* 출제 방향 */}
             <div className="card">
               <p style={{ margin:"0 0 4px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>🎯 출제 방향 <span style={{ fontSize:11, color:"#bbb", fontWeight:500 }}>(선택사항)</span></p>
               <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>태그를 누르면 자동 입력돼요. 직접 수정도 가능해요.</p>
@@ -619,15 +672,10 @@ export default function StudyQuizApp() {
                   <button key={tag} onClick={()=>addDirectionTag(tag)} className="dir-tag">{tag}</button>
                 ))}
               </div>
-              <textarea
-                value={direction}
-                onChange={e=>setDirection(e.target.value)}
+              <textarea value={direction} onChange={e=>setDirection(e.target.value)}
                 placeholder={"예: 분자 이름을 주고 특징을 묻는 문제로 출제해줘\n예: 각 항목을 서로 비교하는 문제 위주로 내줘"}
-                style={{ width:"100%", minHeight:72, background:"#f8f8fc", borderRadius:12, border:"1.5px solid #e8e9ef", padding:"12px 14px", color:"#333", fontSize:13, resize:"vertical", boxSizing:"border-box", fontFamily:"inherit", lineHeight:1.6, outline:"none" }}
-              />
-              {direction && (
-                <button onClick={()=>setDirection('')} style={{ background:"none", border:"none", color:"#ef4444", fontSize:12, cursor:"pointer", marginTop:6 }}>초기화</button>
-              )}
+                style={{ width:"100%", minHeight:72, background:"#f8f8fc", borderRadius:12, border:"1.5px solid #e8e9ef", padding:"12px 14px", color:"#333", fontSize:13, resize:"vertical", boxSizing:"border-box", fontFamily:"inherit", lineHeight:1.6, outline:"none" }} />
+              {direction && <button onClick={()=>setDirection('')} style={{ background:"none", border:"none", color:"#ef4444", fontSize:12, cursor:"pointer", marginTop:6 }}>초기화</button>}
             </div>
 
             <div className="card">
@@ -672,7 +720,7 @@ export default function StudyQuizApp() {
             <div style={{ display:"inline-block", position:"relative", marginBottom:16, animation:"bubble 3s ease-in-out infinite" }}>
               <div style={{ background:"#fff", border:"2.5px solid #fde68a", borderRadius:20, padding:"12px 22px", boxShadow:"0 6px 20px rgba(251,191,36,0.2)" }}>
                 <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#d97706" }}>문제 열심히 만드는 중! ✍️</p>
-                <p style={{ margin:"3px 0 0", fontSize:12, color:"#aaa" }}>잠깐만 기다려줘 멍멍 🐾</p>
+                <p style={{ margin:"3px 0 0", fontSize:12, color:"#aaa" }}>잠깐만 기다려줘~ 🐾</p>
               </div>
               <div style={{ position:"absolute", bottom:-13, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"11px solid transparent", borderRight:"11px solid transparent", borderTop:"14px solid #fde68a" }} />
               <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"9px solid transparent", borderRight:"9px solid transparent", borderTop:"11px solid #fff" }} />
@@ -688,14 +736,16 @@ export default function StudyQuizApp() {
                   <div style={{ position:"absolute", bottom:-10, left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"4.5px solid transparent", borderRight:"4.5px solid transparent", borderTop:"11px solid #92400e" }} />
                 </div>
               </div>
+              {/* 선택된 캐릭터 표시 */}
               <div style={{ position:"absolute", bottom:0, left:"50%", animation:"dogBounce 1.3s ease-in-out infinite", zIndex:2 }}>
-                <img src="/dog.jpg" alt="비솜" style={{ width:150, height:150, objectFit:"cover", borderRadius:"50%", border:"5px solid #fff", boxShadow:"0 10px 30px rgba(0,0,0,0.15)", display:"block", animation:"dogShake 2.6s ease-in-out infinite" }} />
+                <img src={currentChar.src} alt={currentChar.name}
+                  style={{ width:150, height:150, objectFit:"cover", borderRadius:"50%", border:"5px solid #fff", boxShadow:"0 10px 30px rgba(0,0,0,0.15)", display:"block", animation:"dogShake 2.6s ease-in-out infinite" }} />
                 <div style={{ width:120, height:12, background:"rgba(0,0,0,0.08)", borderRadius:"50%", margin:"4px auto 0", animation:"shadowAnim 1.3s ease-in-out infinite", filter:"blur(3px)" }} />
               </div>
             </div>
             <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:"#fff", border:"2px solid #fde68a", borderRadius:20, padding:"6px 16px", marginBottom:12, boxShadow:"0 2px 8px rgba(251,191,36,0.2)" }}>
               <span style={{ fontSize:14 }}>🐾</span>
-              <span style={{ fontSize:13, fontWeight:800, color:"#d97706" }}>비솜이가 문제 출제 중</span>
+              <span style={{ fontSize:13, fontWeight:800, color:"#d97706" }}>{currentChar.name}가 문제 출제 중</span>
               <span style={{ fontSize:14 }}>🐾</span>
             </div>
             <p style={{ margin:"0 0 20px", fontSize:13, color:"#bbb" }}>{getSourceLabel()} 열심히 분석하고 있어요~</p>
