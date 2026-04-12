@@ -112,6 +112,9 @@ export default function StudyQuizApp() {
   const [badImages, setBadImages] = useState([]);
   const [showEnglish, setShowEnglish] = useState(false);
   const [showSolver, setShowSolver] = useState(false);
+  const [dday, setDday] = useState(null);
+  const [ddayLabel, setDdayLabel] = useState('');
+  const [showDdayPicker, setShowDdayPicker] = useState(false);
   const [showHome, setShowHome] = useState(true);
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -145,6 +148,24 @@ export default function StudyQuizApp() {
   };
 
   const currentChar = CHARACTERS.find(c => c.id === character) || CHARACTERS[0];
+
+const getDdayCount = () => {
+  if (!dday) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dday);
+  target.setHours(0,0,0,0);
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  return diff;
+};
+
+const saveDday = (date, label) => {
+  setDday(date);
+  setDdayLabel(label);
+  localStorage.setItem('dday', date);
+  localStorage.setItem('ddayLabel', label);
+  setShowDdayPicker(false);
+};
 
   const checkUsage = async (currentUser) => {
     try {
@@ -408,7 +429,57 @@ export default function StudyQuizApp() {
             </div>
           </div>
 
-          <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 24px" }}>오늘도 열심히 공부해보자! 💪</p>
+          <p style={{ textAlign:"center", fontSize:13, color:"#888", fontWeight:600, margin:"12px 0 8px" }}>오늘도 열심히 공부해보자! 💪</p>
+
+{/* D-day */}
+{(() => {
+  const count = getDdayCount();
+  return (
+    <div style={{ textAlign:"center", marginBottom:24 }}>
+      <button onClick={()=>setShowDdayPicker(true)}
+        style={{ display:"inline-flex", alignItems:"center", gap:6, background: count === null ? "#f1f2f6" : count <= 3 ? "#fef2f2" : count <= 7 ? "#fffbeb" : "#eef2ff", border:"none", borderRadius:20, padding:"7px 16px", cursor:"pointer", fontFamily:"inherit" }}>
+        <span style={{ fontSize:14 }}>🎯</span>
+        <span style={{ fontSize:13, fontWeight:800, color: count === null ? "#999" : count <= 3 ? "#ef4444" : count <= 7 ? "#d97706" : "#6366f1" }}>
+          {count === null ? "D-Day 설정하기" : count === 0 ? `${ddayLabel} D-Day!` : count < 0 ? `${ddayLabel} D+${Math.abs(count)}` : `${ddayLabel} D-${count}`}
+        </span>
+        <span style={{ fontSize:11, color:"#bbb" }}>✏️</span>
+      </button>
+    </div>
+  );
+})()}
+
+{/* D-day 설정 팝업 */}
+{showDdayPicker && (
+  <div onClick={()=>setShowDdayPicker(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", zIndex:200, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+    <div onClick={e=>e.stopPropagation()} style={{ background:"#fff", borderRadius:"24px 24px 0 0", padding:"24px 20px 40px", width:"100%", maxWidth:500 }}>
+      <div style={{ width:40, height:4, background:"#e8e9ef", borderRadius:2, margin:"0 auto 20px" }} />
+      <p style={{ margin:"0 0 20px", fontSize:17, fontWeight:900, color:"#1a1a2e", textAlign:"center" }}>🎯 D-Day 설정</p>
+      <div style={{ marginBottom:16 }}>
+        <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:700, color:"#555" }}>목표 이름</p>
+        <input id="ddayLabelInput" defaultValue={ddayLabel} placeholder="예: 기말고사, 수능, 모의고사"
+          style={{ width:"100%", padding:"12px 14px", borderRadius:12, border:"1.5px solid #e8e9ef", fontSize:15, fontFamily:"inherit", boxSizing:"border-box", outline:"none" }} />
+      </div>
+      <div style={{ marginBottom:24 }}>
+        <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:700, color:"#555" }}>목표 날짜</p>
+        <input id="ddayDateInput" type="date" defaultValue={dday || ''}
+          style={{ width:"100%", padding:"12px 14px", borderRadius:12, border:"1.5px solid #e8e9ef", fontSize:15, fontFamily:"inherit", boxSizing:"border-box", outline:"none" }} />
+      </div>
+      <button onClick={()=>{
+        const label = document.getElementById('ddayLabelInput').value || '목표';
+        const date = document.getElementById('ddayDateInput').value;
+        if (date) saveDday(date, label);
+      }} style={{ width:"100%", padding:16, borderRadius:16, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:16, fontWeight:800, cursor:"pointer", fontFamily:"inherit", marginBottom:10 }}>
+        저장하기
+      </button>
+      {dday && (
+        <button onClick={()=>{ setDday(null); setDdayLabel(''); localStorage.removeItem('dday'); localStorage.removeItem('ddayLabel'); setShowDdayPicker(false); }}
+          style={{ width:"100%", padding:12, borderRadius:16, border:"1.5px solid #e8e9ef", background:"#fff", color:"#999", fontSize:14, cursor:"pointer", fontFamily:"inherit" }}>
+          D-Day 초기화
+        </button>
+      )}
+    </div>
+  </div>
+)}
 
           {/* 카드 목록 */}
           <div style={{ display:"flex", flexDirection:"column", gap:14 }} className="fade-up">
