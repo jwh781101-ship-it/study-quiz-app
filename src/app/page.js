@@ -435,7 +435,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       {/* 헤더 */}
       <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"14px 20px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div>
-          <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI 학습 도우미</h1>
+          <h1 style={{ margin:0, fontSize:18, fontWeight:900, color:"#1a1a2e" }}>✨ AI테스트YOU</h1>
           <p style={{ margin:"2px 0 0", fontSize:11, color:"#aaa" }}>무엇을 공부할까요?</p>
         </div>
         {authLoading ? (
