@@ -361,6 +361,24 @@ if (wrongQuestions.length > 0) {
   }));
   localStorage.setItem('wrongNote', JSON.stringify([...newItems, ...saved].slice(0, 100)));
 }
+
+// 학습 통계 저장
+const prevStats = JSON.parse(localStorage.getItem('studyStats') || '{"totalQuiz":0,"totalCorrect":0,"totalQuestions":0,"subjectStats":{},"recentDates":[]}');
+const newStats = {
+  ...prevStats,
+  totalQuiz: prevStats.totalQuiz + 1,
+  totalCorrect: prevStats.totalCorrect + correct,
+  totalQuestions: prevStats.totalQuestions + total,
+  subjectStats: {
+    ...prevStats.subjectStats,
+    [subject]: {
+      total: (prevStats.subjectStats[subject]?.total || 0) + total,
+      correct: (prevStats.subjectStats[subject]?.correct || 0) + correct,
+    }
+  }
+};
+localStorage.setItem('studyStats', JSON.stringify(newStats));
+}
     for (const q of quizData.questions.filter(q => q.type === "서술형" || q.type === "단답형")) {
       if (selectedAnswers[q.id]?.trim()) await gradeEssay(q, selectedAnswers[q.id]);
       else setEssayScores(prev => ({ ...prev, [q.id]: { result:"오답", score:0, feedback:"답안을 작성하지 않았습니다." } }));
