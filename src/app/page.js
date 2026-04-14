@@ -623,13 +623,11 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
 </div>
 
 <SoundPlayer />       
-                
-          <SoundPlayer />
 
-          <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
-            {["📷 교재 사진 분석","🤖 AI 문제 출제","🇺🇸 영어 회화·문법","⭐ 나만의 단어장"].map(tag => (
-              <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#555", fontWeight:600 }}>{tag}</span>
-            ))}
+          <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:22, flexWrap:"nowrap", overflow:"hidden" }} className="fade-up">
+            {["🤖 AI문제출제","📝 문제풀이","🇺🇸 영어학습","📊 학습통계"].map(tag => (
+            <span key={tag} style={{ background:"#fff", border:"1px solid #e8e9ef", borderRadius:20, padding:"7px 10px", fontSize:11, color:"#555", fontWeight:600, whiteSpace:"nowrap" }}>{tag}</span>
+          ))}
           </div>
 
         </div>
