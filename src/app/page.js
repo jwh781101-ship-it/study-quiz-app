@@ -3,6 +3,8 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import EnglishLearning from "./english";
 import ProblemSolver from "./ProblemSolver";
 import SoundPlayer from "./SoundPlayer";
+import WrongNote from "./WrongNote";
+import StudyStats from "./StudyStats";
 import { supabase } from "./supabase";
 
 const DIFFICULTY_CONFIG = {
@@ -112,6 +114,8 @@ export default function StudyQuizApp() {
   const [badImages, setBadImages] = useState([]);
   const [showEnglish, setShowEnglish] = useState(false);
   const [showSolver, setShowSolver] = useState(false);
+  const [showWrongNote, setShowWrongNote] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [dday, setDday] = useState(null);
   const [ddayLabel, setDdayLabel] = useState('');
   const [showDdayPicker, setShowDdayPicker] = useState(false);
@@ -337,6 +341,26 @@ const saveDday = (date, label) => {
     const total = quizData.questions.filter(q => q.type === "객관식").length;
     quizData.questions.forEach(q => { if (q.type === "객관식" && selectedAnswers[q.id] === q.answer) correct++; });
     setScore({ correct, total }); setShowAnswers(true); setGradingEssay(true);
+
+// 오답 자동 저장
+const wrongQuestions = quizData.questions.filter(q =>
+  q.type === "객관식" && selectedAnswers[q.id] !== q.answer
+);
+if (wrongQuestions.length > 0) {
+  const saved = JSON.parse(localStorage.getItem('wrongNote') || '[]');
+  const newItems = wrongQuestions.map(q => ({
+    id: Date.now() + Math.random(),
+    date: new Date().toLocaleDateString('ko-KR'),
+    subject,
+    grade,
+    question: q.question,
+    options: q.options,
+    answer: q.answer,
+    myAnswer: selectedAnswers[q.id],
+    explanation: q.explanation,
+  }));
+  localStorage.setItem('wrongNote', JSON.stringify([...newItems, ...saved].slice(0, 100)));
+}
     for (const q of quizData.questions.filter(q => q.type === "서술형" || q.type === "단답형")) {
       if (selectedAnswers[q.id]?.trim()) await gradeEssay(q, selectedAnswers[q.id]);
       else setEssayScores(prev => ({ ...prev, [q.id]: { result:"오답", score:0, feedback:"답안을 작성하지 않았습니다." } }));
@@ -356,6 +380,8 @@ const saveDday = (date, label) => {
 
   if (showEnglish) return <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />;
   if (showSolver) return <ProblemSolver onBack={()=>{ setShowSolver(false); setShowHome(true); }} />;
+  if (showWrongNote) return <WrongNote onBack={()=>{ setShowWrongNote(false); setShowHome(true); }} />;
+  if (showStats) return <StudyStats onBack={()=>{ setShowStats(false); setShowHome(true); }} />;
 
   if (showHome) return (
     <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", display:"flex", flexDirection:"column" }}>
@@ -557,6 +583,30 @@ const saveDday = (date, label) => {
 
           </div>
 
+         {/* 오답보관함 + 학습통계 버튼 */}
+<div style={{ display:"flex", gap:10, marginTop:14 }}>
+  <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }}
+    style={{ flex:1, background:"#fff", borderRadius:18, border:"2px solid #f59e0b", boxShadow:"0 4px 16px rgba(245,158,11,0.12)", cursor:"pointer", padding:"16px 12px", display:"flex", alignItems:"center", gap:10, fontFamily:"inherit" }}
+    onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+    <span style={{ fontSize:28 }}>📝</span>
+    <div style={{ textAlign:"left" }}>
+      <p style={{ margin:0, fontSize:14, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
+      <p style={{ margin:0, fontSize:11, color:"#999" }}>틀린 문제 모음</p>
+    </div>
+  </button>
+  <button onClick={()=>{ setShowStats(true); setShowHome(false); }}
+    style={{ flex:1, background:"#fff", borderRadius:18, border:"2px solid #6366f1", boxShadow:"0 4px 16px rgba(99,102,241,0.12)", cursor:"pointer", padding:"16px 12px", display:"flex", alignItems:"center", gap:10, fontFamily:"inherit" }}
+    onMouseOver={e=>e.currentTarget.style.transform="translateY(-2px)"} onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+    <span style={{ fontSize:28 }}>📊</span>
+    <div style={{ textAlign:"left" }}>
+      <p style={{ margin:0, fontSize:14, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
+      <p style={{ margin:0, fontSize:11, color:"#999" }}>나의 공부 현황</p>
+    </div>
+  </button>
+</div>
+
+<SoundPlayer />       
+                
           <SoundPlayer />
 
           <div style={{ display:"flex", justifyContent:"center", gap:8, marginTop:22, flexWrap:"wrap" }} className="fade-up">
