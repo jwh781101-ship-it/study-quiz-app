@@ -360,7 +360,6 @@ if (wrongQuestions.length > 0) {
     explanation: q.explanation,
   }));
   localStorage.setItem('wrongNote', JSON.stringify([...newItems, ...saved].slice(0, 100)));
-}
 
 // 학습 통계 저장
 const prevStats = JSON.parse(localStorage.getItem('studyStats') || '{"totalQuiz":0,"totalCorrect":0,"totalQuestions":0,"subjectStats":{},"recentDates":[]}');
