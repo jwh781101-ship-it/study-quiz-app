@@ -552,7 +552,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               </svg>
               <div style={{ flex:1, textAlign:"left" }}>
                 <span style={{ display:"inline-block", background:"#ff4757", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:20, marginBottom:6 }}>🔥 HOT</span>
-                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>시험문제 생성기</p>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>📖 AI 문제 뽑기</p>
                 <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>교재 사진 찍으면 AI가 문제 출제</p>
               </div>
               <div style={{ width:34, height:34, borderRadius:"50%", background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -572,7 +572,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                 <text x="36" y="43" fontFamily="Georgia, serif" fontSize="22" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
               </svg>
               <div style={{ flex:1, textAlign:"left" }}>
-                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>영어 학습</p>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
                 <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>단어·문법·회화 AI 맞춤 학습</p>
               </div>
               <div style={{ width:34, height:34, borderRadius:"50%", background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
@@ -592,7 +592,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                 <text x="52" y="57" textAnchor="middle" fill="white" fontSize="14" fontWeight="900">?</text>
               </svg>
               <div style={{ flex:1, textAlign:"left" }}>
-                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>문제 풀이 도우미</p>
+                <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>📝 모르면 찍어봐</p>
                 <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>문제 사진 찍으면 AI가 풀어드려요</p>
               </div>
               <div style={{ width:34, height:34, borderRadius:"50%", background:"#d1fae5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
