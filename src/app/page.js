@@ -593,7 +593,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               </svg>
               <div style={{ flex:1, textAlign:"left" }}>
                 <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>📝 모르면 찍어봐</p>
-                <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>모르는 문제 사진 찍으면 AI가 해결</p>
+                <p style={{ margin:0, fontSize:13, color:"#444", fontWeight:700 }}>모르는 문제 찍어주면 AI가 해결</p>
               </div>
               <div style={{ width:34, height:34, borderRadius:"50%", background:"#d1fae5", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
