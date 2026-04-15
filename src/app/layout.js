@@ -1,5 +1,5 @@
 export const metadata = {
-  title: 'AI 학습 비솜이',
+  title: 'AI시험도우미',
   description: '교재를 찍어 올리면 AI가 예상 문제를 만들어드려요',
   icons: {
     icon: '/favicon.png',
