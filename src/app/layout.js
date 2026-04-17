@@ -2,8 +2,8 @@ export const metadata = {
   title: 'AI시험도우미',
   description: '교재를 찍어 올리면 AI가 예상 문제를 만들어드려요',
   icons: {
-    icon: '/favicon.png?v=2',
-    apple: '/apple-touch-icon.png?v=2',
+    icon: '/favicon.png?v=3',
+    apple: '/apple-touch-icon.png?v=3',
   },
 };
 
