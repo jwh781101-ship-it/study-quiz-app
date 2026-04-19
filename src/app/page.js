@@ -694,6 +694,11 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               <div style={{ fontSize:52, marginBottom:8 }}>📚</div>
               <h2 style={{ margin:"0 0 6px", fontSize:22, fontWeight:900, color:"#1a1a2e" }}>학습 자료를 올려주세요</h2>
               <p style={{ margin:0, fontSize:13, color:"#999" }}>사진, 갤러리, 텍스트 중 하나 또는 여러 개를 선택하세요</p>
+              <div style={{ margin:"12px 0 0", background:"#fffbeb", border:"1.5px solid #fde68a", borderRadius:14, padding:"12px 16px", textAlign:"left" }}>
+               <p style={{ margin:"0 0 6px", fontSize:12, fontWeight:800, color:"#d97706" }}>📢 이용 전 꼭 확인하세요!</p>
+               <p style={{ margin:"0 0 4px", fontSize:12, color:"#92400e", lineHeight:1.6 }}>• 손글씨나 필기 자료는 인식률이 떨어질 수 있어요</p>
+               <p style={{ margin:0, fontSize:12, color:"#92400e", lineHeight:1.6 }}>• 문제 수가 많을수록 생성 시간이 길어지고 에러가 발생할 수 있어요</p>
+</div>
             </div>
 
             <button onClick={() => cameraInputRef.current?.click()} style={{ width:"100%", padding:"18px 20px", borderRadius:20, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", display:"flex", alignItems:"center", gap:16, cursor:"pointer", marginBottom:10, boxShadow:"0 4px 20px rgba(99,102,241,0.3)", textAlign:"left" }}>
@@ -914,7 +919,10 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               <span style={{ fontSize:13, fontWeight:800, color:"#d97706" }}>{currentChar.name}가 문제 출제 중</span>
               <span style={{ fontSize:14 }}>🐾</span>
             </div>
-            <p style={{ margin:"0 0 20px", fontSize:13, color:"#bbb" }}>{getSourceLabel()} 열심히 분석하고 있어요~</p>
+            <p style={{ margin:"0 0 12px", fontSize:13, color:"#bbb" }}>{getSourceLabel()} 열심히 분석하고 있어요~</p>
+            <div style={{ background:"#fef2f2", border:"1.5px solid #fecaca", borderRadius:12, padding:"10px 16px", marginBottom:20, display:"inline-block" }}>
+            <p style={{ margin:0, fontSize:12, fontWeight:700, color:"#ef4444" }}>⚠️ 이 화면을 벗어나면 처음부터 다시 시작해야 해요!</p>
+</div>
             <div style={{ display:"flex", justifyContent:"center", gap:7 }}>
               {[0,1,2].map(i => (
                 <div key={i} style={{ width:11, height:11, borderRadius:"50%", background:"#fbbf24", animation:"dotBounce 1.2s ease-in-out infinite", animationDelay:`${i*0.18}s` }} />
