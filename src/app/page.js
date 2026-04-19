@@ -125,11 +125,13 @@ export default function StudyQuizApp() {
   const [usage, setUsage] = useState({ plan:'guest', used:0, limit:999, canUse:true });
   const [character, setCharacter] = useState("dog");
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
   useEffect(() => {
     // localStorage에서 캐릭터 불러오기
+    const timer = setTimeout(() => setShowSplash(false), 3500);
     const saved = localStorage.getItem('character');
     if (saved) setCharacter(saved);
     const savedDday = localStorage.getItem('dday');
@@ -146,7 +148,7 @@ export default function StudyQuizApp() {
       setUser(session?.user ?? null);
       checkUsage(session?.user ?? null);
     });
-    return () => subscription.unsubscribe();
+    return () => { subscription.unsubscribe(); clearTimeout(timer); };
   }, []);
 
   const selectCharacter = (id) => {
@@ -394,6 +396,28 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
   };
 
   const diff = DIFFICULTY_CONFIG[difficulty];
+
+  if (showSplash) return (
+    <div style={{ position:"fixed", inset:0, background:"#ffffff", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", zIndex:999 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&display=swap');
+        @keyframes slideRight { 0%{opacity:0;transform:translateX(-40px)} 100%{opacity:1;transform:translateX(0)} }
+        @keyframes fadeUp { 0%{opacity:0;transform:translateY(16px)} 100%{opacity:1;transform:translateY(0)} }
+        @keyframes lineGrow { 0%{width:0;opacity:0} 100%{width:80px;opacity:1} }
+        .sp-w1 { animation: slideRight 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s both; }
+        .sp-w2 { animation: slideRight 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.45s both; }
+        .sp-w3 { animation: slideRight 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.7s both; }
+        .sp-sub { animation: fadeUp 0.5s ease 1.1s both; opacity:0; }
+        .sp-line { animation: lineGrow 0.6s ease 1s both; }
+      `}</style>
+      <div style={{ position:"absolute", width:280, height:280, borderRadius:"50%", background:"radial-gradient(circle,#eef2ff 0%,transparent 70%)", top:"50%", left:"50%", transform:"translate(-50%,-60%)" }} />
+      <div className="sp-w1" style={{ fontSize:64, fontWeight:900, color:"#6366f1", letterSpacing:2, fontFamily:"'Noto Sans KR',sans-serif", lineHeight:1.1 }}>AI</div>
+      <div className="sp-w2" style={{ fontSize:48, fontWeight:900, color:"#1a1a2e", letterSpacing:8, fontFamily:"'Noto Sans KR',sans-serif", lineHeight:1.1 }}>TEST</div>
+      <div className="sp-w3" style={{ fontSize:64, fontWeight:900, color:"#f59e0b", letterSpacing:2, fontFamily:"'Noto Sans KR',sans-serif", lineHeight:1.1 }}>YOU</div>
+      <div className="sp-line" style={{ height:3, borderRadius:2, background:"linear-gradient(90deg,#6366f1,#f59e0b)", margin:"14px auto 0" }} />
+      <div className="sp-sub" style={{ fontSize:13, color:"#9ca3af", fontWeight:600, marginTop:12, fontFamily:"'Noto Sans KR',sans-serif" }}>사진 한 장으로 시험 준비 끝</div>
+    </div>
+  );
 
   if (showEnglish) return <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />;
   if (showSolver) return <ProblemSolver onBack={()=>{ setShowSolver(false); setShowHome(true); }} />;
