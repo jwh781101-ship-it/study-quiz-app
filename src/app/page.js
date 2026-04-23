@@ -624,7 +624,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       </div>
 
       {/* ====== 2. D-Day 카드 (이미지 매칭) ====== */}
-      <div style={{ padding:"14px 16px 0", marginTop:-14, position:"relative", zIndex:10 }}>
+      <div style={{ padding:"16px 16px 0", position:"relative", zIndex:10 }}>
         {(() => {
           const count = getDdayCount();
           const hasGoal = count !== null;
