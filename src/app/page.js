@@ -129,7 +129,7 @@ function BottomTabBar({ activeTab, onTabChange }) {
   ];
 
   return (
-    <div style={{ position:"fixed", bottom:0, left:0, right:0, background:"#fff", borderTop:"1px solid #eef0f5", padding:"8px 0 calc(8px + env(safe-area-inset-bottom))", display:"flex", justifyContent:"space-around", zIndex:50, boxShadow:"0 -2px 12px rgba(0,0,0,0.04)" }}>
+    <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:520, background:"#fff", borderTop:"1px solid #eef0f5", padding:"8px 0 calc(8px + env(safe-area-inset-bottom))", display:"flex", justifyContent:"space-around", zIndex:50, boxShadow:"0 -2px 12px rgba(0,0,0,0.04)" }}>
       {tabs.map(tab => {
         const active = activeTab === tab.id;
         return (
@@ -505,41 +505,45 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
     </div>
   );
 
-  // 서브 화면들 - 하단 탭바를 모두 표시
-  if (showEnglish) return (
-    <>
-      <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />
+  // 서브 화면들 - PC에서도 중앙 정렬 + 하단 탭바 표시
+  const SubScreenWrapper = ({ children }) => (
+    <div style={{ minHeight:"100vh", background:"#e8eaf0" }}>
+      <div style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative" }}>
+        {children}
+        <div style={{ height:64 }} />
+      </div>
       <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
-      <div style={{ height:64 }} />
-    </>
+    </div>
+  );
+
+  if (showEnglish) return (
+    <SubScreenWrapper>
+      <EnglishLearning onBack={()=>{ setShowEnglish(false); setShowHome(true); }} />
+    </SubScreenWrapper>
   );
   if (showSolver) return (
-    <>
+    <SubScreenWrapper>
       <ProblemSolver onBack={()=>{ setShowSolver(false); setShowHome(true); }} />
-      <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
-      <div style={{ height:64 }} />
-    </>
+    </SubScreenWrapper>
   );
   if (showWrongNote) return (
-    <>
+    <SubScreenWrapper>
       <WrongNote onBack={()=>{ setShowWrongNote(false); setShowHome(true); }} />
-      <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
-      <div style={{ height:64 }} />
-    </>
+    </SubScreenWrapper>
   );
   if (showStats) return (
-    <>
+    <SubScreenWrapper>
       <StudyStats onBack={()=>{ setShowStats(false); setShowHome(true); }} />
-      <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
-      <div style={{ height:64 }} />
-    </>
+    </SubScreenWrapper>
   );
 
   // ========================================
   // 🏠 홈 화면 (새 디자인)
   // ========================================
   if (showHome) return (
-    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:80 }}>
+    <div style={{ minHeight:"100vh", background:"#e8eaf0", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif" }}>
+      {/* PC에서는 좌우 회색 배경 + 중앙 앱 컨테이너 (모바일 느낌 유지) */}
+      <div style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:80, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
@@ -835,7 +839,9 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       {/* SoundPlayer (폭포 BGM) - 유지 */}
       <SoundPlayer />
 
-      {/* 하단 탭바 */}
+      </div>{/* 내부 모바일 컨테이너 끝 */}
+
+      {/* 하단 탭바 (PC에서도 중앙 정렬) */}
       <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
     </div>
   );
@@ -844,7 +850,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
   // 📝 문제 생성/풀이 플로우 (기존 그대로)
   // ========================================
   return (
-    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", paddingBottom: 100 }}>
+    <div style={{ minHeight:"100vh", background:"#e8eaf0", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif" }}>
+      <div style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:100, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative" }}>
       <style>{CSS}</style>
       <input ref={galleryInputRef} type="file" accept="image/*" multiple style={{ display:"none" }} onChange={handleGalleryChange} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={handleCameraChange} />
@@ -1244,6 +1251,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
         )}
       </div>
+
+      </div>{/* 내부 모바일 컨테이너 끝 */}
 
       {/* 하단 탭바 */}
       <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
