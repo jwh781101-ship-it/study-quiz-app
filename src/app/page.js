@@ -605,33 +605,10 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         </div>
       )}
 
-      {/* ====== 1. 히어로 섹션 (보라색 그라데이션) ====== */}
-      <div style={{ background:"linear-gradient(160deg, #6366f1 0%, #7c3aed 55%, #5b21b6 100%)", padding:"20px 20px 30px", position:"relative", overflow:"hidden" }}>
-        {/* 배경 반짝이 효과 */}
-        <div style={{ position:"absolute", top:60, left:"35%", fontSize:14, color:"#fde68a", animation:"twinkle 2s ease-in-out infinite" }}>✨</div>
-        <div style={{ position:"absolute", top:120, right:"15%", fontSize:10, color:"#fde68a", animation:"twinkle 2.5s ease-in-out 0.5s infinite" }}>✨</div>
-        <div style={{ position:"absolute", top:200, left:"8%", fontSize:8, color:"#fde68a", animation:"twinkle 3s ease-in-out 1s infinite" }}>✨</div>
-
-        {/* 상단 헤더 - 로고 + 뱃지 */}
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24, position:"relative", zIndex:2 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:42, height:42, borderRadius:10, background:"#fff", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 12px rgba(0,0,0,0.15)" }}>
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                <path d="M3 17L9 11L13 15L21 7" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M15 7H21V13" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div>
-              <h1 style={{ margin:0, fontSize:17, fontWeight:900, color:"#fff", letterSpacing:-0.3 }}>AI 학습관리 앱</h1>
-              <p style={{ margin:"2px 0 0", fontSize:10.5, color:"rgba(255,255,255,0.75)", fontWeight:500 }}>AI가 다 해주는 시험 준비!</p>
-            </div>
-          </div>
-          <div style={{ background:"rgba(255,255,255,0.15)", backdropFilter:"blur(10px)", border:"1px solid rgba(255,255,255,0.25)", borderRadius:20, padding:"6px 12px", fontSize:10.5, fontWeight:700, color:"#fff", display:"flex", alignItems:"center", gap:4 }}>
-            <span style={{ fontSize:12 }}>👑</span>
-            <span>중고생 맞춤 AI 공부비서</span>
-          </div>
-        </div>
-
+      {/* ====== 1. 히어로 섹션 (원본 이미지 그대로 사용) ====== */}
+      <div style={{ position:"relative", width:"100%", lineHeight:0 }}>
+        <img src="/hero.jpg" alt="AI 학습관리 앱 - AI가 다 해주는 시험 준비 끝!"
+          style={{ width:"100%", height:"auto", display:"block" }} />
         {/* 구글 로그인 버튼 - 숨김 (나중에 display:"flex"로 바꾸면 복구) */}
         {!authLoading && !user && (
           <div style={{ display:"none" }}>
@@ -644,166 +621,57 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             <button onClick={signOut}>로그아웃</button>
           </div>
         )}
-
-        {/* 메인 히어로 - 타이틀 + 폰 목업 */}
-        <div style={{ display:"flex", alignItems:"flex-start", gap:8, position:"relative", zIndex:2 }}>
-          {/* 좌측: 타이틀 + 체크리스트 */}
-          <div style={{ flex:"1 1 55%", paddingTop:4 }}>
-            <h2 style={{ margin:"0 0 4px", fontSize:26, fontWeight:900, color:"#fff", letterSpacing:-1, lineHeight:1.1, animation:"slideIn 0.5s ease 0.1s both" }}>AI가 다 해주는</h2>
-            <h2 style={{ margin:"0 0 16px", fontSize:30, fontWeight:900, background:"linear-gradient(90deg, #a5b4fc, #c4b5fd, #fff)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", letterSpacing:-1, lineHeight:1.1, animation:"slideIn 0.5s ease 0.2s both" }}>시험 준비 끝!</h2>
-
-            <p style={{ margin:"0 0 3px", fontSize:13, fontWeight:700, color:"#fff", lineHeight:1.5, animation:"fadeUp 0.5s ease 0.3s both" }}>교재 찍으면 AI가 문제로!</p>
-            <p style={{ margin:"0 0 14px", fontSize:13, fontWeight:700, color:"#fff", lineHeight:1.5, animation:"fadeUp 0.5s ease 0.35s both" }}>오답관리까지 완벽하게</p>
-
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
-              {["시험 대비","오답 정리","맞춤 문제","성적 분석"].map((t,i) => (
-                <div key={t} style={{ background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:20, padding:"6px 10px", fontSize:11, fontWeight:700, color:"#fff", display:"flex", alignItems:"center", gap:5, animation:`fadeUp 0.5s ease ${0.4 + i*0.05}s both` }}>
-                  <span style={{ color:"#a5b4fc", fontSize:12 }}>✓</span>
-                  <span>{t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 우측: 폰 목업 + 로봇 (장식용 정적 이미지) */}
-          <div style={{ flex:"0 0 42%", position:"relative", minHeight:280 }}>
-            {/* AI 로봇 */}
-            <div style={{ position:"absolute", top:-10, right:-5, zIndex:3, animation:"float 3s ease-in-out infinite" }}>
-              <svg width="82" height="92" viewBox="0 0 82 92" fill="none">
-                {/* 안테나 */}
-                <line x1="41" y1="6" x2="41" y2="18" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-                <circle cx="41" cy="5" r="3" fill="#fde68a"/>
-                {/* 헤드폰 아치 */}
-                <path d="M15 42 Q15 22 41 22 Q67 22 67 42" stroke="#e0e7ff" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                {/* 머리 */}
-                <rect x="18" y="24" width="46" height="40" rx="12" fill="#f1f5f9"/>
-                <rect x="18" y="24" width="46" height="40" rx="12" fill="url(#robotGrad)" opacity="0.3"/>
-                {/* 헤드폰 */}
-                <rect x="11" y="36" width="10" height="18" rx="5" fill="#6366f1"/>
-                <rect x="61" y="36" width="10" height="18" rx="5" fill="#6366f1"/>
-                {/* 눈 */}
-                <circle cx="30" cy="42" r="4.5" fill="#3b82f6"/>
-                <circle cx="52" cy="42" r="4.5" fill="#3b82f6"/>
-                <circle cx="31" cy="41" r="1.5" fill="#fff"/>
-                <circle cx="53" cy="41" r="1.5" fill="#fff"/>
-                {/* 입 (미소) */}
-                <path d="M34 52 Q41 57 48 52" stroke="#3b82f6" strokeWidth="2" fill="none" strokeLinecap="round"/>
-                {/* 몸 */}
-                <rect x="26" y="60" width="30" height="24" rx="6" fill="#e0e7ff"/>
-                <circle cx="41" cy="72" r="6" fill="#6366f1"/>
-                <text x="41" y="75" textAnchor="middle" fontSize="7" fontWeight="900" fill="#fff">AI</text>
-                {/* 팔 */}
-                <rect x="14" y="62" width="10" height="18" rx="5" fill="#f1f5f9"/>
-                <rect x="58" y="56" width="10" height="18" rx="5" fill="#f1f5f9" transform="rotate(-20 63 65)"/>
-                <defs>
-                  <linearGradient id="robotGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor="#6366f1"/>
-                    <stop offset="1" stopColor="#8b5cf6"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-
-            {/* 폰 목업 */}
-            <div style={{ position:"absolute", top:30, right:10, width:135, height:240, background:"#1a1a2e", borderRadius:22, padding:4, boxShadow:"0 20px 40px rgba(0,0,0,0.3)", zIndex:1 }}>
-              <div style={{ width:"100%", height:"100%", background:"#fff", borderRadius:18, overflow:"hidden", padding:"14px 8px 8px", position:"relative" }}>
-                {/* 노치 */}
-                <div style={{ position:"absolute", top:4, left:"50%", transform:"translateX(-50%)", width:30, height:5, background:"#1a1a2e", borderRadius:10 }}/>
-                {/* 타이틀 */}
-                <p style={{ margin:"4px 0 8px", fontSize:8, fontWeight:800, color:"#1a1a2e", textAlign:"left", paddingLeft:4 }}>오늘의 학습 요약</p>
-                {/* 상단 요약 카드 */}
-                <div style={{ display:"flex", gap:3, marginBottom:8 }}>
-                  {[{l:"총 문제 수",v:"142문제"},{l:"맞은 문제",v:"98문제"},{l:"정답률",v:"69%"}].map((s,i)=>(
-                    <div key={i} style={{ flex:1, background:"#f8f8fc", borderRadius:4, padding:"4px 3px", textAlign:"center" }}>
-                      <p style={{ margin:0, fontSize:5.5, color:"#999", fontWeight:600 }}>{s.l}</p>
-                      <p style={{ margin:"1px 0 0", fontSize:7.5, fontWeight:900, color:"#1a1a2e" }}>{s.v}</p>
-                    </div>
-                  ))}
-                </div>
-                {/* 과목별 정답률 */}
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
-                  <span style={{ fontSize:7, fontWeight:800, color:"#1a1a2e" }}>과목별 정답률</span>
-                  <span style={{ fontSize:6, color:"#6366f1" }}>전체보기 ›</span>
-                </div>
-                {[
-                  {s:"수학", p:78, c:"#6366f1"},
-                  {s:"영어", p:62, c:"#ef4444"},
-                  {s:"국어", p:85, c:"#8b5cf6"},
-                  {s:"과학", p:70, c:"#10b981"},
-                ].map((bar,i)=>(
-                  <div key={i} style={{ marginBottom:4 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:6, marginBottom:2 }}>
-                      <span style={{ color:"#555", fontWeight:700 }}>{bar.s}</span>
-                      <span style={{ color:"#1a1a2e", fontWeight:800 }}>{bar.p}%</span>
-                    </div>
-                    <div style={{ height:3, background:"#f0f0f5", borderRadius:2, overflow:"hidden" }}>
-                      <div style={{ width:`${bar.p}%`, height:"100%", background:bar.c, borderRadius:2 }}/>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 폰 옆 플로팅 말풍선 */}
-            <div style={{ position:"absolute", top:85, right:95, background:"#fff", borderRadius:10, padding:"5px 8px", boxShadow:"0 4px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:4, fontSize:8, fontWeight:700, color:"#1a1a2e", zIndex:4, lineHeight:1.3 }}>
-              <span style={{ fontSize:10 }}>📷</span>
-              <span>교재 사진 찍으면<br/>AI가 문제로 출제!</span>
-            </div>
-            <div style={{ position:"absolute", top:155, right:90, background:"#fff", borderRadius:10, padding:"5px 8px", boxShadow:"0 4px 12px rgba(0,0,0,0.15)", display:"flex", alignItems:"center", gap:4, fontSize:8, fontWeight:700, color:"#1a1a2e", zIndex:4, lineHeight:1.3 }}>
-              <span style={{ fontSize:10 }}>📊</span>
-              <span>오답 원인 분석<br/>개념까지 정리!</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* ====== 2. D-Day 카드 ====== */}
-      <div style={{ padding:"16px 16px 0" }}>
+      {/* ====== 2. D-Day 카드 (이미지 매칭) ====== */}
+      <div style={{ padding:"14px 16px 0", marginTop:-14, position:"relative", zIndex:10 }}>
         {(() => {
           const count = getDdayCount();
           const hasGoal = count !== null;
           const progress = hasGoal && ddayLabel ? (() => {
-            // 간단한 진행률 계산 (D-Day 설정일~ 오늘까지의 진행 정도로 대체)
-            // 여기서는 임의로 65% 기준 또는 D-7 이내 기준
             if (count <= 0) return 100;
             if (count >= 30) return 20;
             return Math.round(((30-count)/30) * 100);
           })() : 0;
 
           return (
-            <button onClick={()=>setShowDdayPicker(true)} style={{ width:"100%", background:"#fff", border:"none", borderRadius:18, padding:"14px 16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", display:"flex", alignItems:"center", gap:14, cursor:"pointer", fontFamily:"inherit", textAlign:"left" }} className="fade-up">
-              {/* 좌측 D-DAY 박스 */}
-              <div style={{ background:"#eef2ff", borderRadius:14, padding:"8px 14px", textAlign:"center", minWidth:72, flexShrink:0 }}>
-                <p style={{ margin:0, fontSize:9, fontWeight:800, color:"#6366f1", letterSpacing:0.5 }}>D-DAY</p>
-                <p style={{ margin:"2px 0 0", fontSize:22, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
-                  {hasGoal ? (count === 0 ? "D-Day" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`) : "설정"}
+            <div style={{ background:"#fff", borderRadius:18, padding:"14px 16px", boxShadow:"0 4px 16px rgba(0,0,0,0.08)", display:"flex", alignItems:"center", gap:12 }} className="fade-up">
+              {/* 좌측 D-DAY 박스 (보라색) */}
+              <button onClick={()=>setShowDdayPicker(true)}
+                style={{ background:"#eef2ff", borderRadius:14, padding:"10px 14px", textAlign:"center", minWidth:76, flexShrink:0, border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                <p style={{ margin:0, fontSize:10, fontWeight:800, color:"#6366f1", letterSpacing:0.8, fontFamily:"Arial, sans-serif" }}>D-DAY</p>
+                <p style={{ margin:"3px 0 0", fontSize:26, fontWeight:900, color:"#6366f1", lineHeight:1, fontFamily:"Arial, sans-serif" }}>
+                  {hasGoal ? (count === 0 ? "D" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`) : "설정"}
                 </p>
-              </div>
+              </button>
+
               {/* 가운데 정보 */}
-              <div style={{ flex:1, minWidth:0 }}>
+              <button onClick={()=>setShowDdayPicker(true)}
+                style={{ flex:1, minWidth:0, background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", padding:0 }}>
                 <p style={{ margin:"0 0 2px", fontSize:14, fontWeight:900, color:"#1a1a2e", display:"flex", alignItems:"center", gap:4 }}>
-                  <span>🎯</span>
-                  <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{hasGoal ? ddayLabel : "목표를 설정하세요"}</span>
+                  <span style={{ fontSize:13 }}>🎯</span>
+                  <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{hasGoal ? ddayLabel : "목표 설정"}</span>
                   <span style={{ fontSize:11 }}>✏️</span>
                 </p>
-                <p style={{ margin:"0 0 6px", fontSize:11, color:"#999" }}>
-                  {hasGoal ? new Date(dday).toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}) : "클릭해서 D-Day를 설정하세요"}
+                <p style={{ margin:"0 0 7px", fontSize:11, color:"#999", fontWeight:500 }}>
+                  {hasGoal ? new Date(dday).toLocaleDateString('ko-KR', {year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).replace(/\s/g,'').replace(/\./g,'. ').replace('. (','(') : "클릭해서 D-Day 설정"}
                 </p>
                 {hasGoal && (
                   <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                    <div style={{ flex:1, height:6, background:"#f0f0f5", borderRadius:3, overflow:"hidden" }}>
-                      <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:3, transition:"width 0.3s" }}/>
+                    <div style={{ flex:1, height:7, background:"#f0f0f5", borderRadius:4, overflow:"hidden" }}>
+                      <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:4, transition:"width 0.4s" }}/>
                     </div>
-                    <span style={{ fontSize:11, fontWeight:800, color:"#6366f1" }}>{progress}%</span>
+                    <span style={{ fontSize:11, fontWeight:800, color:"#6366f1", minWidth:30 }}>{progress}%</span>
                   </div>
                 )}
-              </div>
+              </button>
+
               {/* 우측 응원 문구 */}
               <div style={{ textAlign:"right", flexShrink:0 }}>
-                <p style={{ margin:0, fontSize:10, color:"#999" }}>오늘도 한 걸음 더</p>
-                <p style={{ margin:"2px 0 0", fontSize:12, fontWeight:900, color:"#1a1a2e" }}>목표까지 화이팅 💪</p>
+                <p style={{ margin:0, fontSize:10.5, color:"#999", fontWeight:500 }}>오늘도 한 걸음 더</p>
+                <p style={{ margin:"3px 0 0", fontSize:12, fontWeight:900, color:"#1a1a2e" }}>목표까지 화이팅 💪</p>
               </div>
-            </button>
+            </div>
           );
         })()}
       </div>
