@@ -179,12 +179,17 @@ export default function StudyQuizApp() {
   const [character, setCharacter] = useState("dog");
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [showHero, setShowHero] = useState(true);
+  const [heroFading, setHeroFading] = useState(false);
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
 
   useEffect(() => {
     // localStorage에서 캐릭터 불러오기
     const timer = setTimeout(() => setShowSplash(false), 3500);
+    // splash(3.5초) 끝난 후 hero 2.5초 자동 노출 → 페이드아웃(0.4초)
+    const heroFadeTimer = setTimeout(() => setHeroFading(true), 3500 + 2500);
+    const heroHideTimer = setTimeout(() => setShowHero(false), 3500 + 2500 + 400);
     const saved = localStorage.getItem('character');
     if (saved) setCharacter(saved);
     const savedDday = localStorage.getItem('dday');
@@ -201,7 +206,7 @@ export default function StudyQuizApp() {
       setUser(session?.user ?? null);
       checkUsage(session?.user ?? null);
     });
-    return () => { subscription.unsubscribe(); clearTimeout(timer); };
+    return () => { subscription.unsubscribe(); clearTimeout(timer); clearTimeout(heroFadeTimer); clearTimeout(heroHideTimer); };
   }, []);
 
   const selectCharacter = (id) => {
@@ -211,6 +216,11 @@ export default function StudyQuizApp() {
   };
 
   const currentChar = CHARACTERS.find(c => c.id === character) || CHARACTERS[0];
+
+  const closeHero = () => {
+    setHeroFading(true);
+    setTimeout(() => setShowHero(false), 400);
+  };
 
 const getDdayCount = () => {
   if (!dday) return null;
@@ -483,6 +493,36 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
     }
   };
 
+  if (!showSplash && showHero) return (
+    <div onClick={closeHero}
+      style={{ position:"fixed", inset:0, background:"#ffffff", zIndex:998, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", opacity: heroFading ? 0 : 1, transition:"opacity 0.4s ease", overflow:"hidden" }}>
+      <style>{`
+        @keyframes heroFadeIn { 0%{opacity:0;transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes skipPulse { 0%,100%{opacity:0.85} 50%{opacity:1} }
+        .hero-img-wrap { animation: heroFadeIn 0.5s ease both; }
+        .skip-btn { animation: skipPulse 2s ease-in-out infinite; }
+      `}</style>
+
+      {/* 건너뛰기 버튼 */}
+      <button onClick={(e)=>{ e.stopPropagation(); closeHero(); }} className="skip-btn"
+        style={{ position:"absolute", top:"calc(16px + env(safe-area-inset-top))", right:16, zIndex:5, background:"rgba(0,0,0,0.55)", color:"#fff", border:"none", borderRadius:20, padding:"8px 14px", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"'Noto Sans KR',sans-serif", backdropFilter:"blur(8px)", display:"flex", alignItems:"center", gap:4 }}>
+        <span>건너뛰기</span>
+        <span style={{ fontSize:14 }}>›</span>
+      </button>
+
+      {/* 히어로 이미지 */}
+      <div className="hero-img-wrap" style={{ width:"100%", maxWidth:520, margin:"0 auto" }}>
+        <img src="/hero.jpg" alt="AI 학습관리 앱"
+          style={{ width:"100%", height:"auto", display:"block" }} />
+      </div>
+
+      {/* 하단 안내 */}
+      <div style={{ position:"absolute", bottom:"calc(32px + env(safe-area-inset-bottom))", left:0, right:0, textAlign:"center", animation:"skipPulse 1.8s ease-in-out infinite" }}>
+        <p style={{ margin:0, fontSize:12, color:"#9ca3af", fontWeight:600, fontFamily:"'Noto Sans KR',sans-serif" }}>화면을 탭하면 바로 시작해요</p>
+      </div>
+    </div>
+  );
+
   if (showSplash) return (
     <div style={{ position:"fixed", inset:0, background:"#ffffff", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", zIndex:999 }}>
       <style>{`
@@ -609,10 +649,13 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         </div>
       )}
 
-      {/* ====== 1. 히어로 섹션 (원본 이미지 그대로 사용) ====== */}
-      <div style={{ position:"relative", width:"100%", lineHeight:0 }}>
-        <img src="/hero.jpg" alt="AI 학습관리 앱 - AI가 다 해주는 시험 준비 끝!"
-          style={{ width:"100%", height:"auto", display:"block" }} />
+      {/* ====== 1. 컴팩트 헤더 (히어로는 인트로에서 노출) ====== */}
+      <div style={{ padding:"16px 16px 4px", display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ width:36, height:36, borderRadius:11, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>📖</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#1a1a2e" }}>AI 학습관리 앱</p>
+          <p style={{ margin:"2px 0 0", fontSize:11, color:"#999", fontWeight:500 }}>AI가 다 해주는 시험 준비!</p>
+        </div>
         {/* 구글 로그인 버튼 - 숨김 (나중에 display:"flex"로 바꾸면 복구) */}
         {!authLoading && !user && (
           <div style={{ display:"none" }}>
@@ -628,7 +671,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       </div>
 
       {/* ====== 2. D-Day 카드 (이미지 매칭) ====== */}
-      <div style={{ padding:"16px 16px 0", position:"relative", zIndex:10 }}>
+      <div style={{ padding:"12px 16px 0", position:"relative", zIndex:10 }}>
         {(() => {
           const count = getDdayCount();
           const hasGoal = count !== null;
