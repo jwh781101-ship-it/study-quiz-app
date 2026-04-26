@@ -28,6 +28,7 @@ export default function ProblemSolver({ onBack }) {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [hintOnly, setHintOnly] = useState(false);
+  const [grade, setGrade] = useState('중2');
   const galleryRef = useRef();
   const cameraRef = useRef();
 
@@ -71,14 +72,19 @@ export default function ProblemSolver({ onBack }) {
 
     const textSection = textInput.trim() ? `\n\n[텍스트로 입력된 문제]\n${textInput}` : '';
 
+    const gradeLabel = grade;
     const prompt = hintOnly
       ? `당신은 학생의 학습을 돕는 선생님입니다.
+학생 학년: ${gradeLabel}
+반드시 ${gradeLabel} 수준에 맞는 용어와 개념으로만 설명하세요. 해당 학년이 배우지 않은 개념은 절대 사용하지 마세요.
 아래 문제의 힌트만 알려주세요. 절대 정답을 직접 알려주지 마세요.
 만약 문제 풀이와 관련없는 요청(논술 작성, 번역, 요약, 숙제 대필 등)이면 반드시 거절하세요.${textSection}
 
 반드시 JSON으로만 응답:
 {"is_valid":true또는false,"reject_reason":"거절 이유(is_valid가 false일때만)","problem":"문제 내용 요약","hint1":"첫번째 힌트","hint2":"두번째 힌트","hint3":"세번째 힌트","key_concept":"핵심 개념"}`
       : `당신은 학생의 학습을 돕는 선생님입니다.
+학생 학년: ${gradeLabel}
+반드시 ${gradeLabel} 수준에 맞는 용어와 개념으로만 설명하세요. 해당 학년이 배우지 않은 개념은 절대 사용하지 마세요.
 아래 문제를 단계별로 풀어주세요.
 만약 문제 풀이와 관련없는 요청(논술 작성, 번역, 요약, 숙제 대필 등)이면 반드시 거절하세요.
 서술형 답안이라도 모범 답안 방향만 간략히 제시하고, 전체 글을 대신 써주지 마세요.${textSection}
@@ -144,6 +150,19 @@ export default function ProblemSolver({ onBack }) {
               <div style={{ fontSize:52, marginBottom:8 }}>📝</div>
               <h2 style={{ margin:'0 0 6px', fontSize:22, fontWeight:900, color:'#1a1a2e' }}>문제를 올려주세요</h2>
               <p style={{ margin:0, fontSize:13, color:'#999' }}>사진, 갤러리, 텍스트 중 선택하세요</p>
+            </div>
+
+            {/* 학년 선택 */}
+            <div style={{ background:'#fff', borderRadius:16, padding:'14px 16px', marginBottom:12, border:'1.5px solid #e8e9ef' }}>
+              <p style={{ margin:'0 0 10px', fontSize:13, fontWeight:800, color:'#1a1a2e' }}>🎓 내 학년 선택</p>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                {['초4','초5','초6','중1','중2','중3','고1','고2','고3'].map(g => (
+                  <button key={g} onClick={()=>setGrade(g)}
+                    style={{ padding:'7px 14px', borderRadius:20, border:`2px solid ${grade===g?'#10b981':'#e8e9ef'}`, background: grade===g?'#f0fdf4':'#fff', color: grade===g?'#10b981':'#555', fontSize:13, fontWeight: grade===g?700:500, cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s' }}>
+                    {g}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* 안내 배너 */}
@@ -257,7 +276,10 @@ export default function ProblemSolver({ onBack }) {
             <div style={{ background:'linear-gradient(135deg,#10b981,#059669)', borderRadius:20, padding:20, marginBottom:12, color:'#fff' }}>
               <p style={{ margin:'0 0 4px', fontSize:12, opacity:0.8 }}>인식된 문제</p>
               <p style={{ margin:'0 0 8px', fontSize:16, fontWeight:800, lineHeight:1.5 }}>{result.problem}</p>
-              {result.subject && <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>{result.subject}</span>}
+              <div style={{ display:'flex', gap:6', flexWrap:'wrap', marginTop:8 }}>
+                {result.subject && <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>{result.subject}</span>}
+                <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>{grade} 수준</span>
+              </div>
             </div>
 
             {hintOnly && (
