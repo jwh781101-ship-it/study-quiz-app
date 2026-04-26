@@ -276,7 +276,7 @@ export default function ProblemSolver({ onBack }) {
             <div style={{ background:'linear-gradient(135deg,#10b981,#059669)', borderRadius:20, padding:20, marginBottom:12, color:'#fff' }}>
               <p style={{ margin:'0 0 4px', fontSize:12, opacity:0.8 }}>인식된 문제</p>
               <p style={{ margin:'0 0 8px', fontSize:16, fontWeight:800, lineHeight:1.5 }}>{result.problem}</p>
-              <div style={{ display:'flex', gap:6', flexWrap:'wrap', marginTop:8 }}>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:8 }}>
                 {result.subject && <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>{result.subject}</span>}
                 <span style={{ background:'rgba(255,255,255,0.2)', borderRadius:20, padding:'4px 12px', fontSize:12, fontWeight:700 }}>{grade} 수준</span>
               </div>
