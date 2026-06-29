@@ -22,8 +22,8 @@ export async function POST(request) {
 
     // 문제풀이/채점은 하이쿠, 나머지는 소넷
     const model = (isSolving || isGrading)
-      ? 'claude-haiku-4-5-20251001'
-      : 'claude-sonnet-4-20250514';
+      ? 'claude-haiku-4-5'
+      : 'claude-sonnet-4-5';
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
