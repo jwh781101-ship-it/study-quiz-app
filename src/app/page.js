@@ -365,8 +365,27 @@ const saveDday = (date, label) => {
     setStep("loading"); setError(null); setSelectedAnswers({}); setShowAnswers(false); setScore(null); setEssayScores({}); setBadImages([]);
     try {
       const prompt = buildPrompt();
-      const data = await callAPI(uploadedImages, prompt);
-      if (!data.error && data.questions?.length > 0) {
+      let data;
+if (questionCount > 15) {
+  // 15개 초과면 나눠서 2번 요청
+  const half = Math.ceil(questionCount / 2);
+  const prompt1 = buildPrompt(half);
+  const prompt2 = buildPrompt(questionCount - half);
+  const [data1, data2] = await Promise.all([
+    callAPI(uploadedImages, prompt1),
+    callAPI(uploadedImages, prompt2)
+  ]);
+  data = {
+    topic: data1.topic || data2.topic,
+    questions: [
+      ...(data1.questions || []),
+      ...(data2.questions || [])
+    ]
+  };
+} else {
+  data = await callAPI(uploadedImages, prompt);
+}
+if (!data.error && data.questions?.length > 0) {
         let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
         for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [qs[i],qs[j]]=[qs[j],qs[i]]; }
         setQuizData({ ...data, questions: qs }); setStep("result"); incrementUsage(); return;
@@ -1274,7 +1293,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                 <p style={{ margin:0, fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📋 문제 수</p>
                 <span style={{ fontSize:20, fontWeight:900, color:"#6366f1" }}>{questionCount}개</span>
               </div>
-              <input type="range" min={3} max={30} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#6366f1" }} />
+              <input type="range" min={3} max={15} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#6366f1" }} />
               <div style={{ display:"flex", justifyContent:"space-between", color:"#bbb", fontSize:11, marginTop:4 }}><span>3개</span><span>30개</span></div>
               {questionCount >= 20 && <p style={{ margin:"8px 0 0", fontSize:11, color:"#f59e0b", background:"#fffbeb", padding:"6px 10px", borderRadius:8 }}>⏱ 20개 이상은 생성에 30~60초 소요될 수 있어요</p>}
             </div>
