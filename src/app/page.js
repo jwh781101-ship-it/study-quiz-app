@@ -591,7 +591,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         @media (min-width: 1024px) {
           .home-wrapper {
             display: grid !important;
-            grid-template-columns: 320px 1fr !important;
+            grid-template-columns: 280px 1fr !important;
             gap: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
@@ -600,18 +600,19 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           .home-left {
             display: flex !important;
             flex-direction: column !important;
-            gap: 12px !important;
-            padding: 20px 16px 20px 20px !important;
+            gap: 10px !important;
+            padding: 16px 12px 16px 16px !important;
             height: 100vh !important;
             overflow: hidden !important;
-            background: #e0e2ec !important;
+            background: #f0f1f8 !important;
             box-sizing: border-box !important;
+            border-right: 1px solid #e4e5f0 !important;
           }
           .home-right {
-            padding: 20px 20px 20px 16px !important;
-            background: #e0e2ec !important;
-            display: flex !important;
-            flex-direction: column !important;
+            padding: 16px !important;
+            background: #f0f1f8 !important;
+            display: grid !important;
+            grid-template-rows: 1fr 0.7fr 0.65fr !important;
             gap: 12px !important;
             height: 100vh !important;
             overflow: hidden !important;
@@ -623,14 +624,12 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
             gap: 12px !important;
-            flex: 1 !important;
             min-height: 0 !important;
           }
           .pc-sub-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
             gap: 12px !important;
-            flex: 0.65 !important;
             min-height: 0 !important;
           }
           .pc-main-card {
@@ -650,18 +649,18 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 12px !important;
+            gap: 10px !important;
             box-sizing: border-box !important;
             padding: 0 !important;
           }
           .pc-info-section {
-            flex: 0.75 !important;
             min-height: 0 !important;
+            overflow: hidden !important;
           }
           .pc-info-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 8px !important;
           }
         }
 
@@ -809,14 +808,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         <div className="home-left">
 
           {/* 로고 + 캐릭터 */}
-          <div style={{ background:"#fff", borderRadius:18, padding:"20px 16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", textAlign:"center", flexShrink:0 }}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", textAlign:"center", flexShrink:0 }}>
             <img src={currentChar.src} alt={currentChar.name}
               onClick={()=>setShowCharacterPicker(true)}
-              style={{ width:72, height:72, borderRadius:"50%", objectFit:"cover", border:"3px solid #eef2ff", boxShadow:"0 4px 12px rgba(99,102,241,0.2)", cursor:"pointer", display:"block", margin:"0 auto 10px", animation:"float 3s ease-in-out infinite" }} />
-            <p style={{ margin:"0 0 2px", fontSize:20, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
-            <p style={{ margin:"0 0 10px", fontSize:12, color:"#bbb" }}>aitestu.com</p>
+              style={{ width:60, height:60, borderRadius:"50%", objectFit:"cover", border:"3px solid #eef2ff", boxShadow:"0 4px 12px rgba(99,102,241,0.2)", cursor:"pointer", display:"block", margin:"0 auto 8px", animation:"float 3s ease-in-out infinite" }} />
+            <p style={{ margin:"0 0 2px", fontSize:17, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
+            <p style={{ margin:"0 0 8px", fontSize:11, color:"#bbb" }}>aitestu.com</p>
             <button onClick={()=>setShowCharacterPicker(true)}
-              style={{ background:"#f5f3ff", border:"1.5px solid #e0e7ff", borderRadius:10, padding:"6px 16px", fontSize:12, color:"#6366f1", fontWeight:700, cursor:"pointer", fontFamily:"inherit", width:"100%", boxSizing:"border-box" }}>
+              style={{ background:"#f5f3ff", border:"1.5px solid #e0e7ff", borderRadius:10, padding:"5px 14px", fontSize:11, color:"#6366f1", fontWeight:700, cursor:"pointer", fontFamily:"inherit", width:"100%", boxSizing:"border-box" }}>
               🐾 캐릭터 변경
             </button>
           </div>
@@ -827,28 +826,28 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             const hasGoal = count !== null;
             const progress = hasGoal ? (count <= 0 ? 100 : count >= 30 ? 10 : Math.round(((30-count)/30)*100)) : 0;
             return (
-              <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flexShrink:0 }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
-                  <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
-                  <button onClick={()=>setShowDdayPicker(true)} style={{ background:"none", border:"none", color:"#6366f1", fontSize:12, cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>설정 ✏️</button>
+              <div style={{ background:"#fff", borderRadius:16, padding:"14px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", flexShrink:0 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                  <p style={{ margin:0, fontSize:13, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
+                  <button onClick={()=>setShowDdayPicker(true)} style={{ background:"none", border:"none", color:"#6366f1", fontSize:11, cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>설정 ✏️</button>
                 </div>
-                <div style={{ background:"#eef2ff", borderRadius:14, padding:"16px", textAlign:"center", marginBottom: hasGoal?12:0 }}>
-                  <p style={{ margin:0, fontSize:11, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
-                  <p style={{ margin:"6px 0 4px", fontSize:40, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
+                <div style={{ background:"#eef2ff", borderRadius:12, padding:"12px", textAlign:"center", marginBottom: hasGoal?10:0 }}>
+                  <p style={{ margin:0, fontSize:10, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
+                  <p style={{ margin:"4px 0 3px", fontSize:34, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
                     {!hasGoal ? "설정" : count === 0 ? "D-Day!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
                   </p>
-                  {hasGoal && <p style={{ margin:0, fontSize:13, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
-                  {!hasGoal && <p style={{ margin:"6px 0 0", fontSize:12, color:"#999" }}>클릭해서 날짜 설정</p>}
+                  {hasGoal && <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
+                  {!hasGoal && <p style={{ margin:"4px 0 0", fontSize:11, color:"#999" }}>클릭해서 날짜 설정</p>}
                 </div>
                 {hasGoal && (
                   <>
-                    <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:6 }}>
-                      <div style={{ flex:1, height:8, background:"#f0f0f5", borderRadius:4, overflow:"hidden" }}>
-                        <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:4 }}/>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                      <div style={{ flex:1, height:6, background:"#f0f0f5", borderRadius:3, overflow:"hidden" }}>
+                        <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:3 }}/>
                       </div>
-                      <span style={{ fontSize:12, fontWeight:800, color:"#6366f1", minWidth:34 }}>{progress}%</span>
+                      <span style={{ fontSize:11, fontWeight:800, color:"#6366f1", minWidth:30 }}>{progress}%</span>
                     </div>
-                    <p style={{ margin:0, fontSize:11, color:"#999", textAlign:"right" }}>목표까지 화이팅 💪</p>
+                    <p style={{ margin:0, fontSize:10, color:"#999", textAlign:"right" }}>목표까지 화이팅 💪</p>
                   </>
                 )}
               </div>
@@ -856,14 +855,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           })()}
 
           {/* 집중 사운드 */}
-          <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flexShrink:0, boxSizing:"border-box", overflow:"hidden" }}>
+          <div style={{ background:"#fff", borderRadius:16, padding:"14px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", flex:1, minHeight:0, overflow:"hidden", boxSizing:"border-box" }}>
             <SoundPlayer />
           </div>
 
           {/* 학습 팁 */}
-          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:18, padding:"12px 16px", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", color:"#fff", flexShrink:0 }}>
-            <p style={{ margin:"0 0 4px", fontSize:12, fontWeight:900 }}>💡 오늘의 학습 팁</p>
-            <p style={{ margin:0, fontSize:11, lineHeight:1.6, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
+          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:16, padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", color:"#fff", flexShrink:0 }}>
+            <p style={{ margin:"0 0 3px", fontSize:11, fontWeight:900 }}>💡 오늘의 학습 팁</p>
+            <p style={{ margin:0, fontSize:10, lineHeight:1.5, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
           </div>
 
         </div>
@@ -1010,36 +1009,36 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
 
           {/* ====== 시험 준비 + CTA 묶음 ====== */}
-          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:16, padding:"14px 16px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center" }}>
-            <p style={{ margin:"0 0 8px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>시험 준비, 이제 더 똑똑하게!</p>
-            <div className="pc-info-grid" style={{ marginBottom:10 }}>
+          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:16, padding:"14px 16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
+            <p style={{ margin:"0 0 8px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>✨ 시험 준비, 이제 더 똑똑하게! <span style={{ fontSize:11, color:"#999", fontWeight:500 }}>AI와 함께하는 스마트한 학습 습관</span></p>
+            <div className="pc-info-grid" style={{ flex:1, marginBottom:10 }}>
               {[
                 { icon:"🕐", title:"시간 절약", desc:"반복 학습 자동화" },
                 { icon:"📈", title:"성적 향상", desc:"약점 보완" },
                 { icon:"🤖", title:"AI 맞춤", desc:"나만의 플랜" },
                 { icon:"📚", title:"전과목", desc:"국영수과사" },
               ].map((item,i) => (
-                <div key={i} style={{ textAlign:"center", padding:"10px 6px", background:"#f8f9ff", borderRadius:12 }}>
-                  <div style={{ fontSize:22, marginBottom:6 }}>{item.icon}</div>
+                <div key={i} style={{ textAlign:"center", padding:"10px 6px", background:"#f8f9ff", borderRadius:12, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                  <div style={{ fontSize:24, marginBottom:6 }}>{item.icon}</div>
                   <p style={{ margin:"0 0 2px", fontSize:13, fontWeight:900, color:"#1a1a2e" }}>{item.title}</p>
                   <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.3 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
             <button onClick={()=>setShowHome(false)}
-              style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:16, fontWeight:900, cursor:"pointer", boxShadow:"0 4px 16px rgba(99,102,241,0.3)", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:8 }}>
+              style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:15, fontWeight:900, cursor:"pointer", boxShadow:"0 4px 16px rgba(99,102,241,0.3)", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:8, flexShrink:0 }}>
               <span style={{ fontSize:18 }}>📷</span>
               <span>교재 찍고 AI 문제 풀어보기!</span>
               <span style={{ marginLeft:"auto", fontSize:18 }}>›</span>
             </button>
-            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"nowrap" }}>
+            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"nowrap", flexShrink:0 }}>
               {[
                 { icon:"🛡️", text:"안전한 데이터" },
                 { icon:"🚫", text:"광고 없는 환경" },
                 { icon:"☁️", text:"어디서나 동기화" },
                 { icon:"⭐", text:"10만+ 선택" },
               ].map((b,i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:3, fontSize:10, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:3, fontSize:11, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
                   <span>{b.icon}</span><span>{b.text}</span>
                 </div>
               ))}
