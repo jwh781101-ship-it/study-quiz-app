@@ -43,27 +43,27 @@ export default function SoundPlayer() {
   };
 
   return (
-    <div style={{ background:"#fff", borderRadius:20, border:"1.5px solid #e0e7ff", padding:"16px" }}>
-      <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:800, color:"#6366f1" }}>🎧 집중 사운드</p>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:4, marginBottom:14 }}>
+    <div style={{ width:"100%", boxSizing:"border-box" }}>
+      <p style={{ margin:"0 0 10px", fontSize:13, fontWeight:800, color:"#6366f1" }}>🎧 집중 사운드</p>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:4, marginBottom:12 }}>
         {SOUNDS.map(s => (
           <button key={s.id} onClick={()=>selectSound(s.id)}
-            style={{ border:`1.5px solid ${current===s.id?"#6366f1":"#e8e9ef"}`, borderRadius:12, background: current===s.id?"#eef2ff":"#fff", padding:"8px 2px", cursor:"pointer", textAlign:"center", fontFamily:"inherit", transition:"all 0.15s", minWidth:0 }}>
-            <span style={{ fontSize:18, display:"block", marginBottom:3 }}>{s.emoji}</span>
+            style={{ border:`1.5px solid ${current===s.id?"#6366f1":"#e8e9ef"}`, borderRadius:10, background: current===s.id?"#eef2ff":"#fff", padding:"7px 2px", cursor:"pointer", textAlign:"center", fontFamily:"inherit", transition:"all 0.15s", minWidth:0, boxSizing:"border-box" }}>
+            <span style={{ fontSize:16, display:"block", marginBottom:3 }}>{s.emoji}</span>
             <span style={{ fontSize:9, color: current===s.id?"#6366f1":"#555", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", display:"block", width:"100%" }}>{s.label}</span>
           </button>
         ))}
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-        <button onClick={togglePlay} style={{ width:36, height:36, borderRadius:"50%", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:6, width:"100%", boxSizing:"border-box", overflow:"hidden" }}>
+        <button onClick={togglePlay} style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }}>
           {isPlaying
-            ? <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            : <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>}
+            ? <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            : <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>}
         </button>
-        <span style={{ fontSize:11, color:"#999" }}>🔈</span>
-        <input type="range" min={0} max={100} value={volume} onChange={e=>handleVolume(Number(e.target.value))} style={{ flex:1, accentColor:"#6366f1" }} />
-        <span style={{ fontSize:11, color:"#999" }}>🔊</span>
-        <span style={{ fontSize:11, fontWeight:700, color: isPlaying?"#6366f1":"#bbb", minWidth:36, textAlign:"right" }}>{isPlaying?"재생중":"정지"}</span>
+        <span style={{ fontSize:10, color:"#bbb", flexShrink:0 }}>🔈</span>
+        <input type="range" min={0} max={100} value={volume} onChange={e=>handleVolume(Number(e.target.value))} style={{ flex:1, accentColor:"#6366f1", minWidth:0 }} />
+        <span style={{ fontSize:10, color:"#bbb", flexShrink:0 }}>🔊</span>
+        <span style={{ fontSize:10, fontWeight:700, color: isPlaying?"#6366f1":"#bbb", flexShrink:0, whiteSpace:"nowrap" }}>{isPlaying?"재생중":"정지"}</span>
       </div>
     </div>
   );
