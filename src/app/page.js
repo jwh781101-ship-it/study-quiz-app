@@ -582,8 +582,20 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
   // ========================================
   if (showHome) return (
     <div style={{ minHeight:"100vh", background:"#e8eaf0", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif" }}>
-      {/* PC에서는 좌우 회색 배경 + 중앙 앱 컨테이너 (모바일 느낌 유지) */}
-      <div style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:80, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative" }}>
+      <style>{`
+        @media (min-width: 768px) {
+          .pc-outer { display: flex !important; align-items: flex-start !important; justify-content: center !important; gap: 24px !important; padding: 24px !important; }
+          .pc-app { max-width: 420px !important; width: 100% !important; flex-shrink: 0 !important; }
+          .pc-side { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 280px !important; flex-shrink: 0 !important; padding-top: 0 !important; }
+        }
+        @media (max-width: 767px) {
+          .pc-side { display: none !important; }
+        }
+      `}</style>
+
+      <div className="pc-outer" style={{ display:"block" }}>
+        {/* 메인 앱 컨테이너 */}
+        <div className="pc-app" style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:80, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative", borderRadius:0 }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
@@ -882,9 +894,68 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       {/* SoundPlayer (폭포 BGM) - 유지 */}
       <SoundPlayer />
 
-      </div>{/* 내부 모바일 컨테이너 끝 */}
+        </div>{/* 메인 앱 컨테이너 끝 */}
 
-      {/* 하단 탭바 (PC에서도 중앙 정렬) */}
+        {/* PC 전용 사이드바 */}
+        <div className="pc-side">
+          {/* D-Day 카드 */}
+          {(() => {
+            const count = getDdayCount();
+            return (
+              <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+                <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
+                <button onClick={()=>setShowDdayPicker(true)}
+                  style={{ width:"100%", background:"#eef2ff", borderRadius:14, padding:"16px", textAlign:"center", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                  <p style={{ margin:0, fontSize:11, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
+                  <p style={{ margin:"4px 0", fontSize:36, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
+                    {count === null ? "설정" : count === 0 ? "D-Day!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
+                  </p>
+                  {count !== null && <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
+                </button>
+                {count === null && (
+                  <p style={{ margin:"10px 0 0", fontSize:12, color:"#999", textAlign:"center" }}>클릭해서 시험 날짜를 설정하세요</p>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* 빠른 메뉴 */}
+          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+            <p style={{ margin:"0 0 14px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>⚡ 빠른 메뉴</p>
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              {[
+                { label:"AI 문제 뽑기", icon:"📖", color:"#6366f1", bg:"#eef2ff", onClick:()=>setShowHome(false) },
+                { label:"AI 영어선생님", icon:"🌐", color:"#3b82f6", bg:"#eff6ff", onClick:()=>setShowEnglish(true) },
+                { label:"모르면 찍어봐", icon:"📝", color:"#10b981", bg:"#ecfdf5", onClick:()=>{ setShowSolver(true); setShowHome(false); } },
+                { label:"오답보관함", icon:"📋", color:"#f59e0b", bg:"#fffbeb", onClick:()=>{ setShowWrongNote(true); setShowHome(false); } },
+                { label:"학습 통계", icon:"📊", color:"#6366f1", bg:"#eef2ff", onClick:()=>{ setShowStats(true); setShowHome(false); } },
+              ].map((item,i) => (
+                <button key={i} onClick={item.onClick}
+                  style={{ width:"100%", padding:"12px 14px", borderRadius:12, border:"none", background:item.bg, color:item.color, fontSize:14, fontWeight:800, cursor:"pointer", fontFamily:"inherit", textAlign:"left", display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:18 }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 사운드 플레이어 */}
+          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+            <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>🎧 집중 사운드</p>
+            <SoundPlayer />
+          </div>
+
+          {/* 앱 정보 */}
+          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)", textAlign:"center" }}>
+            <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
+            <p style={{ margin:"0 0 12px", fontSize:12, color:"#999" }}>aitestu.com</p>
+            <p style={{ margin:0, fontSize:11, color:"#bbb", lineHeight:1.6 }}>교재 사진 한 장으로<br/>AI가 시험문제를 만들어드려요</p>
+          </div>
+        </div>
+
+      </div>{/* pc-outer 끝 */}
+
+      {/* 하단 탭바 */}
       <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
     </div>
   );
