@@ -344,15 +344,7 @@ const saveDday = (date, label) => {
     }
     const textSection = hasText ? `\n\n[텍스트 학습 내용]\n${textInput}` : "";
     const directionSection = direction.trim() ? `\n\n[출제 방향 - 최우선 적용]\n${direction.trim()}\n반드시 위 방향에 맞게 문제를 출제하세요.` : "";
-    return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.\n\n[중요] 이미지가 다소 흐리거나 기울어져 있어도 절대 포기하지 말고 최대한 내용을 파악해서 문제를 출제하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${questionCount}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n반드시 JSON 형식으로만 응답:
-{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설"}]}
-
-[해설 작성 규칙 - 반드시 준수]
-- 해설에서 보기를 언급할 때 반드시 options 배열의 실제 순서(①②③④⑤)와 일치하게 작성하세요.
-- 즉, options[0]이 ①, options[1]이 ②, options[2]이 ③, options[3]이 ④, options[4]이 ⑤입니다.
-- answer 필드에 적힌 내용이 반드시 options 배열 안에 그대로 존재해야 합니다.
-- 정답(answer)과 해설(explanation)이 서로 모순되면 안 됩니다.
-- 해설에서 "①은 ~~이므로 정답"이라고 썼으면 answer도 반드시 ①로 시작하는 보기여야 합니다.\`;
+    return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.\n\n[중요] 이미지가 다소 흐리거나 기울어져 있어도 절대 포기하지 말고 최대한 내용을 파악해서 문제를 출제하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${questionCount}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n[해설 작성 규칙 - 반드시 준수]\n- 해설에서 보기를 언급할 때 options 배열의 실제 순서(①②③④⑤)와 일치하게 작성하세요.\n- options[0]=①, options[1]=②, options[2]=③, options[3]=④, options[4]=⑤ 입니다.\n- answer 필드에 적힌 내용이 반드시 options 배열 안에 그대로 존재해야 합니다.\n- 정답(answer)과 해설(explanation)이 서로 모순되면 안 됩니다.\n\n반드시 JSON 형식으로만 응답:\n{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설"}]}`;
   };
 
   const callAPI = async (images, prompt) => {
