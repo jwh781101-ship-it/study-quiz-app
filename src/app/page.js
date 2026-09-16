@@ -583,17 +583,74 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
   if (showHome) return (
     <div style={{ minHeight:"100vh", background:"#e8eaf0", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif" }}>
       <style>{`
-        @media (min-width: 768px) {
-          .pc-outer { display: flex !important; align-items: flex-start !important; justify-content: center !important; gap: 24px !important; padding: 24px !important; }
-          .pc-app { max-width: 420px !important; width: 100% !important; flex-shrink: 0 !important; }
-          .pc-side { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 280px !important; flex-shrink: 0 !important; padding-top: 0 !important; }
+        @media (min-width: 1024px) {
+          .pc-outer {
+            display: grid !important;
+            grid-template-columns: 260px 1fr 260px !important;
+            grid-template-rows: auto !important;
+            gap: 20px !important;
+            padding: 20px !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+            align-items: start !important;
+          }
+          .pc-app {
+            max-width: 100% !important;
+            min-height: auto !important;
+            box-shadow: 0 0 40px rgba(0,0,0,0.08) !important;
+            border-radius: 20px !important;
+            overflow: hidden !important;
+          }
+          .pc-left { display: flex !important; flex-direction: column !important; gap: 16px !important; }
+          .pc-side { display: flex !important; flex-direction: column !important; gap: 16px !important; }
+          .pc-bottom-tabs { display: none !important; }
+          .pc-soundplayer-inner { display: none !important; }
         }
-        @media (max-width: 767px) {
+        @media (max-width: 1023px) {
+          .pc-left { display: none !important; }
           .pc-side { display: none !important; }
+          .pc-outer { display: block !important; }
+          .pc-app { max-width: 520px !important; margin: 0 auto !important; }
         }
       `}</style>
 
       <div className="pc-outer" style={{ display:"block" }}>
+
+        {/* PC 왼쪽 사이드바 */}
+        <div className="pc-left">
+          {/* 로고 */}
+          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)", textAlign:"center" }}>
+            <div style={{ width:52, height:52, borderRadius:14, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:26, margin:"0 auto 10px" }}>📖</div>
+            <p style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
+            <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>aitestu.com</p>
+            <p style={{ margin:0, fontSize:11, color:"#bbb", lineHeight:1.6 }}>교재 사진 한 장으로<br/>AI가 시험문제를 만들어드려요</p>
+          </div>
+
+          {/* D-Day */}
+          {(() => {
+            const count = getDdayCount();
+            return (
+              <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+                <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
+                <button onClick={()=>setShowDdayPicker(true)}
+                  style={{ width:"100%", background:"#eef2ff", borderRadius:14, padding:"16px", textAlign:"center", border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                  <p style={{ margin:0, fontSize:11, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
+                  <p style={{ margin:"4px 0", fontSize:36, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
+                    {count === null ? "설정" : count === 0 ? "D!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
+                  </p>
+                  {count !== null && <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
+                  {count === null && <p style={{ margin:"6px 0 0", fontSize:11, color:"#999" }}>클릭해서 날짜 설정</p>}
+                </button>
+              </div>
+            );
+          })()}
+
+          {/* 집중 사운드 */}
+          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+            <SoundPlayer />
+          </div>
+        </div>
+
         {/* 메인 앱 컨테이너 */}
         <div className="pc-app" style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:80, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative", borderRadius:0 }}>
       <style>{`
@@ -891,12 +948,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         ))}
       </div>
 
-      {/* SoundPlayer (폭포 BGM) - 유지 */}
-      <SoundPlayer />
+      {/* SoundPlayer - 모바일에서만 표시 */}
+      <div className="pc-soundplayer-inner">
+        <SoundPlayer />
+      </div>
 
         </div>{/* 메인 앱 컨테이너 끝 */}
 
-        {/* PC 전용 사이드바 */}
+        {/* PC 오른쪽 사이드바 */}
         <div className="pc-side">
           {/* D-Day 카드 */}
           {(() => {
@@ -939,17 +998,24 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             </div>
           </div>
 
-          {/* 사운드 플레이어 */}
+          {/* 캐릭터 선택 */}
           <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
-            <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>🎧 집중 사운드</p>
-            <SoundPlayer />
+            <p style={{ margin:"0 0 12px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>🐾 내 캐릭터</p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              {CHARACTERS.map(c => (
+                <button key={c.id} onClick={()=>selectCharacter(c.id)}
+                  style={{ border:`2px solid ${character===c.id?"#6366f1":"#e8e9ef"}`, borderRadius:14, background: character===c.id?"#eef2ff":"#fff", padding:"10px 8px", cursor:"pointer", textAlign:"center", fontFamily:"inherit" }}>
+                  <img src={c.src} alt={c.name} style={{ width:44, height:44, borderRadius:"50%", objectFit:"cover", display:"block", margin:"0 auto 6px" }} />
+                  <p style={{ margin:0, fontSize:11, fontWeight:800, color: character===c.id?"#6366f1":"#555" }}>{c.name}</p>
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* 앱 정보 */}
-          <div style={{ background:"#fff", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(0,0,0,0.08)", textAlign:"center" }}>
-            <p style={{ margin:"0 0 4px", fontSize:20, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
-            <p style={{ margin:"0 0 12px", fontSize:12, color:"#999" }}>aitestu.com</p>
-            <p style={{ margin:0, fontSize:11, color:"#bbb", lineHeight:1.6 }}>교재 사진 한 장으로<br/>AI가 시험문제를 만들어드려요</p>
+          {/* 학습 팁 */}
+          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:20, padding:20, boxShadow:"0 4px 16px rgba(99,102,241,0.3)", color:"#fff" }}>
+            <p style={{ margin:"0 0 10px", fontSize:14, fontWeight:900 }}>💡 오늘의 학습 팁</p>
+            <p style={{ margin:0, fontSize:12, lineHeight:1.7, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
           </div>
         </div>
 
@@ -1368,8 +1434,10 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
 
       </div>{/* 내부 모바일 컨테이너 끝 */}
 
-      {/* 하단 탭바 */}
-      <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
+      {/* 하단 탭바 - 모바일에서만 */}
+      <div className="pc-bottom-tabs">
+        <BottomTabBar activeTab={getActiveTab()} onTabChange={handleTabChange} />
+      </div>
     </div>
   );
 }
