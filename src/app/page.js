@@ -676,43 +676,50 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           }
           .home-left { display: none !important; }
           .home-right { padding: 0 0 80px !important; }
-          /* 모바일: 메인카드 세로 배치 */
+          /* 모바일: 메인카드 3열 그리드 (원래대로) */
           .pc-main-grid {
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
             gap: 10px !important;
+            flex: none !important;
           }
           .pc-sub-grid {
-            display: flex !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
             gap: 10px !important;
           }
+          /* 모바일 메인카드: 세로 배치 (아이콘 위, 텍스트 아래) */
           .pc-main-card {
-            border-radius: 20px !important;
-            padding: 20px !important;
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            gap: 16px !important;
-            text-align: left !important;
-          }
-          .pc-sub-card {
-            border-radius: 20px !important;
-            padding: 16px !important;
-            flex: 1 !important;
+            border-radius: 16px !important;
+            padding: 16px 8px 14px !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
             text-align: center !important;
+            gap: 0 !important;
+          }
+          .pc-sub-card {
+            border-radius: 16px !important;
+            padding: 16px 14px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 12px !important;
+            text-align: left !important;
           }
           .pc-info-grid {
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: 1fr 1fr 1fr 1fr !important;
             gap: 8px !important;
           }
           .pc-info-section { display: block !important; }
-          .mobile-card-icon-sm { width: 52px !important; height: 52px !important; flex-shrink: 0 !important; }
+          /* 모바일에서 아이콘 크기 조정 */
+          .mobile-card-icon-sm {
+            width: 48px !important;
+            height: 48px !important;
+            margin-bottom: 8px !important;
+          }
         }
       `}</style>
 
@@ -891,11 +898,11 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
 
           {/* ====== 메인 기능 카드 3개 ====== */}
-          <div className="pc-main-grid fade-up">
+          <div className="pc-main-grid fade-up" style={{ padding:"0 16px" }}>
             {/* AI 문제 뽑기 */}
             <button onClick={()=>setShowHome(false)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
-              <div style={{ position:"absolute", top:14, right:14, background:"#ef4444", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:10 }}>HOT</div>
+              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              <div style={{ position:"absolute", top:8, right:8, background:"#ef4444", color:"#fff", fontSize:8, fontWeight:900, padding:"2px 6px", borderRadius:8 }}>HOT</div>
               <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
                   <rect x="8" y="6" width="44" height="48" rx="5" fill="#e0e7ff"/>
@@ -910,15 +917,13 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <line x1="34" y1="28" x2="47" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div>
-                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 문제 뽑기</p>
-                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>교재 사진만 찍으면 AI가 문제로 출제</p>
-              </div>
+              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>AI 문제 뽑기</p>
+              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>교재 사진만 찍으면<br/>AI가 문제로 출제</p>
             </button>
 
             {/* AI 영어선생님 */}
             <button onClick={()=>setShowEnglish(true)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
               <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
                   <circle cx="30" cy="30" r="22" fill="#dbeafe"/>
@@ -930,15 +935,13 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <text x="30" y="36" fontFamily="Georgia, serif" fontSize="19" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
                 </svg>
               </div>
-              <div>
-                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
-                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>단어·문법·회화 AI 맞춤 학습</p>
-              </div>
+              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
+              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>단어·문법·회화<br/>AI 맞춤 학습</p>
             </button>
 
             {/* 모르면 찍어봐 */}
             <button onClick={()=>{ setShowSolver(true); setShowHome(false); }} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
               <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
                 <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
                   <rect x="10" y="8" width="38" height="44" rx="4" fill="#d1fae5"/>
@@ -953,15 +956,13 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   </g>
                 </svg>
               </div>
-              <div>
-                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>모르면 찍어봐</p>
-                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>모르는 문제 찍어주면 AI가 해결</p>
-              </div>
+              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>모르면 찍어봐</p>
+              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>모르는 문제<br/>AI가 해결</p>
             </button>
           </div>
 
           {/* ====== 서브 카드 2개 ====== */}
-          <div className="pc-sub-grid fade-up">
+          <div className="pc-sub-grid fade-up" style={{ padding:"0 16px" }}>
             {/* 오답보관함 */}
             <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }} className="pc-sub-card"
               style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", flexDirection:"column", justifyContent:"center", position:"relative" }}>
@@ -995,7 +996,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
 
           {/* ====== 시험 준비 + CTA 묶음 ====== */}
-          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:18, padding:"18px 20px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:18, padding:"18px 20px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center", margin:"0 16px" }}>
             <p style={{ margin:"0 0 12px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험 준비, 이제 더 똑똑하게!</p>
             <div className="pc-info-grid" style={{ marginBottom:14 }}>
               {[
@@ -1031,7 +1032,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             </div>
           </div>
 
-          {/* 모바일 전용: 집중 사운드 */}
+          {/* 모바일 전용: 집중 사운드 - PC에서는 왼쪽 사이드바에 있음 */}
           <div className="mobile-only" style={{ padding:"0 16px 10px" }}>
             <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
               <SoundPlayer />
