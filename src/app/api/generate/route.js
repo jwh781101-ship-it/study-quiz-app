@@ -1,4 +1,5 @@
-export const maxDuration = 60; // 60초로 늘리기
+export const maxDuration = 60; 
+export const runtime = 'nodejs';
 export async function POST(request) {
   try {
     const body = await request.json();
