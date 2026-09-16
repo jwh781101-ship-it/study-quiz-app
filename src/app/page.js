@@ -591,79 +591,76 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         @media (min-width: 1024px) {
           .home-wrapper {
             display: grid !important;
-            grid-template-columns: 380px 1fr !important;
+            grid-template-columns: 320px 1fr !important;
             gap: 0 !important;
-            width: 100% !important;
-            min-height: 100vh !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
           }
           .home-left {
             display: flex !important;
             flex-direction: column !important;
-            gap: 16px !important;
-            padding: 24px 20px 24px 24px !important;
-            position: sticky !important;
-            top: 0 !important;
+            gap: 10px !important;
+            padding: 16px 14px 16px 16px !important;
             height: 100vh !important;
-            overflow-y: auto !important;
+            overflow: hidden !important;
             background: #e0e2ec !important;
-          }
-          .home-left > div {
-            flex: 1 !important;
-            min-height: 0 !important;
+            box-sizing: border-box !important;
           }
           .home-right {
-            padding: 24px 24px 24px 20px !important;
+            padding: 16px 16px 16px 14px !important;
             background: #e0e2ec !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 16px !important;
-            min-height: 100vh !important;
+            gap: 10px !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .mobile-bottom-tab { display: none !important; }
           .mobile-only { display: none !important; }
           .pc-main-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
-            gap: 16px !important;
-            flex: 2 !important;
+            gap: 10px !important;
+            flex: 1 !important;
+            min-height: 0 !important;
           }
           .pc-sub-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 16px !important;
-            flex: 1.2 !important;
+            gap: 10px !important;
+            flex: 0.65 !important;
+            min-height: 0 !important;
           }
           .pc-main-card {
-            border-radius: 20px !important;
-            padding: 36px 24px !important;
+            border-radius: 18px !important;
+            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
             height: 100% !important;
+            box-sizing: border-box !important;
           }
           .pc-sub-card {
-            border-radius: 20px !important;
-            padding: 28px 24px !important;
+            border-radius: 18px !important;
+            padding: 0 !important;
             height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 20px !important;
+            padding: 0 28px !important;
+            box-sizing: border-box !important;
           }
           .pc-info-section {
-            flex: 1 !important;
+            flex: 0.75 !important;
+            min-height: 0 !important;
           }
           .pc-info-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr 1fr !important;
-            gap: 14px !important;
-          }
-          .pc-cta-section {
-            flex-shrink: 0 !important;
-          }
-          /* 사운드 플레이어 소리 제목 줄바꿈 방지 */
-          .sound-label {
-            font-size: 11px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            gap: 8px !important;
           }
         }
 
@@ -747,14 +744,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         <div className="home-left">
 
           {/* 로고 + 캐릭터 */}
-          <div style={{ background:"#fff", borderRadius:20, padding:"28px 24px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", textAlign:"center" }}>
+          <div style={{ background:"#fff", borderRadius:18, padding:"20px 16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", textAlign:"center", flexShrink:0 }}>
             <img src={currentChar.src} alt={currentChar.name}
               onClick={()=>setShowCharacterPicker(true)}
-              style={{ width:96, height:96, borderRadius:"50%", objectFit:"cover", border:"4px solid #eef2ff", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", cursor:"pointer", display:"block", margin:"0 auto 14px", animation:"float 3s ease-in-out infinite" }} />
-            <p style={{ margin:"0 0 4px", fontSize:22, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
-            <p style={{ margin:"0 0 14px", fontSize:13, color:"#bbb" }}>aitestu.com</p>
+              style={{ width:72, height:72, borderRadius:"50%", objectFit:"cover", border:"3px solid #eef2ff", boxShadow:"0 4px 12px rgba(99,102,241,0.2)", cursor:"pointer", display:"block", margin:"0 auto 10px", animation:"float 3s ease-in-out infinite" }} />
+            <p style={{ margin:"0 0 2px", fontSize:20, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
+            <p style={{ margin:"0 0 10px", fontSize:12, color:"#bbb" }}>aitestu.com</p>
             <button onClick={()=>setShowCharacterPicker(true)}
-              style={{ background:"#f5f3ff", border:"1.5px solid #e0e7ff", borderRadius:12, padding:"8px 20px", fontSize:13, color:"#6366f1", fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+              style={{ background:"#f5f3ff", border:"1.5px solid #e0e7ff", borderRadius:10, padding:"6px 16px", fontSize:12, color:"#6366f1", fontWeight:700, cursor:"pointer", fontFamily:"inherit", width:"100%", boxSizing:"border-box" }}>
               🐾 캐릭터 변경
             </button>
           </div>
@@ -765,18 +762,18 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             const hasGoal = count !== null;
             const progress = hasGoal ? (count <= 0 ? 100 : count >= 30 ? 10 : Math.round(((30-count)/30)*100)) : 0;
             return (
-              <div style={{ background:"#fff", borderRadius:20, padding:"20px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)" }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
-                  <p style={{ margin:0, fontSize:17, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
-                  <button onClick={()=>setShowDdayPicker(true)} style={{ background:"none", border:"none", color:"#6366f1", fontSize:14, cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>설정 ✏️</button>
+              <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flexShrink:0 }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                  <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
+                  <button onClick={()=>setShowDdayPicker(true)} style={{ background:"none", border:"none", color:"#6366f1", fontSize:12, cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>설정 ✏️</button>
                 </div>
-                <div style={{ background:"#eef2ff", borderRadius:16, padding:"24px", textAlign:"center", marginBottom: hasGoal?16:0 }}>
-                  <p style={{ margin:0, fontSize:13, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
-                  <p style={{ margin:"8px 0 6px", fontSize:52, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
+                <div style={{ background:"#eef2ff", borderRadius:14, padding:"16px", textAlign:"center", marginBottom: hasGoal?12:0 }}>
+                  <p style={{ margin:0, fontSize:11, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
+                  <p style={{ margin:"6px 0 4px", fontSize:40, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
                     {!hasGoal ? "설정" : count === 0 ? "D-Day!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
                   </p>
-                  {hasGoal && <p style={{ margin:0, fontSize:15, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
-                  {!hasGoal && <p style={{ margin:"8px 0 0", fontSize:13, color:"#999" }}>클릭해서 날짜 설정</p>}
+                  {hasGoal && <p style={{ margin:0, fontSize:13, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
+                  {!hasGoal && <p style={{ margin:"6px 0 0", fontSize:12, color:"#999" }}>클릭해서 날짜 설정</p>}
                 </div>
                 {hasGoal && (
                   <>
@@ -794,14 +791,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           })()}
 
           {/* 집중 사운드 */}
-          <div style={{ background:"#fff", borderRadius:20, padding:"20px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)" }}>
+          <div style={{ background:"#fff", borderRadius:18, padding:"14px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flex:1, minHeight:0, overflow:"hidden" }}>
             <SoundPlayer />
           </div>
 
           {/* 학습 팁 */}
-          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:20, padding:"18px 20px", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", color:"#fff" }}>
-            <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:900 }}>💡 오늘의 학습 팁</p>
-            <p style={{ margin:0, fontSize:12, lineHeight:1.7, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
+          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:18, padding:"12px 16px", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", color:"#fff", flexShrink:0 }}>
+            <p style={{ margin:"0 0 4px", fontSize:12, fontWeight:900 }}>💡 오늘의 학습 팁</p>
+            <p style={{ margin:0, fontSize:11, lineHeight:1.6, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
           </div>
 
         </div>
@@ -923,9 +920,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           <div className="pc-sub-grid fade-up">
             {/* 오답보관함 */}
             <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", display:"flex", alignItems:"center", gap:20, position:"relative" }}>
-              <div style={{ position:"absolute", top:16, right:16, color:"#cbd5e1", fontSize:18 }}>›</div>
-              <div style={{ width:64, height:64, borderRadius:18, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", flexDirection:"column", justifyContent:"center", position:"relative" }}>
+              <div style={{ width:64, height:64, borderRadius:18, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px" }}>
                 <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
                   <rect x="8" y="6" width="28" height="36" rx="3" fill="#fef3c7"/>
                   <rect x="8" y="6" width="28" height="36" rx="3" stroke="#f59e0b" strokeWidth="1.5" fill="none"/>
@@ -934,17 +930,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <line x1="13" y1="29" x2="25" y2="29" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
-                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.6 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
-              </div>
+              <p style={{ margin:"0 0 8px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
+              <p style={{ margin:0, fontSize:14, color:"#888", lineHeight:1.5 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
             </button>
 
             {/* 학습 통계 */}
             <button onClick={()=>{ setShowStats(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", display:"flex", alignItems:"center", gap:20, position:"relative" }}>
-              <div style={{ position:"absolute", top:16, right:16, color:"#cbd5e1", fontSize:18 }}>›</div>
-              <div style={{ width:64, height:64, borderRadius:18, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", flexDirection:"column", justifyContent:"center", position:"relative" }}>
+              <div style={{ width:64, height:64, borderRadius:18, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px" }}>
                 <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
                   <rect x="12" y="26" width="5" height="12" fill="#10b981"/>
                   <rect x="20" y="18" width="5" height="20" fill="#ef4444"/>
@@ -952,44 +945,42 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <line x1="10" y1="38" x2="38" y2="38" stroke="#6366f1" strokeWidth="1.3"/>
                 </svg>
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
-                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.6 }}>나의 공부 현황<br/>한눈에 분석</p>
-              </div>
+              <p style={{ margin:"0 0 8px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
+              <p style={{ margin:0, fontSize:14, color:"#888", lineHeight:1.5 }}>나의 공부 현황<br/>한눈에 분석</p>
             </button>
           </div>
 
           {/* ====== 시험 준비 + CTA 묶음 ====== */}
-          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:20, padding:"28px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)" }}>
-            <p style={{ margin:"0 0 18px", fontSize:17, fontWeight:900, color:"#1a1a2e" }}>시험 준비, 이제 더 똑똑하게!</p>
-            <div className="pc-info-grid" style={{ marginBottom:24 }}>
+          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:18, padding:"18px 20px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+            <p style={{ margin:"0 0 12px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험 준비, 이제 더 똑똑하게!</p>
+            <div className="pc-info-grid" style={{ marginBottom:14 }}>
               {[
                 { icon:"🕐", title:"시간 절약", desc:"반복 학습 자동화" },
-                { icon:"📈", title:"성적 향상", desc:"맞춤 분석으로 약점 보완" },
-                { icon:"🤖", title:"AI 맞춤 학습", desc:"나만의 학습 플랜 제공" },
-                { icon:"📚", title:"모든 과목", desc:"국영수과사 전과목" },
+                { icon:"📈", title:"성적 향상", desc:"약점 보완" },
+                { icon:"🤖", title:"AI 맞춤 학습", desc:"나만의 플랜" },
+                { icon:"📚", title:"모든 과목", desc:"전과목 지원" },
               ].map((item,i) => (
-                <div key={i} style={{ textAlign:"center", padding:"18px 10px", background:"#f8f9ff", borderRadius:16 }}>
-                  <div style={{ fontSize:30, marginBottom:10 }}>{item.icon}</div>
-                  <p style={{ margin:"0 0 6px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>{item.title}</p>
-                  <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.5 }}>{item.desc}</p>
+                <div key={i} style={{ textAlign:"center", padding:"14px 8px", background:"#f8f9ff", borderRadius:14 }}>
+                  <div style={{ fontSize:26, marginBottom:8 }}>{item.icon}</div>
+                  <p style={{ margin:"0 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>{item.title}</p>
+                  <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>{item.desc}</p>
                 </div>
               ))}
             </div>
             <button onClick={()=>setShowHome(false)}
-              style={{ width:"100%", padding:"22px 24px", borderRadius:18, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:18, fontWeight:900, cursor:"pointer", boxShadow:"0 6px 20px rgba(99,102,241,0.35)", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:12 }}>
-              <span style={{ fontSize:24 }}>📷</span>
+              style={{ width:"100%", padding:"16px 20px", borderRadius:16, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:17, fontWeight:900, cursor:"pointer", boxShadow:"0 6px 20px rgba(99,102,241,0.35)", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:10 }}>
+              <span style={{ fontSize:20 }}>📷</span>
               <span>교재 찍고 AI 문제 풀어보기!</span>
-              <span style={{ marginLeft:"auto", fontSize:22 }}>›</span>
+              <span style={{ marginLeft:"auto", fontSize:20 }}>›</span>
             </button>
-            <div style={{ display:"flex", justifyContent:"space-around", gap:6, marginTop:16, flexWrap:"nowrap" }}>
+            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"nowrap" }}>
               {[
                 { icon:"🛡️", text:"안전한 데이터 관리" },
                 { icon:"🚫", text:"광고 없는 쾌적한 환경" },
                 { icon:"☁️", text:"언제 어디서나 동기화" },
                 { icon:"⭐", text:"10만+ 학생의 선택" },
               ].map((b,i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:4, fontSize:11, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:3, fontSize:11, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
                   <span>{b.icon}</span><span>{b.text}</span>
                 </div>
               ))}
