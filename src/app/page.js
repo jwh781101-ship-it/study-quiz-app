@@ -650,6 +650,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
+            gap: 12px !important;
             box-sizing: border-box !important;
             padding: 0 !important;
           }
@@ -703,10 +704,11 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             gap: 0 !important;
             height: auto !important;
           }
-          /* 모바일 서브카드: 가로 배치 */
+          /* 모바일 서브카드: 가로 배치 오버라이드 */
           .pc-sub-card {
             border-radius: 20px !important;
-            padding: 18px 14px !important;
+            padding: 16px 14px !important;
+            flex: 1 !important;
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
@@ -714,6 +716,15 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             text-align: left !important;
             gap: 12px !important;
             height: auto !important;
+          }
+          .pc-sub-card > div:first-child {
+            width: 44px !important;
+            height: 44px !important;
+            flex-shrink: 0 !important;
+          }
+          .pc-sub-card > div:last-child {
+            text-align: left !important;
+            flex: 1 !important;
           }
           /* 정보섹션 */
           .pc-info-section {
@@ -858,52 +869,36 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         {/* ========== 오른쪽 메인 콘텐츠 ========== */}
         <div className="home-right">
 
-          {/* 모바일 헤더 */}
-          <div className="mobile-only" style={{ padding:"16px 16px 4px", display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:36, height:36, borderRadius:11, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>📖</div>
-            <div style={{ flex:1 }}>
-              <p style={{ margin:0, fontSize:15, fontWeight:900, color:"#1a1a2e" }}>AI 학습관리 앱</p>
-              <p style={{ margin:"2px 0 0", fontSize:11, color:"#999" }}>AI가 다 해주는 시험 준비!</p>
-            </div>
-          </div>
-
-          {/* PC 인사말 */}
-          <div style={{ marginBottom:20, display:"flex", alignItems:"center", justifyContent:"space-between" }} className="mobile-only" data-pc-show="true">
-          </div>
-
           {/* 모바일 D-Day 카드 */}
-          <div className="mobile-only" style={{ padding:"12px 16px 0" }}>
+          <div className="mobile-only" style={{ padding:"16px 16px 0" }}>
             {(() => {
               const count = getDdayCount();
               const hasGoal = count !== null;
               const progress = hasGoal ? (count <= 0 ? 100 : count >= 30 ? 10 : Math.round(((30-count)/30)*100)) : 0;
               return (
-                <div style={{ background:"#fff", borderRadius:18, padding:"14px 16px", boxShadow:"0 4px 16px rgba(0,0,0,0.08)", display:"flex", alignItems:"center", gap:12 }} className="fade-up">
-                  <button onClick={()=>setShowDdayPicker(true)}
-                    style={{ background:"#eef2ff", borderRadius:14, padding:"10px 14px", textAlign:"center", minWidth:76, flexShrink:0, border:"none", cursor:"pointer", fontFamily:"inherit" }}>
-                    <p style={{ margin:0, fontSize:10, fontWeight:800, color:"#6366f1", letterSpacing:0.8 }}>D-DAY</p>
-                    <p style={{ margin:"3px 0 0", fontSize:26, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
-                      {!hasGoal ? "설정" : count === 0 ? "D!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
-                    </p>
-                  </button>
-                  <button onClick={()=>setShowDdayPicker(true)} style={{ flex:1, background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", padding:0 }}>
-                    <p style={{ margin:"0 0 2px", fontSize:14, fontWeight:900, color:"#1a1a2e", display:"flex", alignItems:"center", gap:4 }}>
-                      <span style={{ fontSize:13 }}>🎯</span>
-                      <span>{hasGoal ? ddayLabel : "목표 설정"}</span>
-                      <span style={{ fontSize:11 }}>✏️</span>
-                    </p>
-                    {hasGoal && (
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ flex:1, height:7, background:"#f0f0f5", borderRadius:4, overflow:"hidden" }}>
-                          <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:4 }}/>
+                <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }} className="fade-up">
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <button onClick={()=>setShowDdayPicker(true)}
+                      style={{ background:"#eef2ff", borderRadius:14, padding:"12px 16px", textAlign:"center", minWidth:84, flexShrink:0, border:"none", cursor:"pointer", fontFamily:"inherit" }}>
+                      <p style={{ margin:0, fontSize:11, fontWeight:800, color:"#6366f1", letterSpacing:0.8 }}>D-DAY</p>
+                      <p style={{ margin:"4px 0 0", fontSize:30, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
+                        {!hasGoal ? "설정" : count === 0 ? "D!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
+                      </p>
+                    </button>
+                    <button onClick={()=>setShowDdayPicker(true)} style={{ flex:1, background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", padding:0 }}>
+                      <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>
+                        {hasGoal ? ddayLabel : "목표 설정하기"} ✏️
+                      </p>
+                      {hasGoal && (
+                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                          <div style={{ flex:1, height:7, background:"#f0f0f5", borderRadius:4, overflow:"hidden" }}>
+                            <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:4 }}/>
+                          </div>
+                          <span style={{ fontSize:12, fontWeight:800, color:"#6366f1" }}>{progress}%</span>
                         </div>
-                        <span style={{ fontSize:11, fontWeight:800, color:"#6366f1" }}>{progress}%</span>
-                      </div>
-                    )}
-                  </button>
-                  <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <p style={{ margin:0, fontSize:10.5, color:"#999" }}>오늘도 한 걸음 더</p>
-                    <p style={{ margin:"3px 0 0", fontSize:12, fontWeight:900, color:"#1a1a2e" }}>목표까지 화이팅 💪</p>
+                      )}
+                      <p style={{ margin:0, fontSize:12, color:"#999" }}>오늘도 한 걸음 더 <span style={{ fontWeight:900, color:"#1a1a2e" }}>목표까지 화이팅 💪</span></p>
+                    </button>
                   </div>
                 </div>
               );
@@ -979,8 +974,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             {/* 오답보관함 */}
             <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }} className="pc-sub-card"
               style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
-              <div style={{ width:44, height:44, borderRadius:14, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
+              <div style={{ width:56, height:56, borderRadius:16, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
                   <rect x="8" y="6" width="28" height="36" rx="3" fill="#fef3c7"/>
                   <rect x="8" y="6" width="28" height="36" rx="3" stroke="#f59e0b" strokeWidth="1.5" fill="none"/>
                   <line x1="13" y1="15" x2="31" y2="15" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
@@ -988,29 +983,27 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <line x1="13" y1="29" x2="25" y2="29" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ margin:"0 0 3px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
-                <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
+              <div style={{ textAlign:"center" }}>
+                <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
+                <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
               </div>
-              <span style={{ color:"#ccc", fontSize:14, flexShrink:0 }}>›</span>
             </button>
 
             {/* 학습 통계 */}
             <button onClick={()=>{ setShowStats(true); setShowHome(false); }} className="pc-sub-card"
               style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
-              <div style={{ width:44, height:44, borderRadius:14, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
+              <div style={{ width:56, height:56, borderRadius:16, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
                   <rect x="12" y="26" width="5" height="12" fill="#10b981"/>
                   <rect x="20" y="18" width="5" height="20" fill="#ef4444"/>
                   <rect x="28" y="22" width="5" height="16" fill="#6366f1"/>
                   <line x1="10" y1="38" x2="38" y2="38" stroke="#6366f1" strokeWidth="1.3"/>
                 </svg>
               </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ margin:"0 0 3px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
-                <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>나의 공부 현황<br/>한눈에 분석</p>
+              <div style={{ textAlign:"center" }}>
+                <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
+                <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>나의 공부 현황<br/>한눈에 분석</p>
               </div>
-              <span style={{ color:"#ccc", fontSize:14, flexShrink:0 }}>›</span>
             </button>
           </div>
 
