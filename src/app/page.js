@@ -676,49 +676,62 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           }
           .home-left { display: none !important; }
           .home-right { padding: 0 0 80px !important; }
-          /* 모바일: 메인카드 3열 그리드 (원래대로) */
+          /* 모바일: 메인카드 3열 그리드 */
           .pc-main-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 12px !important;
             flex: none !important;
+            padding: 0 16px !important;
           }
+          /* 모바일: 서브카드 2열 */
           .pc-sub-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 12px !important;
+            padding: 0 16px !important;
           }
-          /* 모바일 메인카드: 세로 배치 (아이콘 위, 텍스트 아래) */
+          /* 모바일 메인카드: 세로 배치 */
           .pc-main-card {
-            border-radius: 16px !important;
-            padding: 16px 8px 14px !important;
+            border-radius: 20px !important;
+            padding: 20px 10px 18px !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
-            justify-content: center !important;
+            justify-content: flex-start !important;
             text-align: center !important;
             gap: 0 !important;
+            height: auto !important;
           }
+          /* 모바일 서브카드: 가로 배치 */
           .pc-sub-card {
-            border-radius: 16px !important;
-            padding: 16px 14px !important;
+            border-radius: 20px !important;
+            padding: 18px 14px !important;
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 12px !important;
+            justify-content: flex-start !important;
             text-align: left !important;
+            gap: 12px !important;
+            height: auto !important;
+          }
+          /* 정보섹션 */
+          .pc-info-section {
+            display: block !important;
+            flex: none !important;
+            margin: 0 16px !important;
           }
           .pc-info-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr 1fr !important;
-            gap: 8px !important;
+            gap: 10px !important;
           }
-          .pc-info-section { display: block !important; }
-          /* 모바일에서 아이콘 크기 조정 */
+          /* 모바일 아이콘 크기 */
           .mobile-card-icon-sm {
-            width: 48px !important;
-            height: 48px !important;
-            margin-bottom: 8px !important;
+            width: 52px !important;
+            height: 52px !important;
+            margin-bottom: 10px !important;
+            flex-shrink: 0 !important;
           }
         }
       `}</style>
@@ -898,7 +911,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
 
           {/* ====== 메인 기능 카드 3개 ====== */}
-          <div className="pc-main-grid fade-up" style={{ padding:"0 16px" }}>
+          <div className="pc-main-grid fade-up" style={{ marginTop:12 }}>
             {/* AI 문제 뽑기 */}
             <button onClick={()=>setShowHome(false)} className="pc-main-card"
               style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
@@ -962,12 +975,12 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           </div>
 
           {/* ====== 서브 카드 2개 ====== */}
-          <div className="pc-sub-grid fade-up" style={{ padding:"0 16px" }}>
+          <div className="pc-sub-grid fade-up" style={{ marginTop:12 }}>
             {/* 오답보관함 */}
             <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", flexDirection:"column", justifyContent:"center", position:"relative" }}>
-              <div style={{ width:64, height:64, borderRadius:18, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px" }}>
-                <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
+              <div style={{ width:44, height:44, borderRadius:14, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
                   <rect x="8" y="6" width="28" height="36" rx="3" fill="#fef3c7"/>
                   <rect x="8" y="6" width="28" height="36" rx="3" stroke="#f59e0b" strokeWidth="1.5" fill="none"/>
                   <line x1="13" y1="15" x2="31" y2="15" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
@@ -975,28 +988,34 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                   <line x1="13" y1="29" x2="25" y2="29" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
                 </svg>
               </div>
-              <p style={{ margin:"0 0 8px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
-              <p style={{ margin:0, fontSize:14, color:"#888", lineHeight:1.5 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ margin:"0 0 3px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
+                <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
+              </div>
+              <span style={{ color:"#ccc", fontSize:14, flexShrink:0 }}>›</span>
             </button>
 
             {/* 학습 통계 */}
             <button onClick={()=>{ setShowStats(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", flexDirection:"column", justifyContent:"center", position:"relative" }}>
-              <div style={{ width:64, height:64, borderRadius:18, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 14px" }}>
-                <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
+              <div style={{ width:44, height:44, borderRadius:14, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="26" height="26" viewBox="0 0 48 48" fill="none">
                   <rect x="12" y="26" width="5" height="12" fill="#10b981"/>
                   <rect x="20" y="18" width="5" height="20" fill="#ef4444"/>
                   <rect x="28" y="22" width="5" height="16" fill="#6366f1"/>
                   <line x1="10" y1="38" x2="38" y2="38" stroke="#6366f1" strokeWidth="1.3"/>
                 </svg>
               </div>
-              <p style={{ margin:"0 0 8px", fontSize:20, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
-              <p style={{ margin:0, fontSize:14, color:"#888", lineHeight:1.5 }}>나의 공부 현황<br/>한눈에 분석</p>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ margin:"0 0 3px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
+                <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>나의 공부 현황<br/>한눈에 분석</p>
+              </div>
+              <span style={{ color:"#ccc", fontSize:14, flexShrink:0 }}>›</span>
             </button>
           </div>
 
           {/* ====== 시험 준비 + CTA 묶음 ====== */}
-          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:18, padding:"18px 20px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center", margin:"0 16px" }}>
+          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:18, padding:"18px 20px", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", display:"flex", flexDirection:"column", justifyContent:"center", marginTop:12 }}>
             <p style={{ margin:"0 0 12px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>시험 준비, 이제 더 똑똑하게!</p>
             <div className="pc-info-grid" style={{ marginBottom:14 }}>
               {[
@@ -1032,16 +1051,11 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             </div>
           </div>
 
-          {/* 모바일 전용: 집중 사운드 - PC에서는 왼쪽 사이드바에 있음 */}
+          {/* 모바일 전용: 집중 사운드 */}
           <div className="mobile-only" style={{ padding:"0 16px 10px" }}>
             <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
               <SoundPlayer />
             </div>
-          </div>
-
-          {/* 모바일 전용: 집중 사운드 */}
-          <div className="mobile-only" style={{ padding:"4px 16px 10px" }}>
-            <SoundPlayer />
           </div>
 
         </div>{/* home-right 끝 */}
