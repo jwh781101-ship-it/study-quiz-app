@@ -1294,7 +1294,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                 <span style={{ fontSize:20, fontWeight:900, color:"#6366f1" }}>{questionCount}개</span>
               </div>
               <input type="range" min={3} max={15} value={questionCount} onChange={e=>setQuestionCount(Number(e.target.value))} style={{ width:"100%", accentColor:"#6366f1" }} />
-              <div style={{ display:"flex", justifyContent:"space-between", color:"#bbb", fontSize:11, marginTop:4 }}><span>3개</span><span>30개</span></div>
+              <div style={{ display:"flex", justifyContent:"space-between", color:"#bbb", fontSize:11, marginTop:4 }}><span>3개</span><span>15개</span></div>
               {questionCount >= 20 && <p style={{ margin:"8px 0 0", fontSize:11, color:"#f59e0b", background:"#fffbeb", padding:"6px 10px", borderRadius:8 }}>⏱ 20개 이상은 생성에 30~60초 소요될 수 있어요</p>}
             </div>
 
