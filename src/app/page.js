@@ -600,19 +600,19 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           .home-left {
             display: flex !important;
             flex-direction: column !important;
-            gap: 10px !important;
-            padding: 16px 14px 16px 16px !important;
+            gap: 12px !important;
+            padding: 20px 16px 20px 20px !important;
             height: 100vh !important;
             overflow: hidden !important;
             background: #e0e2ec !important;
             box-sizing: border-box !important;
           }
           .home-right {
-            padding: 16px 16px 16px 14px !important;
+            padding: 20px 20px 20px 16px !important;
             background: #e0e2ec !important;
             display: flex !important;
             flex-direction: column !important;
-            gap: 10px !important;
+            gap: 12px !important;
             height: 100vh !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
@@ -622,36 +622,36 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           .pc-main-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 12px !important;
             flex: 1 !important;
             min-height: 0 !important;
           }
           .pc-sub-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            gap: 10px !important;
+            gap: 12px !important;
             flex: 0.65 !important;
             min-height: 0 !important;
           }
           .pc-main-card {
             border-radius: 18px !important;
-            padding: 0 !important;
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
             height: 100% !important;
             box-sizing: border-box !important;
+            padding: 0 !important;
           }
           .pc-sub-card {
             border-radius: 18px !important;
-            padding: 0 !important;
             height: 100% !important;
             display: flex !important;
+            flex-direction: column !important;
             align-items: center !important;
-            gap: 20px !important;
-            padding: 0 28px !important;
+            justify-content: center !important;
             box-sizing: border-box !important;
+            padding: 0 !important;
           }
           .pc-info-section {
             flex: 0.75 !important;
@@ -660,7 +660,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           .pc-info-grid {
             display: grid !important;
             grid-template-columns: 1fr 1fr 1fr 1fr !important;
-            gap: 8px !important;
+            gap: 10px !important;
           }
         }
 
@@ -676,11 +676,43 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           }
           .home-left { display: none !important; }
           .home-right { padding: 0 0 80px !important; }
-          .pc-main-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 10px !important; }
-          .pc-sub-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
-          .pc-main-card { border-radius: 16px !important; padding: 18px 10px 16px !important; }
-          .pc-sub-card { border-radius: 16px !important; padding: 16px 14px !important; }
-          .pc-info-grid { display: grid !important; grid-template-columns: 1fr 1fr 1fr 1fr !important; gap: 8px !important; }
+          /* 모바일: 메인카드 세로 배치 */
+          .pc-main-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+          .pc-sub-grid {
+            display: flex !important;
+            gap: 10px !important;
+          }
+          .pc-main-card {
+            border-radius: 20px !important;
+            padding: 20px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 16px !important;
+            text-align: left !important;
+          }
+          .pc-sub-card {
+            border-radius: 20px !important;
+            padding: 16px !important;
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+          .pc-info-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+          }
+          .pc-info-section { display: block !important; }
+          .mobile-card-icon-sm { width: 52px !important; height: 52px !important; flex-shrink: 0 !important; }
         }
       `}</style>
 
@@ -791,7 +823,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           })()}
 
           {/* 집중 사운드 */}
-          <div style={{ background:"#fff", borderRadius:18, padding:"14px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flex:1, minHeight:0, overflow:"hidden" }}>
+          <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 4px 16px rgba(0,0,0,0.07)", flexShrink:0, boxSizing:"border-box", overflow:"hidden" }}>
             <SoundPlayer />
           </div>
 
@@ -862,57 +894,69 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           <div className="pc-main-grid fade-up">
             {/* AI 문제 뽑기 */}
             <button onClick={()=>setShowHome(false)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", position:"relative" }}>
-              <div style={{ position:"absolute", top:16, right:16, background:"#ef4444", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:10 }}>HOT</div>
-              <svg width="72" height="72" viewBox="0 0 60 60" fill="none" style={{ margin:"0 auto 16px", display:"block" }}>
-                <rect x="8" y="6" width="44" height="48" rx="5" fill="#e0e7ff"/>
-                <rect x="8" y="6" width="22" height="48" rx="5" fill="#a5b4fc"/>
-                <rect x="30" y="6" width="22" height="48" rx="5" fill="#818cf8"/>
-                <line x1="29" y1="6" x2="29" y2="54" stroke="#6366f1" strokeWidth="1.5"/>
-                <line x1="13" y1="16" x2="25" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="13" y1="22" x2="25" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="13" y1="28" x2="25" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="34" y1="16" x2="47" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="34" y1="22" x2="47" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="34" y1="28" x2="47" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              <p style={{ margin:"0 0 8px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 문제 뽑기</p>
-              <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.6 }}>교재 사진만 찍으면<br/>AI가 문제로 출제</p>
+              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              <div style={{ position:"absolute", top:14, right:14, background:"#ef4444", color:"#fff", fontSize:10, fontWeight:900, padding:"3px 9px", borderRadius:10 }}>HOT</div>
+              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
+                  <rect x="8" y="6" width="44" height="48" rx="5" fill="#e0e7ff"/>
+                  <rect x="8" y="6" width="22" height="48" rx="5" fill="#a5b4fc"/>
+                  <rect x="30" y="6" width="22" height="48" rx="5" fill="#818cf8"/>
+                  <line x1="29" y1="6" x2="29" y2="54" stroke="#6366f1" strokeWidth="1.5"/>
+                  <line x1="13" y1="16" x2="25" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="13" y1="22" x2="25" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="13" y1="28" x2="25" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="34" y1="16" x2="47" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="34" y1="22" x2="47" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="34" y1="28" x2="47" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 문제 뽑기</p>
+                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>교재 사진만 찍으면 AI가 문제로 출제</p>
+              </div>
             </button>
 
             {/* AI 영어선생님 */}
             <button onClick={()=>setShowEnglish(true)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", position:"relative" }}>
-              <svg width="72" height="72" viewBox="0 0 60 60" fill="none" style={{ margin:"0 auto 16px", display:"block" }}>
-                <circle cx="30" cy="30" r="22" fill="#dbeafe"/>
-                <circle cx="30" cy="30" r="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
-                <ellipse cx="30" cy="30" rx="10" ry="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
-                <line x1="8" y1="30" x2="52" y2="30" stroke="#3b82f6" strokeWidth="1.3" opacity="0.6"/>
-                <line x1="11" y1="20" x2="49" y2="20" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
-                <line x1="11" y1="40" x2="49" y2="40" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
-                <text x="30" y="36" fontFamily="Georgia, serif" fontSize="19" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
-              </svg>
-              <p style={{ margin:"0 0 8px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
-              <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.6 }}>단어·문법·회화<br/>AI 맞춤 학습</p>
+              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
+                  <circle cx="30" cy="30" r="22" fill="#dbeafe"/>
+                  <circle cx="30" cy="30" r="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
+                  <ellipse cx="30" cy="30" rx="10" ry="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
+                  <line x1="8" y1="30" x2="52" y2="30" stroke="#3b82f6" strokeWidth="1.3" opacity="0.6"/>
+                  <line x1="11" y1="20" x2="49" y2="20" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
+                  <line x1="11" y1="40" x2="49" y2="40" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
+                  <text x="30" y="36" fontFamily="Georgia, serif" fontSize="19" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
+                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>단어·문법·회화 AI 맞춤 학습</p>
+              </div>
             </button>
 
             {/* 모르면 찍어봐 */}
             <button onClick={()=>{ setShowSolver(true); setShowHome(false); }} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", textAlign:"center", position:"relative" }}>
-              <svg width="72" height="72" viewBox="0 0 60 60" fill="none" style={{ margin:"0 auto 16px", display:"block" }}>
-                <rect x="10" y="8" width="38" height="44" rx="4" fill="#d1fae5"/>
-                <rect x="10" y="8" width="38" height="44" rx="4" stroke="#10b981" strokeWidth="1.5" fill="none"/>
-                <line x1="17" y1="18" x2="41" y2="18" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="17" y1="25" x2="41" y2="25" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                <line x1="17" y1="32" x2="32" y2="32" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                <g transform="translate(35,30) rotate(35)">
-                  <rect x="0" y="0" width="4" height="16" fill="#fbbf24"/>
-                  <rect x="0" y="0" width="4" height="3" fill="#ef4444"/>
-                  <polygon points="0,16 2,20 4,16" fill="#1a1a2e"/>
-                </g>
-              </svg>
-              <p style={{ margin:"0 0 8px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>모르면 찍어봐</p>
-              <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.6 }}>모르는 문제 찍어주면<br/>AI가 해결</p>
+              style={{ background:"#fff", border:"none", boxShadow:"0 4px 20px rgba(0,0,0,0.08)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
+              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
+                  <rect x="10" y="8" width="38" height="44" rx="4" fill="#d1fae5"/>
+                  <rect x="10" y="8" width="38" height="44" rx="4" stroke="#10b981" strokeWidth="1.5" fill="none"/>
+                  <line x1="17" y1="18" x2="41" y2="18" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="17" y1="25" x2="41" y2="25" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                  <line x1="17" y1="32" x2="32" y2="32" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                  <g transform="translate(35,30) rotate(35)">
+                    <rect x="0" y="0" width="4" height="16" fill="#fbbf24"/>
+                    <rect x="0" y="0" width="4" height="3" fill="#ef4444"/>
+                    <polygon points="0,16 2,20 4,16" fill="#1a1a2e"/>
+                  </g>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin:"0 0 6px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>모르면 찍어봐</p>
+                <p style={{ margin:0, fontSize:13, color:"#888", lineHeight:1.5 }}>모르는 문제 찍어주면 AI가 해결</p>
+              </div>
             </button>
           </div>
 
@@ -957,8 +1001,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               {[
                 { icon:"🕐", title:"시간 절약", desc:"반복 학습 자동화" },
                 { icon:"📈", title:"성적 향상", desc:"약점 보완" },
-                { icon:"🤖", title:"AI 맞춤 학습", desc:"나만의 플랜" },
-                { icon:"📚", title:"모든 과목", desc:"전과목 지원" },
+                { icon:"🤖", title:"AI 맞춤", desc:"나만의 플랜" },
+                { icon:"📚", title:"전과목", desc:"국영수과사" },
               ].map((item,i) => (
                 <div key={i} style={{ textAlign:"center", padding:"14px 8px", background:"#f8f9ff", borderRadius:14 }}>
                   <div style={{ fontSize:26, marginBottom:8 }}>{item.icon}</div>
@@ -973,17 +1017,24 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
               <span>교재 찍고 AI 문제 풀어보기!</span>
               <span style={{ marginLeft:"auto", fontSize:20 }}>›</span>
             </button>
-            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"nowrap" }}>
+            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"wrap" }}>
               {[
-                { icon:"🛡️", text:"안전한 데이터 관리" },
-                { icon:"🚫", text:"광고 없는 쾌적한 환경" },
-                { icon:"☁️", text:"언제 어디서나 동기화" },
-                { icon:"⭐", text:"10만+ 학생의 선택" },
+                { icon:"🛡️", text:"안전한 데이터" },
+                { icon:"🚫", text:"광고 없는 환경" },
+                { icon:"☁️", text:"어디서나 동기화" },
+                { icon:"⭐", text:"10만+ 선택" },
               ].map((b,i) => (
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:3, fontSize:11, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
                   <span>{b.icon}</span><span>{b.text}</span>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* 모바일 전용: 집중 사운드 */}
+          <div className="mobile-only" style={{ padding:"0 16px 10px" }}>
+            <div style={{ background:"#fff", borderRadius:18, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
+              <SoundPlayer />
             </div>
           </div>
 
