@@ -120,7 +120,7 @@ function BottomTabBar({ activeTab, onTabChange }) {
         <circle cx="12" cy="13" r="4"/>
       </svg>
     )},
-    { id: "settings", label: "설정", icon: (active) => (
+    { id: "settings", label: "캐릭터", icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active?"#6366f1":"#9ca3af"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3"/>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -178,8 +178,8 @@ export default function StudyQuizApp() {
   const [usage, setUsage] = useState({ plan:'guest', used:0, limit:999, canUse:true });
   const [character, setCharacter] = useState("dog");
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
-  const [showHero, setShowHero] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
+  const [showHero, setShowHero] = useState(false);
   const [heroFading, setHeroFading] = useState(false);
   const galleryInputRef = useRef();
   const cameraInputRef = useRef();
@@ -517,8 +517,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       setShowHome(false);
       setStep("upload");
     } else if (tabId === "settings") {
-      // 설정 탭: 아직 미구현 - 캐릭터 선택 팝업으로 대체 가능
-      alert("설정 기능은 준비 중이에요! 🛠️");
+      setShowHome(true);
+      setShowCharacterPicker(true);
     }
   };
 
@@ -831,259 +831,62 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
         </div>
       )}
 
-      <div className="home-wrapper">
-
-        {/* ========== PC 왼쪽 사이드바 ========== */}
-        <div className="home-left">
-
-          {/* 로고 + 캐릭터 */}
-          <div style={{ background:"#fff", borderRadius:16, padding:"16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", textAlign:"center", flexShrink:0 }}>
-            <img src={currentChar.src} alt={currentChar.name}
-              onClick={()=>setShowCharacterPicker(true)}
-              style={{ width:60, height:60, borderRadius:"50%", objectFit:"cover", border:"3px solid #eef2ff", boxShadow:"0 4px 12px rgba(99,102,241,0.2)", cursor:"pointer", display:"block", margin:"0 auto 8px", animation:"float 3s ease-in-out infinite" }} />
-            <p style={{ margin:"0 0 2px", fontSize:17, fontWeight:900, color:"#6366f1" }}>AI테스트YOU</p>
-            <p style={{ margin:"0 0 8px", fontSize:11, color:"#bbb" }}>aitestu.com</p>
-            <button onClick={()=>setShowCharacterPicker(true)}
-              style={{ background:"#f5f3ff", border:"1.5px solid #e0e7ff", borderRadius:10, padding:"5px 14px", fontSize:11, color:"#6366f1", fontWeight:700, cursor:"pointer", fontFamily:"inherit", width:"100%", boxSizing:"border-box" }}>
-              🐾 캐릭터 변경
-            </button>
-          </div>
-
-          {/* D-Day */}
-          {(() => {
-            const count = getDdayCount();
-            const hasGoal = count !== null;
-            const progress = hasGoal ? (count <= 0 ? 100 : count >= 30 ? 10 : Math.round(((30-count)/30)*100)) : 0;
-            return (
-              <div style={{ background:"#fff", borderRadius:16, padding:"14px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", flexShrink:0 }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-                  <p style={{ margin:0, fontSize:13, fontWeight:900, color:"#1a1a2e" }}>🎯 D-Day</p>
-                  <button onClick={()=>setShowDdayPicker(true)} style={{ background:"none", border:"none", color:"#6366f1", fontSize:11, cursor:"pointer", fontWeight:700, fontFamily:"inherit" }}>설정 ✏️</button>
-                </div>
-                <div style={{ background:"#eef2ff", borderRadius:12, padding:"12px", textAlign:"center", marginBottom: hasGoal?10:0 }}>
-                  <p style={{ margin:0, fontSize:10, fontWeight:800, color:"#6366f1", letterSpacing:1 }}>D-DAY</p>
-                  <p style={{ margin:"4px 0 3px", fontSize:34, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
-                    {!hasGoal ? "설정" : count === 0 ? "D-Day!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
-                  </p>
-                  {hasGoal && <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:700 }}>{ddayLabel}</p>}
-                  {!hasGoal && <p style={{ margin:"4px 0 0", fontSize:11, color:"#999" }}>클릭해서 날짜 설정</p>}
-                </div>
-                {hasGoal && (
-                  <>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                      <div style={{ flex:1, height:6, background:"#f0f0f5", borderRadius:3, overflow:"hidden" }}>
-                        <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:3 }}/>
-                      </div>
-                      <span style={{ fontSize:11, fontWeight:800, color:"#6366f1", minWidth:30 }}>{progress}%</span>
-                    </div>
-                    <p style={{ margin:0, fontSize:10, color:"#999", textAlign:"right" }}>목표까지 화이팅 💪</p>
-                  </>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* 집중 사운드 */}
-          <div style={{ background:"#fff", borderRadius:16, padding:"14px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", flex:1, minHeight:0, overflow:"hidden", boxSizing:"border-box" }}>
-            <SoundPlayer />
-          </div>
-
-          {/* 학습 팁 */}
-          <div style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", borderRadius:16, padding:"10px 14px", boxShadow:"0 4px 16px rgba(99,102,241,0.25)", color:"#fff", flexShrink:0 }}>
-            <p style={{ margin:"0 0 3px", fontSize:11, fontWeight:900 }}>💡 오늘의 학습 팁</p>
-            <p style={{ margin:0, fontSize:10, lineHeight:1.5, opacity:0.9 }}>교재를 밝고 선명하게 찍을수록 AI가 더 정확한 문제를 만들어드려요! 📸</p>
-          </div>
-
+      <style>{`
+        .dash { --ink:#19243d; --muted:#64748b; --line:#e7ebf4; max-width:1180px; margin:auto; padding:28px 28px 100px; color:var(--ink); }
+        .dash * { box-sizing:border-box; } .dash button { font-family:inherit; cursor:pointer; } .dash button:focus-visible { outline:3px solid #818cf8; outline-offset:3px; }
+        .dash-header {display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:28px;}
+        .dash-brand {display:flex; gap:11px; align-items:center;} .dash-logo {width:42px;height:42px;border-radius:14px;background:#4f46e5;color:white;display:grid;place-items:center;font-weight:900;font-size:18px;}
+        .dash-brand strong {display:block;font-size:17px;letter-spacing:-.04em;} .dash-brand small {font-size:11px;color:#72809b;letter-spacing:.04em;}
+        .dash-avatar {display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:white;border-radius:999px;padding:5px 12px 5px 5px;color:#34435d;font-weight:700;font-size:12px;}
+        .dash-avatar img {width:32px;height:32px;border-radius:50%;object-fit:cover;}
+        .dash-hero {position:relative;overflow:hidden;border-radius:26px;padding:38px 42px;background:linear-gradient(115deg,#222a62,#4945aa 65%,#7775dc);color:white;box-shadow:0 18px 45px rgba(40,45,110,.16);}
+        .dash-hero:after {content:'';position:absolute;width:300px;height:300px;right:-55px;top:-110px;border:55px solid rgba(255,255,255,.055);border-radius:50%;pointer-events:none;}
+        .dash-eyebrow {font-size:11px;letter-spacing:.16em;font-weight:800;color:#c8ceff;margin:0 0 12px;} .dash-hero h1 {font-size:30px;line-height:1.35;letter-spacing:-.05em;margin:0 0 10px;} .dash-hero p:not(.dash-eyebrow){font-size:14px;line-height:1.7;color:#e0e5ff;margin:0 0 24px;}
+        .dash-cta {border:0;background:#fff;color:#363593;font-size:14px;font-weight:800;border-radius:12px;padding:14px 19px;min-height:48px;position:relative;z-index:1;box-shadow:0 5px 16px rgba(12,15,57,.15);}
+        .dash-layout {display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;margin-top:32px;align-items:start;}
+        .dash-section-title {font-size:17px;letter-spacing:-.035em;margin:0 0 5px;font-weight:850;} .dash-section-copy {font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5;}
+        .dash-cards {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;} .dash-card {display:flex;align-items:center;gap:15px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px;min-height:104px;box-shadow:0 5px 18px rgba(35,46,88,.035);transition:transform .18s,border-color .18s,box-shadow .18s;}
+        .dash-card:hover {transform:translateY(-2px);border-color:#c7d2fe;box-shadow:0 10px 28px rgba(48,55,120,.1);} .dash-card-icon {width:48px;height:48px;display:grid;place-items:center;flex-shrink:0;border-radius:15px;font-size:19px;font-weight:900;color:#5149c8;background:#eeedff;}
+        .dash-card-icon.blue{color:#2563a9;background:#e9f2ff}.dash-card-icon.green{color:#16846c;background:#e6f7f1}.dash-card-icon.amber{color:#ac6a19;background:#fff5e5}.dash-card-icon.slate{color:#526989;background:#edf2f8}
+        .dash-card-body {flex:1;min-width:0;} .dash-card strong {display:block;font-size:15px;color:#1e2a43;letter-spacing:-.03em;margin-bottom:5px;} .dash-card small {display:block;font-size:12px;color:#718096;line-height:1.5;} .dash-arrow {font-size:20px;color:#a2acc0;}
+        .dash-side {display:grid;gap:12px;} .dash-panel {border:1px solid var(--line);background:white;border-radius:18px;padding:19px;box-shadow:0 5px 18px rgba(35,46,88,.035);}
+        .dash-panel-head {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;} .dash-panel h3 {font-size:14px;margin:0;font-weight:800;} .dash-panel-action {border:0;background:#f1f2ff;color:#5047bd;padding:8px 11px;border-radius:9px;font-size:12px;font-weight:800;}
+        .dash-goal {display:flex;align-items:center;gap:12px;} .dash-goal-badge {min-width:76px;text-align:center;border-radius:12px;background:#eeedff;padding:10px;color:#5047bd;font-weight:900;font-size:18px;} .dash-goal-text {font-size:13px;color:#34435d;font-weight:750;line-height:1.5;} .dash-goal-text small {display:block;font-size:11px;color:#8290a5;font-weight:500;}
+        .dash-tip {font-size:12px;line-height:1.65;color:#687791;margin:0;} .dash-sound summary {cursor:pointer;font-size:14px;font-weight:800;color:#26344d;list-style:none;} .dash-sound summary:after {content:'+';float:right;font-size:19px;color:#8c98aa;} .dash-sound[open] summary:after{content:'−'} .dash-sound .sound-content{padding-top:16px;}
+        @media(max-width:800px){.dash{max-width:600px;padding:18px 16px 104px}.dash-header{margin-bottom:20px}.dash-layout{grid-template-columns:1fr;gap:24px;margin-top:26px}.dash-side{grid-template-columns:1fr 1fr}.dash-hero{padding:28px 25px;border-radius:22px}.dash-hero h1{font-size:25px}.dash-hero p:not(.dash-eyebrow){font-size:13px}.dash-card{padding:15px;min-height:92px}.dash-card-icon{width:42px;height:42px}.dash-card strong{font-size:14px}}
+        @media(max-width:440px){.dash-cards{grid-template-columns:1fr}.dash-card{min-height:78px}.dash-side{grid-template-columns:1fr}.dash-hero h1{font-size:23px}.dash-avatar span{display:none}}
+        @media(prefers-reduced-motion:reduce){.dash *{transition:none!important;animation:none!important}}
+      `}</style>
+      <main className="dash">
+        <header className="dash-header">
+          <div className="dash-brand"><div className="dash-logo" aria-hidden="true">A</div><div><strong>AI테스트YOU</strong><small>나를 위한 학습 파트너</small></div></div>
+          <button className="dash-avatar" onClick={()=>setShowCharacterPicker(true)} aria-label="학습 캐릭터 변경"><img src={currentChar.src} alt=""/><span>캐릭터 변경</span></button>
+        </header>
+        <section className="dash-hero" aria-labelledby="dash-hero-title">
+          <p className="dash-eyebrow">STUDY SMARTER</p>
+          <h1 id="dash-hero-title">오늘의 공부,<br/>문제로 완성해요.</h1>
+          <p>교재 사진이나 학습 내용을 올리면<br/>나에게 맞는 연습 문제를 만들 수 있어요.</p>
+          <button className="dash-cta" onClick={()=>{setShowHome(false);setStep("upload");}}>문제 만들기 시작 <span aria-hidden="true">→</span></button>
+        </section>
+        <div className="dash-layout">
+          <section aria-labelledby="dash-tools-title">
+            <h2 className="dash-section-title" id="dash-tools-title">무엇을 공부할까요?</h2>
+            <p className="dash-section-copy">필요한 학습 도구를 선택해 바로 시작하세요.</p>
+            <div className="dash-cards">
+              <button className="dash-card" onClick={()=>{setShowHome(false);setStep("upload");}}><span className="dash-card-icon" aria-hidden="true">✎</span><span className="dash-card-body"><strong>AI 문제 만들기</strong><small>자료를 바탕으로 맞춤 문제 출제</small></span><span className="dash-arrow" aria-hidden="true">›</span></button>
+              <button className="dash-card" onClick={()=>setShowEnglish(true)}><span className="dash-card-icon blue" aria-hidden="true">Aa</span><span className="dash-card-body"><strong>AI 영어선생님</strong><small>단어부터 문법, 회화까지</small></span><span className="dash-arrow" aria-hidden="true">›</span></button>
+              <button className="dash-card" onClick={()=>{setShowSolver(true);setShowHome(false);}}><span className="dash-card-icon green" aria-hidden="true">?</span><span className="dash-card-body"><strong>문제 풀이 도우미</strong><small>어려운 문제의 풀이 확인</small></span><span className="dash-arrow" aria-hidden="true">›</span></button>
+              <button className="dash-card" onClick={()=>{setShowWrongNote(true);setShowHome(false);}}><span className="dash-card-icon amber" aria-hidden="true">↻</span><span className="dash-card-body"><strong>오답보관함</strong><small>틀린 문제를 다시 복습</small></span><span className="dash-arrow" aria-hidden="true">›</span></button>
+              <button className="dash-card" onClick={()=>{setShowStats(true);setShowHome(false);}}><span className="dash-card-icon slate" aria-hidden="true">▥</span><span className="dash-card-body"><strong>학습 통계</strong><small>나의 학습 현황 살펴보기</small></span><span className="dash-arrow" aria-hidden="true">›</span></button>
+            </div>
+          </section>
+          <aside className="dash-side" aria-label="학습 도구">
+            <div className="dash-panel"><div className="dash-panel-head"><h3>나의 학습 목표</h3><button className="dash-panel-action" onClick={()=>setShowDdayPicker(true)}>{dday?"변경":"설정"}</button></div><div className="dash-goal"><div className="dash-goal-badge">{getDdayCount()===null?"D-day":getDdayCount()===0?"D-day":getDdayCount()<0?"D+"+Math.abs(getDdayCount()):"D-"+getDdayCount()}</div><div className="dash-goal-text">{dday ? ddayLabel : "목표일을 정해보세요"}<small>{dday || "시험일을 설정하면 여기에 보여요"}</small></div></div></div>
+            <details className="dash-panel dash-sound"><summary>집중 사운드</summary><div className="sound-content"><SoundPlayer/></div></details>
+            <div className="dash-panel"><div className="dash-panel-head"><h3>더 정확한 문제를 위해</h3></div><p className="dash-tip">교재는 밝고 선명하게 촬영하고, 필요한 범위만 올려주세요. 생성된 문제와 근거는 원본과 함께 확인해 주세요.</p></div>
+          </aside>
         </div>
-
-        {/* ========== 오른쪽 메인 콘텐츠 ========== */}
-        <div className="home-right">
-
-          {/* 모바일 D-Day 카드 */}
-          <div className="mobile-only" style={{ padding:"0" }}>
-            {(() => {
-              const count = getDdayCount();
-              const hasGoal = count !== null;
-              const progress = hasGoal ? (count <= 0 ? 100 : count >= 30 ? 10 : Math.round(((30-count)/30)*100)) : 0;
-              return (
-                <div style={{ background:"#fff", borderRadius:16, padding:"14px 16px", boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }} className="fade-up">
-                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                    <button onClick={()=>setShowDdayPicker(true)}
-                      style={{ background:"#eef2ff", borderRadius:12, padding:"10px 14px", textAlign:"center", minWidth:80, flexShrink:0, border:"none", cursor:"pointer", fontFamily:"inherit" }}>
-                      <p style={{ margin:0, fontSize:10, fontWeight:800, color:"#6366f1", letterSpacing:0.8 }}>D-DAY</p>
-                      <p style={{ margin:"3px 0 0", fontSize:28, fontWeight:900, color:"#6366f1", lineHeight:1 }}>
-                        {!hasGoal ? "설정" : count === 0 ? "D!" : count < 0 ? `D+${Math.abs(count)}` : `D-${count}`}
-                      </p>
-                    </button>
-                    <button onClick={()=>setShowDdayPicker(true)} style={{ flex:1, background:"none", border:"none", cursor:"pointer", fontFamily:"inherit", textAlign:"left", padding:0 }}>
-                      <p style={{ margin:"0 0 4px", fontSize:15, fontWeight:900, color:"#1a1a2e" }}>
-                        {hasGoal ? ddayLabel : "목표 설정하기"} ✏️
-                      </p>
-                      {hasGoal && (
-                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                          <div style={{ flex:1, height:6, background:"#f0f0f5", borderRadius:3, overflow:"hidden" }}>
-                            <div style={{ width:`${progress}%`, height:"100%", background:"linear-gradient(90deg,#6366f1,#8b5cf6)", borderRadius:3 }}/>
-                          </div>
-                          <span style={{ fontSize:11, fontWeight:800, color:"#6366f1" }}>{progress}%</span>
-                        </div>
-                      )}
-                      <p style={{ margin:0, fontSize:11, color:"#999" }}>오늘도 한 걸음 더 <span style={{ fontWeight:900, color:"#1a1a2e" }}>목표까지 화이팅 💪</span></p>
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* ====== 메인 기능 카드 3개 ====== */}
-          <div className="pc-main-grid fade-up">
-            {/* AI 문제 뽑기 */}
-            <button onClick={()=>setShowHome(false)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
-              <div style={{ position:"absolute", top:8, right:8, background:"#ef4444", color:"#fff", fontSize:8, fontWeight:900, padding:"2px 6px", borderRadius:8 }}>HOT</div>
-              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
-                  <rect x="8" y="6" width="44" height="48" rx="5" fill="#e0e7ff"/>
-                  <rect x="8" y="6" width="22" height="48" rx="5" fill="#a5b4fc"/>
-                  <rect x="30" y="6" width="22" height="48" rx="5" fill="#818cf8"/>
-                  <line x1="29" y1="6" x2="29" y2="54" stroke="#6366f1" strokeWidth="1.5"/>
-                  <line x1="13" y1="16" x2="25" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="13" y1="22" x2="25" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="13" y1="28" x2="25" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="34" y1="16" x2="47" y2="16" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="34" y1="22" x2="47" y2="22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="34" y1="28" x2="47" y2="28" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>AI 문제 뽑기</p>
-              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>교재 사진만 찍으면<br/>AI가 문제로 출제</p>
-            </button>
-
-            {/* AI 영어선생님 */}
-            <button onClick={()=>setShowEnglish(true)} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
-              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
-                  <circle cx="30" cy="30" r="22" fill="#dbeafe"/>
-                  <circle cx="30" cy="30" r="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
-                  <ellipse cx="30" cy="30" rx="10" ry="22" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
-                  <line x1="8" y1="30" x2="52" y2="30" stroke="#3b82f6" strokeWidth="1.3" opacity="0.6"/>
-                  <line x1="11" y1="20" x2="49" y2="20" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
-                  <line x1="11" y1="40" x2="49" y2="40" stroke="#3b82f6" strokeWidth="1" opacity="0.4"/>
-                  <text x="30" y="36" fontFamily="Georgia, serif" fontSize="19" fontWeight="900" fill="#1d4ed8" textAnchor="middle">A</text>
-                </svg>
-              </div>
-              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>AI 영어선생님</p>
-              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>단어·문법·회화<br/>AI 맞춤 학습</p>
-            </button>
-
-            {/* 모르면 찍어봐 */}
-            <button onClick={()=>{ setShowSolver(true); setShowHome(false); }} className="pc-main-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit", position:"relative" }}>
-              <div className="mobile-card-icon-sm" style={{ width:72, height:72, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                <svg width="100%" height="100%" viewBox="0 0 60 60" fill="none">
-                  <rect x="10" y="8" width="38" height="44" rx="4" fill="#d1fae5"/>
-                  <rect x="10" y="8" width="38" height="44" rx="4" stroke="#10b981" strokeWidth="1.5" fill="none"/>
-                  <line x1="17" y1="18" x2="41" y2="18" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="17" y1="25" x2="41" y2="25" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="17" y1="32" x2="32" y2="32" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
-                  <g transform="translate(35,30) rotate(35)">
-                    <rect x="0" y="0" width="4" height="16" fill="#fbbf24"/>
-                    <rect x="0" y="0" width="4" height="3" fill="#ef4444"/>
-                    <polygon points="0,16 2,20 4,16" fill="#1a1a2e"/>
-                  </g>
-                </svg>
-              </div>
-              <p style={{ margin:"8px 0 4px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>모르면 찍어봐</p>
-              <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.4 }}>모르는 문제<br/>AI가 해결</p>
-            </button>
-          </div>
-
-          {/* ====== 서브 카드 2개 ====== */}
-          <div className="pc-sub-grid fade-up">
-            {/* 오답보관함 */}
-            <button onClick={()=>{ setShowWrongNote(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
-              <div style={{ width:56, height:56, borderRadius:16, background:"#fffbeb", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-                  <rect x="8" y="6" width="28" height="36" rx="3" fill="#fef3c7"/>
-                  <rect x="8" y="6" width="28" height="36" rx="3" stroke="#f59e0b" strokeWidth="1.5" fill="none"/>
-                  <line x1="13" y1="15" x2="31" y2="15" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
-                  <line x1="13" y1="22" x2="31" y2="22" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
-                  <line x1="13" y1="29" x2="25" y2="29" stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <div style={{ textAlign:"center" }}>
-                <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>오답보관함</p>
-                <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>틀린 문제 자동 저장<br/>복습까지 한 번에</p>
-              </div>
-            </button>
-
-            {/* 학습 통계 */}
-            <button onClick={()=>{ setShowStats(true); setShowHome(false); }} className="pc-sub-card"
-              style={{ background:"#fff", border:"none", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", cursor:"pointer", fontFamily:"inherit" }}>
-              <div style={{ width:56, height:56, borderRadius:16, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-                  <rect x="12" y="26" width="5" height="12" fill="#10b981"/>
-                  <rect x="20" y="18" width="5" height="20" fill="#ef4444"/>
-                  <rect x="28" y="22" width="5" height="16" fill="#6366f1"/>
-                  <line x1="10" y1="38" x2="38" y2="38" stroke="#6366f1" strokeWidth="1.3"/>
-                </svg>
-              </div>
-              <div style={{ textAlign:"center" }}>
-                <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:900, color:"#1a1a2e" }}>학습 통계</p>
-                <p style={{ margin:0, fontSize:12, color:"#888", lineHeight:1.4 }}>나의 공부 현황<br/>한눈에 분석</p>
-              </div>
-            </button>
-          </div>
-
-          {/* ====== 시험 준비 + CTA 묶음 ====== */}
-          <div className="pc-info-section fade-up" style={{ background:"#fff", borderRadius:16, padding:"14px 16px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)", display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
-            <p style={{ margin:"0 0 8px", fontSize:14, fontWeight:900, color:"#1a1a2e" }}>✨ 시험 준비, 이제 더 똑똑하게! <span style={{ fontSize:11, color:"#999", fontWeight:500 }}>AI와 함께하는 스마트한 학습 습관</span></p>
-            <div className="pc-info-grid" style={{ flex:1, marginBottom:10 }}>
-              {[
-                { icon:"🕐", title:"시간 절약", desc:"반복 학습 자동화" },
-                { icon:"📈", title:"성적 향상", desc:"약점 보완" },
-                { icon:"🤖", title:"AI 맞춤", desc:"나만의 플랜" },
-                { icon:"📚", title:"전과목", desc:"국영수과사" },
-              ].map((item,i) => (
-                <div key={i} style={{ textAlign:"center", padding:"10px 6px", background:"#f8f9ff", borderRadius:12, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
-                  <div style={{ fontSize:24, marginBottom:6 }}>{item.icon}</div>
-                  <p style={{ margin:"0 0 2px", fontSize:13, fontWeight:900, color:"#1a1a2e" }}>{item.title}</p>
-                  <p style={{ margin:0, fontSize:11, color:"#888", lineHeight:1.3 }}>{item.desc}</p>
-                </div>
-              ))}
-            </div>
-            <button onClick={()=>setShowHome(false)}
-              style={{ width:"100%", padding:"14px 16px", borderRadius:14, border:"none", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:15, fontWeight:900, cursor:"pointer", boxShadow:"0 4px 16px rgba(99,102,241,0.3)", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:10, marginBottom:8, flexShrink:0 }}>
-              <span style={{ fontSize:18 }}>📷</span>
-              <span>교재 찍고 AI 문제 풀어보기!</span>
-              <span style={{ marginLeft:"auto", fontSize:18 }}>›</span>
-            </button>
-            <div style={{ display:"flex", justifyContent:"space-around", gap:4, flexWrap:"nowrap", flexShrink:0 }}>
-              {[
-                { icon:"🛡️", text:"안전한 데이터" },
-                { icon:"🚫", text:"광고 없는 환경" },
-                { icon:"☁️", text:"어디서나 동기화" },
-                { icon:"⭐", text:"10만+ 선택" },
-              ].map((b,i) => (
-                <div key={i} style={{ display:"flex", alignItems:"center", gap:3, fontSize:11, color:"#999", fontWeight:600, whiteSpace:"nowrap" }}>
-                  <span>{b.icon}</span><span>{b.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 모바일 전용: 집중 사운드 */}
-          <div className="mobile-only" style={{ padding:"0" }}>
-            <div style={{ background:"#fff", borderRadius:16, padding:"14px", boxShadow:"0 2px 12px rgba(0,0,0,0.06)" }}>
-              <SoundPlayer />
-            </div>
-          </div>
-
-        </div>{/* home-right 끝 */}
-
-      </div>{/* home-wrapper 끝 */}
+      </main>
 
       {/* 하단 탭바 - 모바일에서만 */}
       <div className="mobile-bottom-tab">
@@ -1274,7 +1077,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
 
             <div className="card">
               <p style={{ margin:"0 0 4px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>🎯 출제 방향 <span style={{ fontSize:11, color:"#bbb", fontWeight:500 }}>(선택사항)</span></p>
-              <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>자료 범위 안에서 원하는 단원이나 문제 형식을 적어주세요. 자료에 없는 내용은 출제하지 않아요.</p>
+              <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>원하는 단원이나 문제 형식을 적어주세요. 선택한 출제 범위가 우선 적용돼요.</p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
                 {(DIRECTION_TAGS[subject] || DIRECTION_TAGS["기타"]).map(tag => (
                   <button key={tag} onClick={()=>addDirectionTag(tag)} className="dir-tag">{tag}</button>
