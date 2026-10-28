@@ -250,7 +250,8 @@ const saveDday = (date, label) => {
       const resp = await fetch('/api/usage', { headers });
       const data = await resp.json();
       setUsage(data);
-    } catch(e) {}
+      return data;
+    } catch(e) { return null; }
   };
 
   const incrementUsage = async () => {
@@ -283,7 +284,7 @@ const saveDday = (date, label) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const MAX_SIZE = 1024;
+      const MAX_SIZE = 1800;
       let { width, height } = img;
       if (width > MAX_SIZE || height > MAX_SIZE) {
         if (width > height) { height = Math.round(height * MAX_SIZE / width); width = MAX_SIZE; }
@@ -292,7 +293,7 @@ const saveDday = (date, label) => {
       const canvas = document.createElement("canvas");
       canvas.width = width; canvas.height = height;
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-      const compressed = canvas.toDataURL("image/jpeg", 0.7);
+      const compressed = canvas.toDataURL("image/jpeg", 0.85);
       resolve({ url, base64: compressed.split(",")[1], type: "image/jpeg" });
     };
     img.src = url;
@@ -326,12 +327,12 @@ const saveDday = (date, label) => {
     setDirection(prev => prev ? `${prev}, ${text}` : text);
   };
 
-  const buildPrompt = () => {
+  const buildPrompt = (count = questionCount) => {
     const diff = DIFFICULTY_CONFIG[difficulty];
     const gradeInfo = GRADES.find(g => g.label === grade);
     const sourceDesc = getSourceLabel();
     const scopeText = scope === "image_only"
-      ? `반드시 제공된 ${sourceDesc}에서만 출제하세요. 제공된 자료에 없는 내용은 절대 출제하지 마세요.`
+      ? `제공된 ${sourceDesc}에 명확하게 드러난 내용만 출제하세요. 학년, 과목, 출제 방향보다 자료의 범위가 우선입니다. 자료에 없는 사실이나 교과 지식, 추측으로 빈 부분을 채우지 마세요.`
       : `제공된 ${sourceDesc}을 중심으로 출제하되, 관련 개념과 연계된 문제도 포함할 수 있습니다.`;
     let typeGuide = "";
     if (subject === "영어") {
@@ -340,25 +341,28 @@ const saveDday = (date, label) => {
       else typeGuide = "객관식과 서술형(영작/단답)을 골고루 섞어서 출제하세요.";
     }
     const textSection = hasText ? `\n\n[텍스트 학습 내용]\n${textInput}` : "";
-    const directionSection = direction.trim() ? `\n\n[출제 방향 - 최우선 적용]\n${direction.trim()}\n반드시 위 방향에 맞게 문제를 출제하세요.` : "";
-    return `당신은 대한민국 교육부 공식 출제위원이자 20년 경력의 ${subject} 전문 출제자입니다.\n\n[중요] 이미지가 다소 흐리거나 기울어져 있어도 절대 포기하지 말고 최대한 내용을 파악해서 문제를 출제하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${questionCount}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n반드시 JSON 형식으로만 응답:\n{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설"}]}`;
+    const directionSection = direction.trim() ? `\n\n[출제 방향 - 자료 범위 내에서만 적용]\n${direction.trim()}\n위 방향이 자료 범위와 충돌하거나 근거가 없으면 범위를 우선하고 부족하다고 알려주세요.` : "";
+    return `당신은 학습 자료에 충실하게 출제하는 ${subject} 전문 학습 도우미입니다.\n\n[중요] 사진의 글자를 확실하게 읽을 수 없거나 출제 범위가 불분명하면 추측하지 마세요. 충분한 근거가 없으면 문제를 만들지 말고 JSON {"error":"어떤 자료가 부족하거나 흐린지 구체적으로 안내"}로 응답하세요.\n\n[출제 대상]\n- 학년: ${gradeInfo.full}\n- 과목: ${subject}\n- 난이도: ${diff.label} (${diff.prompt})\n- 문제 수: ${count}개\n\n[출제 범위]\n${scopeText}${textSection}${directionSection}\n\n[출제 원칙]\n1. 정답은 반드시 1개만 존재해야 합니다.\n2. 객관식 정답 위치를 ①②③④⑤ 중 랜덤하게 배치하세요.\n3. 문제 순서를 전체 범위에서 골고루 랜덤하게 배치하세요.\n4. 해설에는 정답 이유 + 오답 이유를 명확히 설명하세요.
+5. 각 문제에 자료에서 직접 확인되는 짧은 원문 인용을 source_quote에 넣으세요. 인용은 지어내지 마세요. 자료가 부족하면 문제 수를 채우려 추측하지 말고 error로 답하세요.
+6. 요청한 개수의 중복되지 않은 문제만 출제하세요.\n${subject === "영어" ? `\n[영어 유형]\n${typeGuide}` : ""}\n\n반드시 JSON 형식으로만 응답:\n{"topic":"학습주제","questions":[{"id":1,"type":"객관식","question":"문제","options":["① 내용","② 내용","③ 내용","④ 내용","⑤ 내용"],"answer":"③ 내용","explanation":"해설","source_quote":"자료의 원문 근거"},{"id":2,"type":"서술형","question":"문제","options":null,"answer":"답","explanation":"해설","source_quote":"자료의 원문 근거"}]}`;
   };
 
-  const callAPI = async (images, prompt) => {
+  const callAPI = async (images, prompt, expectedCount) => {
     const resp = await fetch("/api/generate", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images: images.map(img => ({ base64: img.base64, type: img.type })), prompt })
+      body: JSON.stringify({ images: images.map(img => ({ base64: img.base64, type: img.type })), prompt, expectedCount })
     });
     return resp.json();
   };
 
   const generateQuiz = async () => {
     if (!hasContent) { setError("이미지를 올리거나 텍스트를 입력해주세요."); return; }
-    await checkUsage(user);
-    if (!usage.canUse) {
+    const latestUsage = await checkUsage(user);
+    if (!latestUsage) { setError("사용량을 확인하지 못했어요. 잠시 후 다시 시도해주세요."); return; }
+    if (!latestUsage.canUse) {
       const msg = user
-        ? `오늘 사용 한도(${usage.limit}회)를 초과했어요.`
-        : `비회원은 하루 ${usage.limit}회까지 사용 가능해요.`;
+        ? `오늘 사용 한도(${latestUsage.limit}회)를 초과했어요.`
+        : `비회원은 하루 ${latestUsage.limit}회까지 사용 가능해요.`;
       setError(msg);
       return;
     }
@@ -383,9 +387,15 @@ if (questionCount > 15) {
     ]
   };
 } else {
-  data = await callAPI(uploadedImages, prompt);
+  data = await callAPI(uploadedImages, prompt, questionCount);
 }
-if (!data.error && data.questions?.length > 0) {
+if (data.error) throw new Error(data.error);
+      if (!data.error && data.questions?.length === questionCount) {
+        if (scope === "image_only" && !hasImages) {
+          const normalize = value => String(value || "").replace(/\s+/g, "").toLowerCase();
+          const source = normalize(textInput);
+          if (data.questions.some(q => !q.source_quote || !source.includes(normalize(q.source_quote)))) throw new Error("입력한 자료에서 문제의 근거를 확인하지 못했어요. 범위를 더 구체적으로 적거나 다시 시도해주세요.");
+        }
         let qs = data.questions.map(q => { try { return shuffleOptions(q); } catch(e) { return q; } });
         for (let i = qs.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [qs[i],qs[j]]=[qs[j],qs[i]]; }
         setQuizData({ ...data, questions: qs }); setStep("result"); incrementUsage(); return;
@@ -404,7 +414,7 @@ if (!data.error && data.questions?.length > 0) {
           if (diagErr.message.includes("번 이미지")) throw diagErr;
         }
       }
-      throw new Error(data.error || "문제를 생성할 수 없어요. 교재 사진을 더 밝고 선명하게 다시 찍어주세요.");
+      throw new Error(data.error || "요청한 문제 수를 만들지 못했어요. 자료를 추가하거나 문제 수를 줄여 다시 시도해주세요.");
     } catch(err) { setError(err.message); setStep("config"); }
   };
 
@@ -1090,6 +1100,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
     <div style={{ minHeight:"100vh", background:"#e8eaf0", fontFamily:"'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif" }}>
       <div style={{ maxWidth:520, margin:"0 auto", background:"#f5f6fa", minHeight:"100vh", paddingBottom:100, boxShadow:"0 0 40px rgba(0,0,0,0.08)", position:"relative" }}>
       <style>{CSS}</style>
+      <style>{` .card{border-radius:20px!important;box-shadow:0 6px 24px rgba(30,41,89,.06)!important;border:1px solid #e7eaf3!important} button{touch-action:manipulation} button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #818cf8!important;outline-offset:2px} .option-btn,.tag-btn,.dir-tag{transition:background .18s,border-color .18s,transform .18s} .btn-primary{min-height:54px!important;box-shadow:0 8px 24px rgba(79,70,229,.22)} @media(max-width:380px){.card{padding:16px!important}} `}</style>
       <input ref={galleryInputRef} type="file" accept="image/*" multiple style={{ display:"none" }} onChange={handleGalleryChange} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={handleCameraChange} />
 
@@ -1099,7 +1110,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
           <div style={{ width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>📖</div>
           <div>
             <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>시험 문제 생성기</h1>
-            <p style={{ margin:0, fontSize:11, color:"#999" }}>AI가 맞춤 문제를 만들어드려요</p>
+            <p style={{ margin:0, fontSize:11, color:"#64748b" }}>{step==="upload"?"1단계 · 자료 추가":step==="config"?"2단계 · 출제 설정":step==="loading"?"문제를 만들고 있어요":"3단계 · 문제 풀기"}</p>
           </div>
           <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:6 }}>
             {["upload","config","result"].map((s,i) => (
@@ -1218,7 +1229,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             </div>
 
             <div className="card">
-              <p style={{ margin:"0 0 12px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📎 출제 범위 설정</p>
+              <p style={{ margin:"0 0 4px", fontSize:16, fontWeight:800, color:"#1a1a2e" }}>출제 범위 선택</p><p style={{margin:"0 0 12px",fontSize:12,color:"#64748b",lineHeight:1.5}}>자료만 출제하면 범위를 벗어날 가능성을 줄일 수 있어요.</p>
               <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                 {SCOPE_OPTIONS.map(opt => (
                   <button key={opt.id} onClick={()=>setScope(opt.id)} className={`option-btn${scope===opt.id?" selected":""}`}>
@@ -1263,14 +1274,14 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
 
             <div className="card">
               <p style={{ margin:"0 0 4px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>🎯 출제 방향 <span style={{ fontSize:11, color:"#bbb", fontWeight:500 }}>(선택사항)</span></p>
-              <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>태그를 누르면 자동 입력돼요. 직접 수정도 가능해요.</p>
+              <p style={{ margin:"0 0 12px", fontSize:11, color:"#999" }}>자료 범위 안에서 원하는 단원이나 문제 형식을 적어주세요. 자료에 없는 내용은 출제하지 않아요.</p>
               <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:10 }}>
                 {(DIRECTION_TAGS[subject] || DIRECTION_TAGS["기타"]).map(tag => (
                   <button key={tag} onClick={()=>addDirectionTag(tag)} className="dir-tag">{tag}</button>
                 ))}
               </div>
               <textarea value={direction} onChange={e=>setDirection(e.target.value)}
-                placeholder={"예: 분자 이름을 주고 특징을 묻는 문제로 출제해줘\n예: 각 항목을 서로 비교하는 문제 위주로 내줘"}
+                placeholder={"예: 3단원 광합성 부분만 출제해줘\n예: 각 개념의 차이를 비교하는 문제로 내줘"}
                 style={{ width:"100%", minHeight:72, background:"#f8f8fc", borderRadius:12, border:"1.5px solid #e8e9ef", padding:"12px 14px", color:"#333", fontSize:13, resize:"vertical", boxSizing:"border-box", fontFamily:"inherit", lineHeight:1.6, outline:"none" }} />
               {direction && <button onClick={()=>setDirection('')} style={{ background:"none", border:"none", color:"#ef4444", fontSize:12, cursor:"pointer", marginTop:6 }}>초기화</button>}
             </div>
@@ -1299,7 +1310,8 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
             </div>
 
             {error && <div style={{ background:"#fef2f2", border:"1.5px solid #fecaca", borderRadius:14, padding:"12px 16px", color:"#ef4444", fontSize:13, marginBottom:12 }}>⚠️ {error}</div>}
-            <button className="btn-primary" onClick={generateQuiz} style={{ marginBottom:8 }}>✨ AI 문제 생성하기 ({getSourceLabel()})</button>
+            <div style={{padding:"12px 14px",marginBottom:10,borderRadius:14,background:"#eef2ff",color:"#4338ca",fontSize:13,lineHeight:1.6}}><strong>출제 설정 확인</strong><br/>{grade} · {subject} · {DIFFICULTY_CONFIG[difficulty].label} · {questionCount}문제<br/>{scope === "image_only" ? "입력한 자료 안에서만" : "관련 개념까지 확장"}</div>
+            <button className="btn-primary" onClick={generateQuiz} style={{ marginBottom:8 }}>문제 {questionCount}개 만들기 →</button>
           </div>
         )}
 
@@ -1435,6 +1447,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
                     {showAnswers && er && <span style={{ background: er.result==="정답"?"#d1fae5":er.result==="부분정답"?"#fef3c7":"#fee2e2", color: er.result==="정답"?"#059669":er.result==="부분정답"?"#d97706":"#ef4444", borderRadius:6, padding:"3px 8px", fontSize:11, fontWeight:700 }}>{er.result} ({er.score}점)</span>}
                   </div>
                   <p style={{ margin:"0 0 14px", fontSize:15, fontWeight:700, color:"#1a1a2e", lineHeight:1.6 }}>{q.question}</p>
+                  {showAnswers && q.source_quote && <div style={{margin:"12px 0", padding:"12px 14px", borderRadius:12, background:"#eef2ff", color:"#3730a3", fontSize:13, lineHeight:1.6}}><strong>자료 속 근거</strong><br/>{q.source_quote}<br/><span style={{fontSize:11,color:"#6366f1"}}>AI가 찾은 근거입니다. 원본과 비교해 확인해주세요.</span></div>}
                   {q.type==="객관식" && q.options && (
                     <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                       {q.options.map((opt,oi) => {
