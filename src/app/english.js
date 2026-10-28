@@ -19,8 +19,18 @@ const TABS = [
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-  * { box-sizing: border-box; }
-  .card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 12px; }
+  .eng-root, .eng-root * { box-sizing: border-box; }
+  .eng-root { color:#1e293b; line-height:1.6; overflow-wrap:anywhere; }
+  .eng-root button, .eng-root input { font-family:inherit; }
+  .eng-root button { min-height:44px; min-width:44px; }
+  .eng-root button:focus-visible, .eng-root input:focus-visible { outline:3px solid #4f46e5 !important; outline-offset:3px; }
+  .eng-root input { min-width:0; font-size:16px !important; }
+  .eng-root p { line-height:1.65; }
+  .eng-root .eng-toggle { border:0; background:transparent; color:#4338ca; cursor:pointer; font-weight:700; text-align:left; padding:8px 4px; }
+  .eng-root .eng-tabs { scrollbar-width:thin; scrollbar-color:#a5b4fc transparent; }
+  @media (max-width:420px) { .eng-root .card { padding:16px; } .eng-root .eng-levels { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); } .eng-root .eng-grammar-compare { flex-direction:column; } }
+  @media (prefers-reduced-motion:reduce) { .eng-root *, .eng-root *::before, .eng-root *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+  .eng-root .card { background:#fff; border:1px solid #e2e8f0; border-radius:18px; padding:20px; box-shadow:0 8px 24px rgba(30,41,59,0.05); margin-bottom:12px; }
   .eng-btn { border: none; border-radius: 12px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
   .eng-btn:active { transform: scale(0.97); }
   @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
@@ -49,7 +59,7 @@ function SpeakButton({ text }) {
     window.speechSynthesis.speak(u);
   };
   return (
-    <button onClick={speak} className="eng-btn" style={{ width:32, height:32, background: speaking?"#dbeafe":"#eff6ff", border:`1.5px solid ${speaking?"#3b82f6":"#bfdbfe"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, flexShrink:0 }}>
+    <button onClick={speak} aria-label={`영어 발음 듣기: ${text}`} className="eng-btn" style={{ width:32, height:32, background: speaking?"#dbeafe":"#eff6ff", border:`1.5px solid ${speaking?"#3b82f6":"#bfdbfe"}`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, flexShrink:0 }}>
       {speaking ? "🔊" : "🔈"}
     </button>
   );
@@ -220,22 +230,22 @@ ${wordList}
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"#f5f6fa", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:40 }}>
+    <div className="eng-root" style={{ minHeight:"100vh", background:"#f1f5f9", fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:40 }}>
       <style>{CSS}</style>
 
       {/* 헤더 */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #f0f0f5", padding:"16px 20px 14px", position:"sticky", top:0, zIndex:100 }}>
+      <div style={{ background:"#fff", borderBottom:"1px solid #e2e8f0", padding:"16px 20px 14px", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ maxWidth:640, margin:"0 auto", display:"flex", alignItems:"center", gap:12 }}>
-          <button onClick={onBack} style={{ width:36, height:36, borderRadius:10, border:"1.5px solid #e8e9ef", background:"#fff", cursor:"pointer", fontSize:18 }}>←</button>
-          <div style={{ width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#3b82f6,#6366f1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>🇺🇸</div>
+          <button onClick={onBack} aria-label="뒤로 가기" style={{ width:36, height:36, borderRadius:10, border:"1.5px solid #cbd5e1", background:"#fff", cursor:"pointer", fontSize:18 }}>←</button>
+          <div style={{ width:38, height:38, borderRadius:12, background:"linear-gradient(135deg,#3b82f6,#4f46e5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>🇺🇸</div>
           <div>
-            <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1a1a2e" }}>영어 학습</h1>
-            <p style={{ margin:0, fontSize:11, color:"#999" }}>{today}</p>
+            <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:"#1e293b" }}>영어 학습</h1>
+            <p style={{ margin:0, fontSize:11, color:"#64748b" }}>{today}</p>
           </div>
           {quizTotal>0 && (
             <div style={{ marginLeft:"auto", background:"#eef2ff", borderRadius:12, padding:"4px 12px", display:"flex", alignItems:"center", gap:4 }}>
               <span style={{ fontSize:14 }}>🏆</span>
-              <span style={{ fontSize:13, fontWeight:800, color:"#6366f1" }}>{quizScore}/{quizTotal}</span>
+              <span style={{ fontSize:13, fontWeight:800, color:"#4f46e5" }}>{quizScore}/{quizTotal}</span>
             </div>
           )}
         </div>
@@ -245,11 +255,11 @@ ${wordList}
 
         {/* 레벨 선택 */}
         <div className="card" style={{ padding:"14px 16px" }}>
-          <p style={{ margin:"0 0 10px", fontSize:12, fontWeight:800, color:"#888", textTransform:"uppercase", letterSpacing:1 }}>레벨 선택</p>
-          <div style={{ display:"flex", gap:8 }}>
+          <p style={{ margin:"0 0 10px", fontSize:12, fontWeight:800, color:"#64748b", textTransform:"uppercase", letterSpacing:1 }}>레벨 선택</p>
+          <div className="eng-levels" role="group" aria-label="레벨 선택" style={{ display:"flex", gap:8 }}>
             {LEVELS.map(l => (
-              <button key={l.id} onClick={()=>{ setLevel(l.id); setQuiz(null); setStory(null); setTalk(null); setGrammar(null); }} className="eng-btn"
-                style={{ flex:1, padding:"10px 8px", background:level===l.id?l.bg:"#f8f8fc", border:`2px solid ${level===l.id?l.color:"transparent"}`, color:level===l.id?l.color:"#888", textAlign:"center" }}>
+              <button key={l.id} aria-pressed={level===l.id} onClick={()=>{ setLevel(l.id); setQuiz(null); setStory(null); setTalk(null); setGrammar(null); }} className="eng-btn"
+                style={{ flex:1, padding:"10px 8px", background:level===l.id?l.bg:"#f8fafc", border:`2px solid ${level===l.id?l.color:"transparent"}`, color:level===l.id?l.color:"#64748b", textAlign:"center" }}>
                 <div style={{ fontSize:20, marginBottom:2 }}>{l.emoji}</div>
                 <div style={{ fontSize:13, fontWeight:800 }}>{l.label}</div>
                 <div style={{ fontSize:10, opacity:0.7 }}>{l.desc}</div>
@@ -259,50 +269,50 @@ ${wordList}
         </div>
 
         {/* 탭 */}
-        <div style={{ display:"flex", gap:4, background:"#fff", borderRadius:16, padding:5, marginBottom:14, boxShadow:"0 2px 8px rgba(0,0,0,0.05)", overflowX:"auto" }}>
+        <nav className="eng-tabs" aria-label="영어 학습 메뉴" style={{ display:"flex", gap:4, background:"#fff", border:"1px solid #e2e8f0", borderRadius:16, padding:5, marginBottom:14, boxShadow:"0 8px 24px rgba(30,41,59,0.05)", overflowX:"auto" }}>
           {TABS.map(tab => (
-            <button key={tab.id} onClick={()=>setActiveTab(tab.id)} className="eng-btn"
-              style={{ flex:"0 0 auto", padding:"8px 10px", fontSize:11, fontWeight:activeTab===tab.id?800:500, background:activeTab===tab.id?"#6366f1":"transparent", color:activeTab===tab.id?"#fff":"#888", textAlign:"center", minWidth:52 }}>
+            <button key={tab.id} aria-pressed={activeTab===tab.id} onClick={()=>setActiveTab(tab.id)} className="eng-btn"
+              style={{ flex:"0 0 auto", padding:"8px 10px", fontSize:11, fontWeight:activeTab===tab.id?800:500, background:activeTab===tab.id?"#4f46e5":"transparent", color:activeTab===tab.id?"#fff":"#64748b", textAlign:"center", minWidth:52 }}>
               <div style={{ fontSize:16 }}>{tab.label}</div>
               <div>{tab.id==="bookmarks"&&bookmarks.length>0 ? `${tab.name}(${bookmarks.length})` : tab.name}</div>
             </button>
           ))}
-        </div>
+        </nav>
 
         {/* ── 오늘의 단어 ── */}
         {activeTab==="words" && (
           <div className="fade-up">
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <p style={{ margin:0, fontSize:13, color:"#666" }}>{loadingWords?"불러오는 중...":words.length>0?`📌 주제: ${words[0]?.theme||""}`:""}</p>
-              <button onClick={loadWords} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 단어</button>
+              <p style={{ margin:0, fontSize:13, color:"#475569" }}>{loadingWords?"불러오는 중...":words.length>0?`📌 주제: ${words[0]?.theme||""}`:""}</p>
+              <button onClick={loadWords} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#4f46e5", fontSize:12, fontWeight:700 }}>🔄 새 단어</button>
             </div>
             {loadingWords ? (
-              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>단어 생성 중...</p></div>
+              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#64748b", fontSize:13, margin:"12px 0 0" }}>단어 생성 중...</p></div>
             ) : words.map((w,i) => (
-              <div key={i} className="card fade-up" style={{ cursor:"pointer", border:`1.5px solid ${expandedWord===i?lv.color:"#f0f0f5"}`, background:expandedWord===i?lv.bg:"#fff" }}
-                onClick={()=>setExpandedWord(expandedWord===i?null:i)}>
+              <div key={i} className="card fade-up" style={{ cursor:"pointer", border:`1.5px solid ${expandedWord===i?lv.color:"#e2e8f0"}`, background:expandedWord===i?lv.bg:"#fff" }} onClick={()=>setExpandedWord(expandedWord===i?null:i)}>
                 <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                   <div style={{ width:36, height:36, borderRadius:10, background:lv.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:900, color:lv.color, flexShrink:0 }}>{i+1}</div>
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:18, fontWeight:900, color:"#1a1a2e" }}>{w.word}</span>
-                      <span style={{ fontSize:12, color:"#aaa" }}>{w.pronunciation}</span>
+                      <span style={{ fontSize:18, fontWeight:900, color:"#1e293b" }}>{w.word}</span>
+                      <span style={{ fontSize:12, color:"#64748b" }}>{w.pronunciation}</span>
                       <SpeakButton text={w.word} />
                     </div>
-                    <p style={{ margin:0, fontSize:13, color:"#555", fontWeight:600 }}>{w.meaning}</p>
+                    <p style={{ margin:0, fontSize:13, color:"#475569", fontWeight:600 }}>{w.meaning}</p>
                   </div>
-                  <button onClick={e=>{e.stopPropagation();toggleBookmark(w);}} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", flexShrink:0 }}>
+                  <button aria-label={`${w.word} ${isBookmarked(w)?"단어장에서 삭제":"단어장에 저장"}`} aria-pressed={isBookmarked(w)} onClick={e=>{e.stopPropagation();toggleBookmark(w);}} style={{ background:"none", border:"none", fontSize:20, cursor:"pointer", flexShrink:0 }}>
                     {isBookmarked(w)?"⭐":"☆"}
                   </button>
                 </div>
+                <button className="eng-toggle" aria-expanded={expandedWord===i} onClick={e=>{e.stopPropagation();setExpandedWord(expandedWord===i?null:i)}}>{expandedWord===i?"예문 접기":"예문 보기"}</button>
                 {expandedWord===i && (
                   <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${lv.color}33` }} className="fade-up">
                     <div style={{ background:"rgba(255,255,255,0.7)", borderRadius:12, padding:"10px 14px", marginBottom:8 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
-                        <p style={{ margin:0, fontSize:13, color:"#555", fontStyle:"italic", flex:1 }}>{w.example}</p>
+                        <p style={{ margin:0, fontSize:13, color:"#475569", fontStyle:"italic", flex:1 }}>{w.example}</p>
                         <SpeakButton text={w.example} />
                       </div>
-                      <p style={{ margin:0, fontSize:12, color:"#888" }}>{w.example_kr}</p>
+                      <p style={{ margin:0, fontSize:12, color:"#64748b" }}>{w.example_kr}</p>
                     </div>
                     <div style={{ display:"flex", alignItems:"center", gap:6, background:"#fffbeb", borderRadius:10, padding:"8px 12px" }}>
                       <span style={{ fontSize:14 }}>💡</span>
@@ -319,11 +329,11 @@ ${wordList}
         {activeTab==="talk" && (
           <div className="fade-up">
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <p style={{ margin:0, fontSize:13, color:"#666" }}>소리 내어 따라해보세요! 🎤</p>
-              <button onClick={loadTalk} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 대화</button>
+              <p style={{ margin:0, fontSize:13, color:"#475569" }}>소리 내어 따라해보세요! 🎤</p>
+              <button onClick={loadTalk} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#4f46e5", fontSize:12, fontWeight:700 }}>🔄 새 대화</button>
             </div>
             {loadingTalk ? (
-              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>회화 생성 중...</p></div>
+              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#64748b", fontSize:13, margin:"12px 0 0" }}>회화 생성 중...</p></div>
             ) : talk ? (
               <div>
                 {/* 상황 카드 */}
@@ -332,9 +342,9 @@ ${wordList}
                     <span style={{ fontSize:20 }}>🎬</span>
                     <span style={{ fontSize:14, fontWeight:800, color:lv.color }}>{talk.situation}</span>
                   </div>
-                  <p style={{ margin:"0 0 6px", fontSize:13, color:"#555" }}>{talk.situation_desc}</p>
+                  <p style={{ margin:"0 0 6px", fontSize:13, color:"#475569" }}>{talk.situation_desc}</p>
                   <div style={{ background:"rgba(255,255,255,0.7)", borderRadius:10, padding:"6px 10px" }}>
-                    <span style={{ fontSize:11, color:"#888" }}>💡 포인트: </span>
+                    <span style={{ fontSize:11, color:"#64748b" }}>💡 포인트: </span>
                     <span style={{ fontSize:11, color:lv.color, fontWeight:700 }}>{talk.level_hint}</span>
                   </div>
                 </div>
@@ -346,11 +356,11 @@ ${wordList}
                     return (
                       <div key={i} className="talk-bubble" style={{ marginBottom:16, display:"flex", flexDirection:"column", alignItems:isA?"flex-start":"flex-end", animationDelay:`${i*0.1}s` }}>
                         <div style={{ display:"flex", alignItems:"flex-end", gap:8, flexDirection:isA?"row":"row-reverse" }}>
-                          <div style={{ width:32, height:32, borderRadius:"50%", background:isA?"#6366f1":"#10b981", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#fff", fontWeight:800, flexShrink:0 }}>{line.speaker}</div>
+                          <div style={{ width:32, height:32, borderRadius:"50%", background:isA?"#4f46e5":"#10b981", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#fff", fontWeight:800, flexShrink:0 }}>{line.speaker}</div>
                           <div style={{ maxWidth:"78%" }}>
                             <div style={{ background:isA?"#eef2ff":"#ecfdf5", borderRadius:isA?"4px 16px 16px 16px":"16px 4px 16px 16px", padding:"10px 14px", marginBottom:4 }}>
                               <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
-                                <p style={{ margin:0, fontSize:15, fontWeight:700, color:"#1a1a2e", flex:1 }}>{line.en}</p>
+                                <p style={{ margin:0, fontSize:15, fontWeight:700, color:"#1e293b", flex:1 }}>{line.en}</p>
                                 <SpeakButton text={line.en} />
                               </div>
                               <p style={{ margin:0, fontSize:12, color:"#777" }}>{line.kr}</p>
@@ -362,7 +372,7 @@ ${wordList}
                     );
                   })}
                   {shownLines < (talk.lines?.length||0) && (
-                    <button onClick={()=>setShownLines(s=>s+1)} className="eng-btn" style={{ width:"100%", padding:"12px", background:"#f8f8fc", color:"#6366f1", fontSize:14, fontWeight:700, marginTop:8 }}>
+                    <button onClick={()=>setShownLines(s=>s+1)} className="eng-btn" style={{ width:"100%", padding:"12px", background:"#f8fafc", color:"#4f46e5", fontSize:14, fontWeight:700, marginTop:8 }}>
                       다음 대사 보기 ({shownLines}/{talk.lines?.length}) →
                     </button>
                   )}
@@ -383,36 +393,36 @@ ${wordList}
           <div className="fade-up">
             {/* 직접 입력 */}
             <div className="card" style={{ padding:"14px 16px", marginBottom:12 }}>
-              <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:800, color:"#1a1a2e" }}>📝 배우고 싶은 문법을 직접 입력하세요</p>
+              <p style={{ margin:"0 0 8px", fontSize:13, fontWeight:800, color:"#1e293b" }}>📝 배우고 싶은 문법을 직접 입력하세요</p>
               <div style={{ display:"flex", gap:8 }}>
                 <input
-                  value={grammarInput}
+                  aria-label="배우고 싶은 문법 주제" value={grammarInput}
                   onChange={e=>setGrammarInput(e.target.value)}
                   onKeyDown={e=>e.key==="Enter"&&grammarInput.trim()&&loadGrammar(grammarInput.trim())}
                   placeholder="예) 현재완료, 수동태, to부정사, 관계대명사..."
-                  style={{ flex:1, padding:"10px 14px", borderRadius:12, border:"1.5px solid #c7d2fe", fontSize:14, fontFamily:"inherit", outline:"none", background:"#f8f8fc", color:"#1a1a2e" }}
+                  style={{ flex:1, padding:"10px 14px", borderRadius:12, border:"1.5px solid #c7d2fe", fontSize:14, fontFamily:"inherit", outline:"none", background:"#f8fafc", color:"#1e293b" }}
                 />
                 <button
                   onClick={()=>grammarInput.trim() ? loadGrammar(grammarInput.trim()) : loadGrammar()}
                   className="eng-btn"
-                  style={{ padding:"10px 16px", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:13, fontWeight:800, flexShrink:0 }}>
+                  style={{ padding:"10px 16px", background:"linear-gradient(135deg,#4f46e5,#6366f1)", color:"#fff", fontSize:13, fontWeight:800, flexShrink:0 }}>
                   생성
                 </button>
               </div>
               {grammarInput && (
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:8 }}>
-                  <span style={{ fontSize:12, color:"#6366f1", fontWeight:700 }}>🎯 "{grammarInput}" 위주로 생성해요 · 🔄 누를 때마다 새로운 예문!</span>
-                  <button onClick={()=>{setGrammarInput(""); setGrammar(null);}} style={{ background:"none", border:"none", color:"#bbb", fontSize:12, cursor:"pointer" }}>초기화</button>
+                  <span style={{ fontSize:12, color:"#4f46e5", fontWeight:700 }}>🎯 "{grammarInput}" 위주로 생성해요 · 🔄 누를 때마다 새로운 예문!</span>
+                  <button onClick={()=>{setGrammarInput(""); setGrammar(null);}} style={{ background:"none", border:"none", color:"#64748b", fontSize:12, cursor:"pointer" }}>초기화</button>
                 </div>
               )}
             </div>
 
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <p style={{ margin:0, fontSize:13, color:"#666" }}>{grammarInput ? `"${grammarInput}" 문법 연습 중 🔍` : "규칙을 발견하는 재미! 🔍"}</p>
-              <button onClick={()=>loadGrammar(grammarInput.trim())} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 예문</button>
+              <p style={{ margin:0, fontSize:13, color:"#475569" }}>{grammarInput ? `"${grammarInput}" 문법 연습 중 🔍` : "규칙을 발견하는 재미! 🔍"}</p>
+              <button onClick={()=>loadGrammar(grammarInput.trim())} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#4f46e5", fontSize:12, fontWeight:700 }}>🔄 새 예문</button>
             </div>
             {loadingGrammar ? (
-              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>문법 생성 중...</p></div>
+              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#64748b", fontSize:13, margin:"12px 0 0" }}>문법 생성 중...</p></div>
             ) : grammar ? (
               <div>
                 {/* 문법 포인트 */}
@@ -421,10 +431,10 @@ ${wordList}
                     <span style={{ fontSize:24 }}>✏️</span>
                     <h3 style={{ margin:0, fontSize:18, fontWeight:900, color:lv.color }}>{grammar.point}</h3>
                   </div>
-                  <p style={{ margin:"0 0 14px", fontSize:14, color:"#555", lineHeight:1.6 }}>{grammar.description}</p>
+                  <p style={{ margin:"0 0 14px", fontSize:14, color:"#475569", lineHeight:1.6 }}>{grammar.description}</p>
 
                   {/* 틀린 vs 맞는 */}
-                  <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+                  <div className="eng-grammar-compare" style={{ display:"flex", gap:8, marginBottom:12 }}>
                     <div style={{ flex:1, background:"#fef2f2", border:"1.5px solid #fecaca", borderRadius:14, padding:"12px 14px" }}>
                       <p style={{ margin:"0 0 4px", fontSize:11, fontWeight:800, color:"#ef4444" }}>❌ 틀린 표현</p>
                       <p style={{ margin:0, fontSize:14, fontWeight:700, color:"#dc2626" }}>{grammar.wrong}</p>
@@ -445,28 +455,28 @@ ${wordList}
 
                 {/* 빈칸 채우기 */}
                 <div className="card">
-                  <p style={{ margin:"0 0 14px", fontSize:14, fontWeight:800, color:"#1a1a2e" }}>📝 직접 써보기!</p>
+                  <p style={{ margin:"0 0 14px", fontSize:14, fontWeight:800, color:"#1e293b" }}>📝 직접 써보기!</p>
                   {grammar.exercises?.map((ex, i) => {
                     const parts = ex.sentence.split("____");
                     const userAns = fillAnswers[i]||"";
                     const isRight = fillChecked && userAns.trim().toLowerCase()===ex.answer.toLowerCase();
                     const isWrong = fillChecked && userAns.trim() && !isRight;
                     return (
-                      <div key={i} style={{ marginBottom:14, padding:"12px 14px", borderRadius:14, background: fillChecked?(isRight?"#ecfdf5":isWrong?"#fef2f2":"#f8f8fc"):"#f8f8fc", border:`1.5px solid ${fillChecked?(isRight?"#10b981":isWrong?"#ef4444":"#e8e9ef"):"#e8e9ef"}` }}>
+                      <div key={i} style={{ marginBottom:14, padding:"12px 14px", borderRadius:14, background: fillChecked?(isRight?"#ecfdf5":isWrong?"#fef2f2":"#f8fafc"):"#f8fafc", border:`1.5px solid ${fillChecked?(isRight?"#10b981":isWrong?"#ef4444":"#cbd5e1"):"#cbd5e1"}` }}>
                         <div style={{ display:"flex", alignItems:"center", flexWrap:"wrap", gap:4, marginBottom:8 }}>
-                          <span style={{ fontSize:14, color:"#1a1a2e", fontWeight:600 }}>{parts[0]}</span>
-                          <input value={userAns} onChange={e=>setFillAnswers(p=>({...p,[i]:e.target.value}))} disabled={fillChecked}
-                            placeholder={ex.hint} style={{ width:100, padding:"4px 8px", border:`1.5px solid ${fillChecked?(isRight?"#10b981":isWrong?"#ef4444":"#e8e9ef"):"#c7d2fe"}`, borderRadius:8, fontSize:14, fontFamily:"inherit", background:fillChecked?(isRight?"#ecfdf5":isWrong?"#fef2f2":"#fff"):"#fff", color:isRight?"#059669":isWrong?"#ef4444":"#1a1a2e", outline:"none", fontWeight:fillChecked?700:400 }} />
-                          {parts[1] && <span style={{ fontSize:14, color:"#1a1a2e", fontWeight:600 }}>{parts[1]}</span>}
+                          <span style={{ fontSize:14, color:"#1e293b", fontWeight:600 }}>{parts[0]}</span>
+                          <input aria-label={`${i+1}번 빈칸 답`} value={userAns} onChange={e=>setFillAnswers(p=>({...p,[i]:e.target.value}))} disabled={fillChecked}
+                            placeholder={ex.hint} style={{ width:100, padding:"4px 8px", border:`1.5px solid ${fillChecked?(isRight?"#10b981":isWrong?"#ef4444":"#cbd5e1"):"#c7d2fe"}`, borderRadius:8, fontSize:14, fontFamily:"inherit", background:fillChecked?(isRight?"#ecfdf5":isWrong?"#fef2f2":"#fff"):"#fff", color:isRight?"#059669":isWrong?"#ef4444":"#1e293b", outline:"none", fontWeight:fillChecked?700:400 }} />
+                          {parts[1] && <span style={{ fontSize:14, color:"#1e293b", fontWeight:600 }}>{parts[1]}</span>}
                         </div>
                         {fillChecked && <p style={{ margin:0, fontSize:12, color:isRight?"#059669":"#ef4444", fontWeight:700 }}>{isRight?"✓ 정답!":"✗ 정답: "+ex.answer}</p>}
                       </div>
                     );
                   })}
                   {!fillChecked ? (
-                    <button onClick={()=>setFillChecked(true)} className="eng-btn" style={{ width:"100%", padding:"13px", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:14, fontWeight:800 }}>채점하기 ✓</button>
+                    <button onClick={()=>setFillChecked(true)} className="eng-btn" style={{ width:"100%", padding:"13px", background:"linear-gradient(135deg,#4f46e5,#6366f1)", color:"#fff", fontSize:14, fontWeight:800 }}>채점하기 ✓</button>
                   ) : (
-                    <button onClick={()=>{setFillAnswers({}); setFillChecked(false);}} className="eng-btn" style={{ width:"100%", padding:"13px", background:"#f1f2f6", color:"#666", fontSize:14, fontWeight:700 }}>🔄 다시 풀기</button>
+                    <button onClick={()=>{setFillAnswers({}); setFillChecked(false);}} className="eng-btn" style={{ width:"100%", padding:"13px", background:"#f1f2f6", color:"#475569", fontSize:14, fontWeight:700 }}>🔄 다시 풀기</button>
                   )}
                 </div>
               </div>
@@ -480,7 +490,7 @@ ${wordList}
             {quizTotal>0 && (
               <div className="card" style={{ background:"linear-gradient(135deg,#eef2ff,#e0e7ff)", border:"1.5px solid #c7d2fe", padding:"14px 16px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <div>
-                  <p style={{ margin:0, fontSize:12, color:"#6366f1", fontWeight:700 }}>오늘의 퀴즈 점수</p>
+                  <p style={{ margin:0, fontSize:12, color:"#4f46e5", fontWeight:700 }}>오늘의 퀴즈 점수</p>
                   <p style={{ margin:0, fontSize:24, fontWeight:900, color:"#4338ca" }}>{quizScore} / {quizTotal}</p>
                 </div>
                 <div style={{ fontSize:32 }}>{quizScore===quizTotal&&quizTotal>0?"🏆":quizScore>quizTotal/2?"😊":"💪"}</div>
@@ -493,14 +503,14 @@ ${wordList}
               </div>
             )}
             {loadingQuiz ? (
-              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>퀴즈 생성 중...</p></div>
+              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#64748b", fontSize:13, margin:"12px 0 0" }}>퀴즈 생성 중...</p></div>
             ) : quiz ? (
               <div className="card">
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                  <span style={{ background:"#eef2ff", color:"#6366f1", padding:"4px 10px", borderRadius:20, fontSize:12, fontWeight:700 }}>🎯 {quiz.type}</span>
-                  {quizAnswer && <button onClick={()=>{setQuiz(null);setQuizAnswer(null);loadQuiz();}} className="eng-btn" style={{ padding:"6px 12px", background:"#6366f1", color:"#fff", fontSize:12, fontWeight:700 }}>다음 문제 →</button>}
+                  <span style={{ background:"#eef2ff", color:"#4f46e5", padding:"4px 10px", borderRadius:20, fontSize:12, fontWeight:700 }}>🎯 {quiz.type}</span>
+                  {quizAnswer && <button onClick={()=>{setQuiz(null);setQuizAnswer(null);loadQuiz();}} className="eng-btn" style={{ padding:"6px 12px", background:"#4f46e5", color:"#fff", fontSize:12, fontWeight:700 }}>다음 문제 →</button>}
                 </div>
-                <p style={{ margin:"0 0 16px", fontSize:16, fontWeight:800, color:"#1a1a2e", lineHeight:1.6 }}>{quiz.question}</p>
+                <p style={{ margin:"0 0 16px", fontSize:16, fontWeight:800, color:"#1e293b", lineHeight:1.6 }}>{quiz.question}</p>
                 <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                   {quiz.options?.map((opt,i) => {
                     const isCorrect = opt===quiz.answer;
@@ -509,9 +519,9 @@ ${wordList}
                     return (
                       <button key={i} onClick={()=>handleQuizAnswer(opt)} className="eng-btn"
                         style={{ padding:"13px 16px", textAlign:"left", fontSize:14, fontWeight:isSelected||isCorrect&&quizAnswer?700:500,
-                          background:!quizAnswer?"#f8f8fc":isCorrect?"#ecfdf5":isWrong?"#fef2f2":"#f8f8fc",
-                          border:`2px solid ${!quizAnswer?"#e8e9ef":isCorrect?"#10b981":isWrong?"#ef4444":"#e8e9ef"}`,
-                          color:!quizAnswer?"#333":isCorrect?"#059669":isWrong?"#ef4444":"#aaa",
+                          background:!quizAnswer?"#f8fafc":isCorrect?"#ecfdf5":isWrong?"#fef2f2":"#f8fafc",
+                          border:`2px solid ${!quizAnswer?"#cbd5e1":isCorrect?"#10b981":isWrong?"#ef4444":"#cbd5e1"}`,
+                          color:!quizAnswer?"#333":isCorrect?"#059669":isWrong?"#ef4444":"#64748b",
                           cursor:quizAnswer?"default":"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                         {opt}
                         {quizAnswer&&isCorrect&&<span>✓</span>}
@@ -529,7 +539,7 @@ ${wordList}
             ) : (
               <div className="card" style={{ textAlign:"center", padding:40 }}>
                 <p style={{ fontSize:40, margin:"0 0 12px" }}>🎯</p>
-                <button onClick={loadQuiz} className="eng-btn" style={{ padding:"14px 24px", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", color:"#fff", fontSize:15, fontWeight:800 }}>퀴즈 시작!</button>
+                <button onClick={loadQuiz} className="eng-btn" style={{ padding:"14px 24px", background:"linear-gradient(135deg,#4f46e5,#6366f1)", color:"#fff", fontSize:15, fontWeight:800 }}>퀴즈 시작!</button>
               </div>
             )}
           </div>
@@ -539,31 +549,31 @@ ${wordList}
         {activeTab==="story" && (
           <div className="fade-up">
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-              <p style={{ margin:0, fontSize:13, color:"#666" }}>소리 내어 읽어보세요! 🎤</p>
-              <button onClick={loadStory} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#6366f1", fontSize:12, fontWeight:700 }}>🔄 새 이야기</button>
+              <p style={{ margin:0, fontSize:13, color:"#475569" }}>소리 내어 읽어보세요! 🎤</p>
+              <button onClick={loadStory} className="eng-btn" style={{ padding:"6px 12px", background:"#eef2ff", color:"#4f46e5", fontSize:12, fontWeight:700 }}>🔄 새 이야기</button>
             </div>
             {loadingStory ? (
-              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#bbb", fontSize:13, margin:"12px 0 0" }}>이야기 생성 중...</p></div>
+              <div className="card" style={{ padding:40 }}><LoadingSpinner /><p style={{ textAlign:"center", color:"#64748b", fontSize:13, margin:"12px 0 0" }}>이야기 생성 중...</p></div>
             ) : story ? (
               <div className="card">
                 <div style={{ marginBottom:16 }}>
-                  <h3 style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:"#1a1a2e" }}>{story.title}</h3>
-                  <p style={{ margin:0, fontSize:13, color:"#888" }}>{story.title_kr}</p>
+                  <h3 style={{ margin:"0 0 4px", fontSize:18, fontWeight:900, color:"#1e293b" }}>{story.title}</h3>
+                  <p style={{ margin:0, fontSize:13, color:"#64748b" }}>{story.title_kr}</p>
                 </div>
                 {story.sentences?.map((s,i) => (
-                  <div key={i} style={{ marginBottom:12, padding:"12px 14px", borderRadius:14, background:showTranslation[i]?"#f5f3ff":"#f8f8fc", border:`1.5px solid ${showTranslation[i]?"#c4b5fd":"#f0f0f5"}`, cursor:"pointer" }}
-                    onClick={()=>setShowTranslation(p=>({...p,[i]:!p[i]}))}>
+                  <div key={i} style={{ marginBottom:12, padding:"12px 14px", borderRadius:14, background:showTranslation[i]?"#f5f3ff":"#f8fafc", border:`1.5px solid ${showTranslation[i]?"#c4b5fd":"#e2e8f0"}`, cursor:"pointer" }} onClick={()=>setShowTranslation(p=>({...p,[i]:!p[i]}))}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:showTranslation[i]?6:0 }}>
-                      <p style={{ margin:0, fontSize:15, fontWeight:700, color:"#1a1a2e", lineHeight:1.6, flex:1 }}>{s.en}</p>
+                      <p style={{ margin:0, fontSize:15, fontWeight:700, color:"#1e293b", lineHeight:1.6, flex:1 }}>{s.en}</p>
                       <SpeakButton text={s.en} />
                     </div>
+                    <button className="eng-toggle" aria-expanded={!!showTranslation[i]} onClick={e=>{e.stopPropagation();setShowTranslation(p=>({...p,[i]:!p[i]}))}}>{showTranslation[i]?"해석 접기":"해석 보기"}</button>
                     {showTranslation[i] && (
                       <div className="fade-up">
-                        <p style={{ margin:"0 0 6px", fontSize:13, color:"#6366f1" }}>{s.kr}</p>
+                        <p style={{ margin:"0 0 6px", fontSize:13, color:"#4f46e5" }}>{s.kr}</p>
                         <span style={{ fontSize:11, background:"#ede9fe", color:"#7c3aed", padding:"2px 8px", borderRadius:8, fontWeight:700 }}>{s.key_word} = {s.key_meaning}</span>
                       </div>
                     )}
-                    {!showTranslation[i] && <p style={{ margin:"4px 0 0", fontSize:11, color:"#bbb" }}>탭하면 해석 보기 👆</p>}
+                    {!showTranslation[i] && <p style={{ margin:"4px 0 0", fontSize:11, color:"#64748b" }}>탭하면 해석 보기 👆</p>}
                   </div>
                 ))}
               </div>
@@ -577,13 +587,13 @@ ${wordList}
             {bookmarks.length===0 ? (
               <div className="card" style={{ textAlign:"center", padding:"48px 24px" }}>
                 <p style={{ fontSize:48, margin:"0 0 12px" }}>⭐</p>
-                <h3 style={{ margin:"0 0 8px", fontSize:18, fontWeight:800, color:"#1a1a2e" }}>나만의 단어장</h3>
-                <p style={{ margin:0, fontSize:13, color:"#bbb" }}>단어 옆 ☆을 눌러서 저장해보세요!</p>
+                <h3 style={{ margin:"0 0 8px", fontSize:18, fontWeight:800, color:"#1e293b" }}>나만의 단어장</h3>
+                <p style={{ margin:0, fontSize:13, color:"#64748b" }}>단어 옆 ☆을 눌러서 저장해보세요!</p>
               </div>
             ) : (
               <>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                  <p style={{ margin:0, fontSize:13, color:"#666", fontWeight:700 }}>⭐ 저장된 단어 {bookmarks.length}개</p>
+                  <p style={{ margin:0, fontSize:13, color:"#475569", fontWeight:700 }}>⭐ 저장된 단어 {bookmarks.length}개</p>
                   <button onClick={()=>setBookmarks([])} className="eng-btn" style={{ padding:"6px 12px", background:"#fef2f2", color:"#ef4444", fontSize:12, fontWeight:700 }}>전체 삭제</button>
                 </div>
                 {bookmarks.map((w,i) => (
@@ -591,14 +601,14 @@ ${wordList}
                     <div style={{ display:"flex", alignItems:"center", gap:12 }}>
                       <div style={{ flex:1 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                          <span style={{ fontSize:17, fontWeight:900, color:"#1a1a2e" }}>{w.word}</span>
-                          <span style={{ fontSize:12, color:"#aaa" }}>{w.pronunciation}</span>
+                          <span style={{ fontSize:17, fontWeight:900, color:"#1e293b" }}>{w.word}</span>
+                          <span style={{ fontSize:12, color:"#64748b" }}>{w.pronunciation}</span>
                           <SpeakButton text={w.word} />
                         </div>
-                        <p style={{ margin:"3px 0 0", fontSize:13, color:"#555" }}>{w.meaning}</p>
-                        <p style={{ margin:"4px 0 0", fontSize:12, color:"#888", fontStyle:"italic" }}>{w.example}</p>
+                        <p style={{ margin:"3px 0 0", fontSize:13, color:"#475569" }}>{w.meaning}</p>
+                        <p style={{ margin:"4px 0 0", fontSize:12, color:"#64748b", fontStyle:"italic" }}>{w.example}</p>
                       </div>
-                      <button onClick={()=>toggleBookmark(w)} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer" }}>⭐</button>
+                      <button aria-label={`${w.word} 단어장에서 삭제`} onClick={()=>toggleBookmark(w)} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer" }}>⭐</button>
                     </div>
                   </div>
                 ))}
