@@ -3,7 +3,14 @@ import { useState, useRef, useCallback } from 'react';
 
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-  * { box-sizing: border-box; }
+  .study-aux-screen, .study-aux-screen * { box-sizing: border-box; }
+  .study-aux-screen { color: #172438; }
+  .study-aux-screen button { font-family: inherit; touch-action: manipulation; }
+  .study-aux-screen button:focus-visible, .study-aux-screen [role="button"]:focus-visible, .study-aux-screen textarea:focus-visible { outline: 3px solid #3159ac !important; outline-offset: 3px; }
+  .study-aux-screen button { min-height: 44px; }
+  .study-aux-screen p { overflow-wrap: anywhere; }
+  @media (prefers-reduced-motion: reduce) { .study-aux-screen *, .study-aux-screen *::before, .study-aux-screen *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  @media (max-width: 380px) { .study-aux-screen .aux-metrics { grid-template-columns: 1fr !important; } }
   body { margin: 0; background: #f5f6fa; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   .fade-up { animation: fadeUp 0.35s ease both; }
@@ -125,7 +132,7 @@ export default function ProblemSolver({ onBack }) {
   };
 
   return (
-    <div style={{ minHeight:'100vh', background:'#f5f6fa', fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:40 }}>
+    <div className="study-aux-screen" style={{ minHeight:'100vh', background:'#f4f6f9', fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:40 }}>
       <style>{CSS}</style>
       <input ref={galleryRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e=>{ processFiles(e.target.files); e.target.value=''; }} />
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={e=>{ processFiles(e.target.files); e.target.value=''; }} />
@@ -133,11 +140,11 @@ export default function ProblemSolver({ onBack }) {
       {/* 헤더 */}
       <div style={{ background:'#fff', borderBottom:'1px solid #f0f0f5', padding:'16px 20px', position:'sticky', top:0, zIndex:100 }}>
         <div style={{ maxWidth:640, margin:'0 auto', display:'flex', alignItems:'center', gap:12 }}>
-          <button onClick={onBack} style={{ width:36, height:36, borderRadius:10, border:'1.5px solid #e8e9ef', background:'#fff', cursor:'pointer', fontSize:18, flexShrink:0 }}>←</button>
-          <div style={{ width:38, height:38, borderRadius:12, background:'linear-gradient(135deg,#10b981,#059669)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>📝</div>
+          <button aria-label="이전 화면으로 돌아가기" onClick={onBack} style={{ width:36, height:36, borderRadius:10, border:'1px solid #dce3ec', background:'#fff', cursor:'pointer', fontSize:18, flexShrink:0 }}>←</button>
+          <div style={{ width:38, height:38, borderRadius:12, background:'linear-gradient(135deg,#17665f,#245b65)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>📝</div>
           <div>
-            <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:'#1a1a2e' }}>문제 풀이 도우미</h1>
-            <p style={{ margin:0, fontSize:11, color:'#999' }}>AI가 단계별로 풀어드려요</p>
+            <h1 style={{ margin:0, fontSize:17, fontWeight:800, color:'#172438' }}>문제 풀이 도우미</h1>
+            <p style={{ margin:0, fontSize:11, color:'#66748a' }}>AI가 단계별로 풀어드려요</p>
           </div>
         </div>
       </div>
@@ -148,16 +155,16 @@ export default function ProblemSolver({ onBack }) {
           <div className="fade-up">
             <div style={{ textAlign:'center', padding:'24px 0 20px' }}>
               <div style={{ fontSize:52, marginBottom:8 }}>📝</div>
-              <h2 style={{ margin:'0 0 6px', fontSize:22, fontWeight:900, color:'#1a1a2e' }}>문제를 올려주세요</h2>
-              <p style={{ margin:0, fontSize:13, color:'#999' }}>사진, 갤러리, 텍스트 중 선택하세요</p>
+              <h2 style={{ margin:'0 0 6px', fontSize:22, fontWeight:900, color:'#172438' }}>문제를 올려주세요</h2>
+              <p style={{ margin:0, fontSize:13, color:'#66748a' }}>사진, 갤러리, 텍스트 중 선택하세요</p>
             </div>
 
             {/* 학년 선택 */}
-            <div style={{ background:'#fff', borderRadius:16, padding:'14px 16px', marginBottom:12, border:'1.5px solid #e8e9ef' }}>
-              <p style={{ margin:'0 0 10px', fontSize:13, fontWeight:800, color:'#1a1a2e' }}>🎓 내 학년 선택</p>
+            <div style={{ background:'#fff', borderRadius:16, padding:'14px 16px', marginBottom:12, border:'1px solid #dce3ec' }}>
+              <p style={{ margin:'0 0 10px', fontSize:13, fontWeight:800, color:'#172438' }}>🎓 내 학년 선택</p>
               <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                 {['초4','초5','초6','중1','중2','중3','고1','고2','고3'].map(g => (
-                  <button key={g} onClick={()=>setGrade(g)}
+                  <button key={g} aria-pressed={grade===g} onClick={()=>setGrade(g)}
                     style={{ padding:'7px 14px', borderRadius:20, border:`2px solid ${grade===g?'#10b981':'#e8e9ef'}`, background: grade===g?'#f0fdf4':'#fff', color: grade===g?'#10b981':'#555', fontSize:13, fontWeight: grade===g?700:500, cursor:'pointer', fontFamily:'inherit', transition:'all 0.15s' }}>
                     {g}
                   </button>
@@ -171,7 +178,7 @@ export default function ProblemSolver({ onBack }) {
             </div>
 
             {/* 카메라 */}
-            <button onClick={()=>cameraRef.current?.click()} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:'none', background:'linear-gradient(135deg,#10b981,#059669)', color:'#fff', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, boxShadow:'0 4px 20px rgba(16,185,129,0.3)', textAlign:'left' }}>
+            <button onClick={()=>cameraRef.current?.click()} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:'none', background:'linear-gradient(135deg,#17665f,#245b65)', color:'#fff', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, boxShadow:'0 4px 20px rgba(16,185,129,0.3)', textAlign:'left' }}>
               <div style={{ width:48, height:48, borderRadius:14, background:'rgba(255,255,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>📷</div>
               <div style={{ flex:1 }}>
                 <p style={{ margin:0, fontSize:16, fontWeight:800 }}>카메라로 찍기</p>
@@ -184,32 +191,33 @@ export default function ProblemSolver({ onBack }) {
             <button onClick={()=>galleryRef.current?.click()} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:'2px solid #e8e9ef', background:'#fff', color:'#333', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, textAlign:'left' }}>
               <div style={{ width:48, height:48, borderRadius:14, background:'#f0fdf4', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>🖼️</div>
               <div style={{ flex:1 }}>
-                <p style={{ margin:0, fontSize:16, fontWeight:800, color:'#1a1a2e' }}>갤러리에서 선택</p>
-                <p style={{ margin:'3px 0 0', fontSize:12, color:'#999' }}>최대 5장</p>
+                <p style={{ margin:0, fontSize:16, fontWeight:800, color:'#172438' }}>갤러리에서 선택</p>
+                <p style={{ margin:'3px 0 0', fontSize:12, color:'#66748a' }}>최대 5장</p>
               </div>
               <span style={{ fontSize:20, color:'#ccc' }}>›</span>
             </button>
 
             {/* 텍스트 입력 */}
-            <button onClick={()=>setShowTextInput(v=>!v)} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:`2px solid ${showTextInput?'#10b981':'#e8e9ef'}`, background: showTextInput?'#f0fdf4':'#fff', color:'#333', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, textAlign:'left' }}>
+            <button aria-expanded={showTextInput} onClick={()=>setShowTextInput(v=>!v)} style={{ width:'100%', padding:'18px 20px', borderRadius:20, border:`2px solid ${showTextInput?'#10b981':'#e8e9ef'}`, background: showTextInput?'#f0fdf4':'#fff', color:'#333', display:'flex', alignItems:'center', gap:16, cursor:'pointer', marginBottom:10, textAlign:'left' }}>
               <div style={{ width:48, height:48, borderRadius:14, background: showTextInput?'#d1fae5':'#f0f0f8', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26 }}>✏️</div>
               <div style={{ flex:1 }}>
-                <p style={{ margin:0, fontSize:16, fontWeight:800, color:'#1a1a2e' }}>텍스트 붙여넣기</p>
-                <p style={{ margin:'3px 0 0', fontSize:12, color:'#999' }}>문제를 직접 입력 또는 복사</p>
+                <p style={{ margin:0, fontSize:16, fontWeight:800, color:'#172438' }}>텍스트 붙여넣기</p>
+                <p style={{ margin:'3px 0 0', fontSize:12, color:'#66748a' }}>문제를 직접 입력 또는 복사</p>
               </div>
               <span style={{ fontSize:18, color: showTextInput?'#10b981':'#ccc', transition:'transform 0.2s', display:'inline-block', transform: showTextInput?'rotate(90deg)':'none' }}>›</span>
             </button>
 
             {showTextInput && (
-              <div style={{ background:'#fff', borderRadius:20, padding:16, marginBottom:10, border:'1.5px solid #e8e9ef' }}>
+              <div style={{ background:'#fff', borderRadius:20, padding:16, marginBottom:10, border:'1px solid #dce3ec' }}>
                 <textarea
+                  aria-label="문제 텍스트"
                   value={textInput}
                   onChange={e=>setTextInput(e.target.value)}
                   placeholder={'문제를 붙여넣거나 직접 입력하세요\n\n예시)\n다음 방정식을 풀어라: 2x + 5 = 13\n\n※ 논술 작성·번역·요약은 지원하지 않아요'}
-                  style={{ width:'100%', minHeight:140, background:'#f8f8fc', borderRadius:12, border:'1.5px solid #e8e9ef', padding:'12px 14px', color:'#333', fontSize:14, resize:'vertical', boxSizing:'border-box', fontFamily:'inherit', lineHeight:1.6, outline:'none' }}
+                  style={{ width:'100%', minHeight:140, background:'#f8f8fc', borderRadius:12, border:'1px solid #dce3ec', padding:'12px 14px', color:'#333', fontSize:14, resize:'vertical', boxSizing:'border-box', fontFamily:'inherit', lineHeight:1.6, outline:'none' }}
                 />
                 <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
-                  <span style={{ color:'#bbb', fontSize:12 }}>{textInput.length}자</span>
+                  <span style={{ color:'#68758a', fontSize:12 }}>{textInput.length}자</span>
                   {textInput && <button onClick={()=>setTextInput('')} style={{ background:'none', border:'none', color:'#ef4444', fontSize:12, cursor:'pointer' }}>전체 지우기</button>}
                 </div>
               </div>
@@ -217,7 +225,7 @@ export default function ProblemSolver({ onBack }) {
 
             {/* 업로드된 이미지 */}
             {images.length > 0 && (
-              <div style={{ background:'#fff', borderRadius:20, padding:16, marginBottom:12, border:'1.5px solid #e8e9ef' }}>
+              <div style={{ background:'#fff', borderRadius:20, padding:16, marginBottom:12, border:'1px solid #dce3ec' }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
                   <span style={{ fontSize:13, fontWeight:700, color:'#10b981' }}>📷 {images.length}장 선택됨</span>
                   {images.length < 5 && <button onClick={()=>galleryRef.current?.click()} style={{ background:'#f0fdf4', border:'none', color:'#10b981', borderRadius:8, padding:'4px 10px', fontSize:12, cursor:'pointer', fontWeight:700 }}>+ 추가</button>}
@@ -226,7 +234,7 @@ export default function ProblemSolver({ onBack }) {
                   {images.map((img, idx) => (
                     <div key={idx} style={{ position:'relative' }}>
                       <img src={img.url} alt="" style={{ width:64, height:64, objectFit:'cover', borderRadius:12, border:'2px solid #e8e9ef' }} />
-                      <button onClick={()=>setImages(prev=>prev.filter((_,i)=>i!==idx))} style={{ position:'absolute', top:-6, right:-6, width:20, height:20, borderRadius:'50%', background:'#ef4444', border:'2px solid #fff', color:'#fff', fontSize:11, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800 }}>×</button>
+                      <button aria-label={`${idx + 1}번째 사진 삭제`} onClick={()=>setImages(prev=>prev.filter((_,i)=>i!==idx))} style={{ position:'absolute', top:-6, right:-6, width:20, height:20, borderRadius:'50%', background:'#ef4444', border:'2px solid #fff', color:'#fff', fontSize:11, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800 }}>×</button>
                     </div>
                   ))}
                 </div>
@@ -237,21 +245,21 @@ export default function ProblemSolver({ onBack }) {
             {hasContent && (
               <div style={{ background:'#fff', borderRadius:20, padding:16, marginBottom:12, border:'1.5px solid #d1fae5' }}>
                 <div style={{ display:'flex', gap:8, marginBottom:14 }}>
-                  <button onClick={()=>setHintOnly(false)} style={{ flex:1, padding:'12px 8px', borderRadius:14, border:`2px solid ${!hintOnly?'#10b981':'#e8e9ef'}`, background:!hintOnly?'#f0fdf4':'#fff', color:!hintOnly?'#10b981':'#888', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:13 }}>
+                  <button aria-pressed={!hintOnly} onClick={()=>setHintOnly(false)} style={{ flex:1, padding:'12px 8px', borderRadius:14, border:`2px solid ${!hintOnly?'#10b981':'#e8e9ef'}`, background:!hintOnly?'#f0fdf4':'#fff', color:!hintOnly?'#10b981':'#888', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:13 }}>
                     📖 단계별 풀이
                   </button>
-                  <button onClick={()=>setHintOnly(true)} style={{ flex:1, padding:'12px 8px', borderRadius:14, border:`2px solid ${hintOnly?'#10b981':'#e8e9ef'}`, background:hintOnly?'#f0fdf4':'#fff', color:hintOnly?'#10b981':'#888', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:13 }}>
+                  <button aria-pressed={hintOnly} onClick={()=>setHintOnly(true)} style={{ flex:1, padding:'12px 8px', borderRadius:14, border:`2px solid ${hintOnly?'#10b981':'#e8e9ef'}`, background:hintOnly?'#f0fdf4':'#fff', color:hintOnly?'#10b981':'#888', cursor:'pointer', fontFamily:'inherit', fontWeight:700, fontSize:13 }}>
                     💡 힌트만 보기
                   </button>
                 </div>
-                <button onClick={solve} style={{ width:'100%', padding:18, borderRadius:16, border:'none', background:'linear-gradient(135deg,#10b981,#059669)', color:'#fff', fontSize:17, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 20px rgba(16,185,129,0.35)' }}>
+                <button onClick={solve} style={{ width:'100%', padding:18, borderRadius:16, border:'none', background:'linear-gradient(135deg,#17665f,#245b65)', color:'#fff', fontSize:17, fontWeight:800, cursor:'pointer', fontFamily:'inherit', boxShadow:'0 4px 20px rgba(16,185,129,0.35)' }}>
                   ✨ AI가 풀어줘!
                 </button>
               </div>
             )}
 
             {error && (
-              <div style={{ background:'#fef2f2', border:'1.5px solid #fecaca', borderRadius:14, padding:'12px 16px', color:'#ef4444', fontSize:13, lineHeight:1.6 }}>
+              <div role="alert" style={{ background:'#fef2f2', border:'1.5px solid #fecaca', borderRadius:14, padding:'12px 16px', color:'#a52222', fontSize:13, lineHeight:1.6 }}>
                 {error}
               </div>
             )}
@@ -261,8 +269,8 @@ export default function ProblemSolver({ onBack }) {
         {step === 'loading' && (
           <div style={{ textAlign:'center', padding:'80px 24px' }} className="fade-up">
             <div style={{ fontSize:52, marginBottom:16 }}>🤔</div>
-            <p style={{ fontSize:18, fontWeight:900, color:'#1a1a2e', margin:'0 0 8px' }}>AI가 문제를 풀고 있어요</p>
-            <p style={{ fontSize:13, color:'#999', margin:'0 0 24px' }}>잠깐만 기다려주세요~</p>
+            <p style={{ fontSize:18, fontWeight:900, color:'#172438', margin:'0 0 8px' }}>AI가 문제를 풀고 있어요</p>
+            <p style={{ fontSize:13, color:'#66748a', margin:'0 0 24px' }}>잠깐만 기다려주세요~</p>
             <div style={{ display:'flex', justifyContent:'center', gap:7 }}>
               {[0,1,2].map(i => (
                 <div key={i} style={{ width:11, height:11, borderRadius:'50%', background:'#10b981', animation:'dotBounce 1.2s ease-in-out infinite', animationDelay:`${i*0.18}s` }} />
@@ -273,7 +281,7 @@ export default function ProblemSolver({ onBack }) {
 
         {step === 'result' && result && (
           <div className="fade-up">
-            <div style={{ background:'linear-gradient(135deg,#10b981,#059669)', borderRadius:20, padding:20, marginBottom:12, color:'#fff' }}>
+            <div style={{ background:'linear-gradient(135deg,#17665f,#245b65)', borderRadius:20, padding:20, marginBottom:12, color:'#fff' }}>
               <p style={{ margin:'0 0 4px', fontSize:12, opacity:0.8 }}>인식된 문제</p>
               <p style={{ margin:'0 0 8px', fontSize:16, fontWeight:800, lineHeight:1.5 }}>{result.problem}</p>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:8 }}>
@@ -283,8 +291,8 @@ export default function ProblemSolver({ onBack }) {
             </div>
 
             {hintOnly && (
-              <div style={{ background:'#fff', borderRadius:20, border:'1.5px solid #e8e9ef', padding:20, marginBottom:12 }}>
-                <p style={{ margin:'0 0 16px', fontSize:15, fontWeight:900, color:'#1a1a2e' }}>💡 힌트</p>
+              <div style={{ background:'#fff', borderRadius:20, border:'1px solid #dce3ec', padding:20, marginBottom:12 }}>
+                <p style={{ margin:'0 0 16px', fontSize:15, fontWeight:900, color:'#172438' }}>💡 힌트</p>
                 {[result.hint1, result.hint2, result.hint3].filter(Boolean).map((hint, i) => (
                   <div key={i} style={{ display:'flex', gap:12, marginBottom:12, padding:'12px 14px', background:'#f0fdf4', borderRadius:14, border:'1px solid #a7f3d0' }}>
                     <div style={{ width:24, height:24, borderRadius:'50%', background:'#10b981', color:'#fff', fontSize:12, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
@@ -307,13 +315,13 @@ export default function ProblemSolver({ onBack }) {
                   <p style={{ margin:0, fontSize:20, fontWeight:900, color:'#065f46', lineHeight:1.5 }}>{result.answer}</p>
                 </div>
 
-                <div style={{ background:'#fff', borderRadius:20, border:'1.5px solid #e8e9ef', padding:20, marginBottom:12 }}>
-                  <p style={{ margin:'0 0 16px', fontSize:15, fontWeight:900, color:'#1a1a2e' }}>📖 단계별 풀이</p>
+                <div style={{ background:'#fff', borderRadius:20, border:'1px solid #dce3ec', padding:20, marginBottom:12 }}>
+                  <p style={{ margin:'0 0 16px', fontSize:15, fontWeight:900, color:'#172438' }}>📖 단계별 풀이</p>
                   {result.steps?.map((s, i) => (
                     <div key={i} style={{ display:'flex', gap:12, marginBottom:14 }}>
-                      <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#10b981,#059669)', color:'#fff', fontSize:13, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{s.step}</div>
+                      <div style={{ width:28, height:28, borderRadius:'50%', background:'linear-gradient(135deg,#17665f,#245b65)', color:'#fff', fontSize:13, fontWeight:900, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{s.step}</div>
                       <div style={{ flex:1 }}>
-                        <p style={{ margin:'0 0 4px', fontSize:14, fontWeight:800, color:'#1a1a2e' }}>{s.title}</p>
+                        <p style={{ margin:'0 0 4px', fontSize:14, fontWeight:800, color:'#172438' }}>{s.title}</p>
                         <p style={{ margin:0, fontSize:13, color:'#555', lineHeight:1.7 }}>{s.content}</p>
                       </div>
                     </div>
@@ -343,8 +351,8 @@ export default function ProblemSolver({ onBack }) {
             )}
 
             <div style={{ display:'flex', gap:8, paddingBottom:24 }}>
-              <button onClick={reset} style={{ flex:1, padding:16, borderRadius:16, border:'none', background:'linear-gradient(135deg,#10b981,#059669)', color:'#fff', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>🔄 다른 문제 풀기</button>
-              <button onClick={onBack} style={{ padding:'16px 20px', borderRadius:16, border:'1.5px solid #e8e9ef', background:'#fff', color:'#999', fontSize:15, cursor:'pointer', fontFamily:'inherit' }}>🏠</button>
+              <button onClick={reset} style={{ flex:1, padding:16, borderRadius:16, border:'none', background:'linear-gradient(135deg,#17665f,#245b65)', color:'#fff', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>🔄 다른 문제 풀기</button>
+              <button onClick={onBack} style={{ padding:'16px 20px', borderRadius:16, border:'1px solid #dce3ec', background:'#fff', color:'#66748a', fontSize:15, cursor:'pointer', fontFamily:'inherit' }}>🏠</button>
             </div>
           </div>
         )}
