@@ -1,114 +1,117 @@
-export const maxDuration = 60; 
+export const maxDuration = 60;
 export const runtime = 'nodejs';
+
+const MAX_REQUEST_BYTES = 16 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_IMAGES = 10;
+const MAX_PROMPT_BYTES = 100 * 1024;
+const MEDIA_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+const errorResponse = (message, status) => Response.json({ error: message }, { status });
+const nonempty = value => typeof value === 'string' && value.trim().length > 0;
+
+// Read incrementally so the limit applies even when Content-Length is absent or incorrect.
+async function readBody(request) {
+  const declared = request.headers.get('content-length');
+  if (declared && Number(declared) > MAX_REQUEST_BYTES) return null;
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_REQUEST_BYTES) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return Buffer.concat(chunks.map(chunk => Buffer.from(chunk))).toString('utf8');
+}
+
+function validQuiz(data, expectedCount) {
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !nonempty(data.topic) ||
+      !Array.isArray(data.questions) || data.questions.length === 0 ||
+      (expectedCount !== undefined && data.questions.length !== expectedCount)) return false;
+  const ids = new Set();
+  for (const q of data.questions) {
+    if (!q || typeof q !== 'object' || Array.isArray(q) ||
+        !(Number.isSafeInteger(q.id) || nonempty(q.id)) ||
+        !nonempty(q.question) || !nonempty(q.answer) || !nonempty(q.explanation) ||
+        !['객관식', '서술형', '단답형'].includes(q.type)) return false;
+    // React object keys treat a numeric id and the equivalent string as the same key.
+    const id = String(q.id);
+    if (ids.has(id)) return false;
+    ids.add(id);
+    if (q.type === '객관식') {
+      if (!Array.isArray(q.options) || q.options.length !== 5 || !q.options.every(nonempty)) return false;
+      const strip = s => s.replace(/^[①②③④⑤]\s*/, '').replace(/^[0-9]+[.)]\s*/, '').trim();
+      const options = q.options.map(strip);
+      if (options.some(s => !s) || new Set(options).size !== 5 ||
+          options.filter(option => option === strip(q.answer)).length !== 1) return false;
+    } else if (q.options !== null && q.options !== undefined) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function parseCompleteJson(text) {
+  const trimmed = text.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  // A complete JSON object is accepted as-is or inside a complete code fence.
+  // Do not repair truncated JSON or return a partial set of questions.
+  return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
 export async function POST(request) {
   try {
-    const body = await request.json();
-    const { images, prompt, isGrading, isSolving } = body;
+    const raw = await readBody(request);
+    if (raw === null) return errorResponse('요청 크기가 너무 큽니다.', 413);
+    let body;
+    try { body = JSON.parse(raw); } catch { return errorResponse('올바른 JSON 요청이 아닙니다.', 400); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return errorResponse('요청 형식이 올바르지 않습니다.', 400);
+    const { images = [], prompt, isGrading, isSolving, expectedCount } = body;
+    if (!nonempty(prompt) || Buffer.byteLength(prompt, 'utf8') > MAX_PROMPT_BYTES) return errorResponse('프롬프트가 비어 있거나 너무 깁니다.', 400);
+    if (!Array.isArray(images) || images.length > MAX_IMAGES) return errorResponse('이미지는 최대 10장까지 가능합니다.', 400);
+    if (expectedCount !== undefined && (!Number.isSafeInteger(expectedCount) || expectedCount < 1 || expectedCount > 100)) return errorResponse('문제 수가 올바르지 않습니다.', 400);
 
     const content = [];
-
-    if (!isGrading && images && images.length > 0) {
-      for (const img of images) {
-        const mediaType = (() => {
-          const t = (img.type || '').toLowerCase();
-          if (t.includes('png')) return 'image/png';
-          if (t.includes('gif')) return 'image/gif';
-          if (t.includes('webp')) return 'image/webp';
-          return 'image/jpeg';
-        })();
-        content.push({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img.base64 } });
-      }
+    for (const img of images) {
+      if (!img || typeof img !== 'object' || typeof img.base64 !== 'string' || typeof img.type !== 'string') return errorResponse('이미지 형식이 올바르지 않습니다.', 400);
+      const type = img.type.toLowerCase();
+      if (!MEDIA_TYPES.has(type) || !img.base64 || img.base64.length > Math.ceil(MAX_IMAGE_BYTES / 3) * 4 ||
+          !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(img.base64)) return errorResponse('이미지 형식 또는 크기가 올바르지 않습니다.', 400);
+      const bytes = Buffer.from(img.base64, 'base64');
+      if (bytes.length > MAX_IMAGE_BYTES) return errorResponse('이미지 크기가 너무 큽니다.', 413);
+      if (!isGrading) content.push({ type: 'image', source: { type: 'base64', media_type: type, data: img.base64 } });
     }
-
     content.push({ type: 'text', text: prompt });
 
-    // 문제풀이/채점은 하이쿠, 나머지는 소넷
-    const model = (isSolving || isGrading)
-      ? 'claude-haiku-4-5'
-      : 'claude-sonnet-4-5';
-
+    // Existing image diagnosis has no operation flag; recognize its exact prompt prefix.
+    const isDiagnosis = prompt.startsWith('아래 이미지들 중 학습 자료로 인식할 수 없는 이미지 번호를 찾아주세요.');
+    const isQuiz = !isGrading && !isSolving && !isDiagnosis;
+    const model = (isSolving || isGrading) ? 'claude-haiku-4-5' : 'claude-sonnet-4-5';
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: 16000,
-        messages: [{ role: 'user', content }]
-      })
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model, max_tokens: 16000, messages: [{ role: 'user', content }] })
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return Response.json({ error: `API 오류 ${response.status}: ${errText}` }, { status: 500 });
-    }
-
+    if (!response.ok) return errorResponse('AI 서비스 요청에 실패했습니다. 잠시 후 다시 시도해주세요.', 502);
     const data = await response.json();
-    if (data.error) return Response.json({ error: data.error.message }, { status: 500 });
-    if (!data.content || data.content.length === 0) return Response.json({ error: 'AI 응답이 비어있습니다' }, { status: 500 });
-
-    const text = data.content.map(i => i.text || '').join('');
-    if (!text.trim()) return Response.json({ error: 'AI 응답 텍스트가 비어있습니다' }, { status: 500 });
-
-    let parsed = null;
-    let lastError = '';
-
-    const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonBlockMatch) {
-      try { parsed = JSON.parse(jsonBlockMatch[1]); } catch(e) { lastError = e.message; }
-    }
-
-    if (!parsed) {
-      const codeBlockMatch = text.match(/```\s*([\s\S]*?)\s*```/);
-      if (codeBlockMatch) {
-        try { parsed = JSON.parse(codeBlockMatch[1]); } catch(e) { lastError = e.message; }
-      }
-    }
-
-    if (!parsed) {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try { parsed = JSON.parse(jsonMatch[0]); } catch(e) { lastError = e.message; }
-      }
-    }
-
-    if (!parsed) {
-      try { parsed = JSON.parse(text.trim()); } catch(e) { lastError = e.message; }
-    }
-
-    if (!parsed) {
-      try {
-        const jsonStart = text.indexOf('{');
-        if (jsonStart !== -1) {
-          let partial = text.slice(jsonStart);
-          const openB = (partial.split('[').length - 1);
-          const closeB = (partial.split(']').length - 1);
-          const openC = (partial.split('{').length - 1);
-          const closeC = (partial.split('}').length - 1);
-          partial += ']'.repeat(Math.max(0, openB - closeB));
-          partial += '}'.repeat(Math.max(0, openC - closeC));
-          parsed = JSON.parse(partial);
-          if (parsed.questions && parsed.questions.length > 0) {
-            const last = parsed.questions[parsed.questions.length - 1];
-            if (!last.answer || !last.explanation || !last.question) {
-              parsed.questions.pop();
-            }
-          }
-        }
-      } catch(e2) { lastError = e2.message; }
-    }
-
-    if (!parsed) {
-      return Response.json({
-        error: `JSON 파싱 실패. AI 응답: ${text.slice(0, 200)}`
-      }, { status: 500 });
-    }
-
+    if (data.error || data.stop_reason === 'max_tokens' || data.stop_reason === 'refusal' || !Array.isArray(data.content)) return errorResponse('AI 응답이 불완전하거나 처리할 수 없습니다. 다시 시도해주세요.', 502);
+    const text = data.content.filter(item => item && item.type === 'text' && typeof item.text === 'string').map(item => item.text).join('');
+    let parsed;
+    try { parsed = parseCompleteJson(text); } catch { return errorResponse('AI가 완전한 JSON 응답을 반환하지 않았습니다. 다시 시도해주세요.', 502); }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return errorResponse('AI 응답 형식이 올바르지 않습니다.', 502);
+    if (isQuiz && !validQuiz(parsed, expectedCount)) return errorResponse('생성된 문제의 형식 또는 개수가 올바르지 않습니다. 다시 시도해주세요.', 502);
     return Response.json(parsed);
-  } catch (err) {
-    return Response.json({ error: `서버 오류: ${err.message}` }, { status: 500 });
+  } catch {
+    return errorResponse('요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.', 500);
   }
 }
