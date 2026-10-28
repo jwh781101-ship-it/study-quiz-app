@@ -61,6 +61,16 @@ function validQuiz(data, expectedCount) {
   return true;
 }
 
+// AI text is untrusted. Forward only short, plain guidance; suppress likely secrets,
+// URLs, markup and technical payloads rather than reflecting them to the client.
+function safeModelError(value) {
+  const fallback = '학습 자료를 확인할 수 없습니다. 자료를 더 선명하고 구체적으로 제공해주세요.';
+  if (!nonempty(value)) return fallback;
+  const message = value.replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!message || /https?:\/\/|www\.|[\w.+-]+@[\w.-]+\.[a-z]{2,}|<[^>]*>|```|(?:api[_ -]?key|secret|password|authorization|bearer|token|비밀번호|인증키|비밀키)|[a-z0-9_\-]{24,}/i.test(message)) return fallback;
+  return Array.from(message).slice(0, 300).join('');
+}
+
 function parseCompleteJson(text) {
   const trimmed = text.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -109,6 +119,7 @@ export async function POST(request) {
     let parsed;
     try { parsed = parseCompleteJson(text); } catch { return errorResponse('AI가 완전한 JSON 응답을 반환하지 않았습니다. 다시 시도해주세요.', 502); }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return errorResponse('AI 응답 형식이 올바르지 않습니다.', 502);
+    if (isQuiz && Object.prototype.hasOwnProperty.call(parsed, 'error')) return errorResponse(safeModelError(parsed.error), 422);
     if (isQuiz && !validQuiz(parsed, expectedCount)) return errorResponse('생성된 문제의 형식 또는 개수가 올바르지 않습니다. 다시 시도해주세요.', 502);
     return Response.json(parsed);
   } catch {
