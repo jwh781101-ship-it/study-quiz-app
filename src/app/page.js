@@ -859,7 +859,7 @@ localStorage.setItem('studyStats', JSON.stringify(newStats));
       `}</style>
       <main className="dash">
         <header className="dash-header">
-          <div className="dash-brand"><div className="dash-logo" aria-hidden="true">A</div><div><strong>AI테스트YOU</strong><small>나를 위한 학습 파트너</small></div></div>
+          <div className="dash-brand"><img className="dash-logo" src="/study-icon.svg" alt="" aria-hidden="true" /><div><strong>AI테스트YOU</strong><small>나를 위한 학습 파트너</small></div></div>
           <button className="dash-avatar" onClick={()=>setShowCharacterPicker(true)} aria-label="학습 캐릭터 변경"><img src={currentChar.src} alt=""/><span>캐릭터 변경</span></button>
         </header>
         <section className="dash-hero" aria-labelledby="dash-hero-title">
