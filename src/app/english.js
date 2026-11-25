@@ -138,13 +138,15 @@ export default function EnglishLearning({ onBack }) {
     });
     const { data, error } = await Promise.race([supabase.auth.getSession(), aborted]);
     if (error) throw new Error("로그인 정보를 확인하지 못했어요.");
-    if (!data?.session?.access_token) throw new Error("로그인 후 다시 시도해주세요.");
+    const headers={"Content-Type":"application/json"};
+    if(data?.session?.access_token) headers.Authorization="Bearer "+data.session.access_token;
     const resp = await fetch("/api/english", {
-      method:"POST", headers:{"Content-Type":"application/json", Authorization:"Bearer " + data.session.access_token},
+      method:"POST", headers,
       body: JSON.stringify({ prompt }), signal
     });
-    if (!resp.ok) throw new Error(resp.status === 401 ? "로그인 후 다시 시도해주세요." : "영어 학습 내용을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
-    return resp.json();
+    let result;try {result=await resp.json();} catch {throw new Error("서버 응답을 읽을 수 없어요. 다시 시도해 주세요.");}
+    if (!resp.ok || result.error) throw new Error(result.error || "영어 학습 내용을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
+    return result;
   };
 
   const lv = LEVELS.find(l => l.id === level);
