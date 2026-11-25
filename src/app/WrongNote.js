@@ -19,10 +19,14 @@ export default function WrongNote({ onBack }) {
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
   const [filterSubject, setFilterSubject] = useState('전체');
+  const [storageWarning, setStorageWarning] = useState('');
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('wrongNote') || '[]');
-    setItems(saved);
+    try {
+      const saved = JSON.parse(localStorage.getItem('wrongNote') || '[]');
+      if (!Array.isArray(saved) || !saved.every(item => item && typeof item === 'object' && !Array.isArray(item) && (typeof item.id === 'string' || typeof item.id === 'number') && ['subject','grade','date','question','answer','myAnswer','explanation'].every(k => item[k] == null || typeof item[k] === 'string' || typeof item[k] === 'number') && (item.options == null || (Array.isArray(item.options) && item.options.every(o => typeof o === 'string' || typeof o === 'number'))))) throw new Error('invalid');
+      setItems(saved);
+    } catch { setStorageWarning('오답 데이터를 불러오지 못했어요. 기존 데이터는 삭제하지 않았습니다.'); }
   }, []);
 
   const subjects = ['전체', ...new Set(items.map(i => i.subject))];
@@ -31,15 +35,14 @@ export default function WrongNote({ onBack }) {
 
   const deleteItem = (id) => {
     const updated = items.filter(i => i.id !== id);
-    setItems(updated);
-    localStorage.setItem('wrongNote', JSON.stringify(updated));
-    setSelected(null);
+    try { localStorage.setItem('wrongNote', JSON.stringify(updated)); setItems(updated); setSelected(null); setStorageWarning(''); }
+    catch { setStorageWarning('오답 삭제 내용을 저장하지 못했어요. 다시 시도해주세요.'); }
   };
 
   const clearAll = () => {
     if (confirm('오답보관함을 전체 삭제할까요?')) {
-      setItems([]);
-      localStorage.removeItem('wrongNote');
+      try { localStorage.removeItem('wrongNote'); setItems([]); setSelected(null); setStorageWarning(''); }
+      catch { setStorageWarning('오답을 삭제하지 못했어요. 다시 시도해주세요.'); }
     }
   };
 
@@ -64,6 +67,7 @@ export default function WrongNote({ onBack }) {
 
       <div style={{ maxWidth:640, margin:'0 auto', padding:'16px' }}>
 
+        {storageWarning && <p role="alert" style={{ color:'#b45309', fontSize:13 }}>{storageWarning}</p>}
         {items.length === 0 ? (
           <div style={{ textAlign:'center', padding:'80px 24px' }} className="fade-up">
             <div style={{ fontSize:52, marginBottom:16 }}>📭</div>

@@ -1,16 +1,1 @@
-import { createClient } from '@supabase/supabase-js'
-
-export async function GET(request) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-
-  if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    )
-    await supabase.auth.exchangeCodeForSession(code)
-  }
-
-  return Response.redirect(`${origin}/`)
-}
+export async function GET(request){const u=new URL(request.url);const target=new URL('/auth/complete',u.origin);for(const key of ['code','error','error_description']){const v=u.searchParams.get(key);if(v)target.searchParams.set(key,v);}return Response.redirect(target,307);}

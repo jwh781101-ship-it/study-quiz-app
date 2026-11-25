@@ -1,0 +1,4 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {supabase} from '../../supabase';
+export default function AuthCallback(){const [error,setError]=useState('');useEffect(()=>{let live=true;async function finish(){try{const u=new URL(window.location.href);if(u.searchParams.get('error')||new URLSearchParams(u.hash.slice(1)).get('error'))throw new Error('로그인이 취소되었거나 실패했습니다.');const code=u.searchParams.get('code');if(code){const {error}=await supabase.auth.exchangeCodeForSession(code);if(error)throw error;}const {data,error}=await supabase.auth.getSession();if(error||!data.session)throw new Error('로그인 세션을 확인하지 못했습니다. 다시 로그인해 주세요.');if(live)window.location.replace('/');}catch{if(live)setError('로그인하지 못했습니다. 홈에서 다시 시도해 주세요.');}}finish();return()=>{live=false;};},[]);return <main style={{padding:40,fontFamily:'system-ui',maxWidth:600,margin:'auto'}}><h1>로그인 확인</h1><p role="status">{error||'로그인 정보를 확인하고 있습니다.'}</p>{error&&<a href="/">홈으로 돌아가기</a>}</main>;}

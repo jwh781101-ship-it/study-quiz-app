@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 const LEVELS = [
   { id:"low", label:"하", emoji:"🌱", desc:"초급", color:"#10b981", bg:"#ecfdf5" },
@@ -73,6 +74,40 @@ export default function EnglishLearning({ onBack }) {
   const [loadingWords, setLoadingWords] = useState(false);
   const [expandedWord, setExpandedWord] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
+  const [bookmarkWarning, setBookmarkWarning] = useState("");
+  const [errors, setErrors] = useState({});
+  const requests = useRef({});
+  const bookmarkReadable = useRef(true);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("englishBookmarks.v1");
+      if (raw) {
+        const saved = JSON.parse(raw);
+        if (saved?.version !== 1 || !Array.isArray(saved.items) || !saved.items.every(w => w && typeof w === "object" && !Array.isArray(w) && typeof w.word === "string" && ["pronunciation","meaning","example","example_kr","tip"].every(k => w[k] == null || typeof w[k] === "string"))) throw new Error("invalid");
+        setBookmarks(saved.items);
+      }
+    } catch { bookmarkReadable.current = false; setBookmarkWarning("단어장을 불러오지 못했어요. 기존 데이터는 유지됩니다."); }
+  }, []);
+  const saveBookmark = (word) => {
+    if (!bookmarkReadable.current) { setBookmarkWarning("기존 단어장을 읽을 수 없어 덮어쓰지 않았어요."); return; }
+    const next = bookmarks.some(w => w.word === word.word) ? bookmarks.filter(w => w.word !== word.word) : [...bookmarks, word];
+    try { localStorage.setItem("englishBookmarks.v1", JSON.stringify({version:1, items:next})); setBookmarks(next); setBookmarkWarning(""); }
+    catch { setBookmarkWarning("단어장을 저장하지 못했어요. 브라우저 저장 공간을 확인해주세요."); }
+  };
+  const startRequest = (key) => {
+    const old = requests.current[key];
+    if (old) { old.controller.abort(); clearTimeout(old.timer); }
+    const controller = new AbortController();
+    const req = { controller, timedOut:false };
+    req.timer = setTimeout(() => { req.timedOut = true; controller.abort(); }, 90000);
+    requests.current[key] = req;
+    setErrors(prev => ({...prev, [key]:""}));
+    return { signal:controller.signal, current:() => requests.current[key] === req, finish:() => clearTimeout(req.timer), timedOut:() => req.timedOut };
+  };
+  const cancelRequests = () => {
+    Object.values(requests.current).forEach(req => { clearTimeout(req.timer); req.controller.abort(); });
+    requests.current = {};
+  };
   // 회화
   const [talk, setTalk] = useState(null);
   const [loadingTalk, setLoadingTalk] = useState(false);
@@ -96,11 +131,19 @@ export default function EnglishLearning({ onBack }) {
   const [showTranslation, setShowTranslation] = useState({});
   const [today] = useState(new Date().toLocaleDateString('ko-KR', { month:'long', day:'numeric', weekday:'short' }));
 
-  const callAI = async (prompt) => {
-    const resp = await fetch("/api/english", {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ prompt })
+  const callAI = async (prompt, signal) => {
+    const aborted = new Promise((_, reject) => {
+      if (signal.aborted) reject(new DOMException("Aborted", "AbortError"));
+      else signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once:true });
     });
+    const { data, error } = await Promise.race([supabase.auth.getSession(), aborted]);
+    if (error) throw new Error("로그인 정보를 확인하지 못했어요.");
+    if (!data?.session?.access_token) throw new Error("로그인 후 다시 시도해주세요.");
+    const resp = await fetch("/api/english", {
+      method:"POST", headers:{"Content-Type":"application/json", Authorization:"Bearer " + data.session.access_token},
+      body: JSON.stringify({ prompt }), signal
+    });
+    if (!resp.ok) throw new Error(resp.status === 401 ? "로그인 후 다시 시도해주세요." : "영어 학습 내용을 불러오지 못했어요. 잠시 후 다시 시도해주세요.");
     return resp.json();
   };
 
@@ -122,6 +165,7 @@ export default function EnglishLearning({ onBack }) {
   };
 
   const loadWords = async () => {
+    const req = startRequest("words");
     setLoadingWords(true); setWords([]); setExpandedWord(null);
     try {
       const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":level==="high"?"중학교 고급~고등학교":"고등학교 심화~수능/토익 수준";
@@ -130,13 +174,20 @@ export default function EnglishLearning({ onBack }) {
 주제: "${topic}" 관련 단어를 중심으로 선정하되, 이 주제에만 국한되지 않고 다양하게 구성하세요.
 이전에 자주 나오는 단어(apple, book, school, happy 등 기초 단어)는 피하고 새롭고 유용한 단어를 선택하세요.
 반드시 JSON만 응답:
-{"theme":"오늘주제(${topic} 관련)","words":[{"word":"단어","pronunciation":"한글발음","meaning":"뜻","example":"자연스러운예문","example_kr":"예문해석","tip":"재미있는암기팁"}]}`);
-      if (data.words) setWords(data.words);
-    } catch(e) {}
-    setLoadingWords(false);
+{"theme":"오늘주제(${topic} 관련)","words":[{"word":"단어","pronunciation":"한글발음","meaning":"뜻","example":"자연스러운예문","example_kr":"예문해석","tip":"재미있는암기팁"}]}`, req.signal);
+      if (!req.current()) return;
+      if (!(Array.isArray(data.words) && data.words.length > 0 && data.words.every(w => w && typeof w.word === "string"))) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
+      setWords(data.words);
+    } catch(e) {
+      if (req.current()) setErrors(prev => ({...prev, words:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
+    } finally {
+      req.finish();
+      if (req.current()) setLoadingWords(false);
+    }
   };
 
   const loadTalk = async () => {
+    const req = startRequest("talk");
     setLoadingTalk(true); setTalk(null); setShownLines(0);
     try {
       const lvDesc = level==="low"?"아주 기초적인 (초등 수준, 쉬운 단어)":level==="mid"?"중급 (중학교 수준)":level==="high"?"심화 (고등학교 수준)":"최고급 (수능/토익/원어민 수준, 자연스러운 구어체와 관용표현 포함)";
@@ -152,13 +203,20 @@ export default function EnglishLearning({ onBack }) {
 상황: ${sit}. A와 B가 6~8줄 대화.
 매번 다른 내용과 표현을 사용하고, 실생활에서 자주 쓰는 자연스러운 표현을 포함하세요.
 반드시 JSON만 응답:
-{"situation":"${sit}","situation_desc":"상황 한줄 설명","level_hint":"이 레벨 핵심 표현 포인트","lines":[{"speaker":"A","en":"영어대사","kr":"한국어해석","key":"핵심표현(있을때만)"}]}`);
-      if (data.lines) { setTalk(data); setShownLines(1); }
-    } catch(e) {}
-    setLoadingTalk(false);
+{"situation":"${sit}","situation_desc":"상황 한줄 설명","level_hint":"이 레벨 핵심 표현 포인트","lines":[{"speaker":"A","en":"영어대사","kr":"한국어해석","key":"핵심표현(있을때만)"}]}`, req.signal);
+      if (!req.current()) return;
+      if (!(Array.isArray(data.lines) && data.lines.length > 0)) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
+      setTalk(data); setShownLines(1);
+    } catch(e) {
+      if (req.current()) setErrors(prev => ({...prev, talk:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
+    } finally {
+      req.finish();
+      if (req.current()) setLoadingTalk(false);
+    }
   };
 
   const loadGrammar = async (customTopic="") => {
+    const req = startRequest("grammar");
     setLoadingGrammar(true); setGrammar(null); setFillAnswers({}); setFillChecked(false);
     try {
       const lvDesc = level==="low"?"초급 (명사 복수형, be동사, 기초 문장)":level==="mid"?"중급 (현재진행형, 과거형, 조동사)":level==="high"?"고급 (비교급최상급, 수동태, 관계대명사)":"최고급 (가정법, 도치, 분사구문, 수능/토익 고난도 문법)";
@@ -171,13 +229,20 @@ export default function EnglishLearning({ onBack }) {
 ${topicNote}
 매번 다른 예문과 빈칸 문제를 사용하세요. 아이들이 자주 틀리는 실수를 중심으로 재미있게 설명하고, 빈칸 문제도 다양한 상황의 문장으로 만들어주세요.
 반드시 JSON만 응답:
-{"point":"문법포인트제목","description":"쉬운설명 1-2문장","wrong":"틀린예문","right":"맞는예문","wrong_reason":"왜틀렸는지","tip":"재미있는기억팁","exercises":[{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"}]}`);
-      if (data.point) setGrammar(data);
-    } catch(e) {}
-    setLoadingGrammar(false);
+{"point":"문법포인트제목","description":"쉬운설명 1-2문장","wrong":"틀린예문","right":"맞는예문","wrong_reason":"왜틀렸는지","tip":"재미있는기억팁","exercises":[{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"},{"sentence":"____포함한자연스러운문장","answer":"정답단어","hint":"힌트"}]}`, req.signal);
+      if (!req.current()) return;
+      if (!(typeof data.point === "string" && Array.isArray(data.exercises) && data.exercises.every(e => e && typeof e.answer === "string"))) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
+      setGrammar(data);
+    } catch(e) {
+      if (req.current()) setErrors(prev => ({...prev, grammar:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
+    } finally {
+      req.finish();
+      if (req.current()) setLoadingGrammar(false);
+    }
   };
 
   const loadQuiz = async () => {
+    const req = startRequest("quiz");
     setLoadingQuiz(true); setQuiz(null); setQuizAnswer(null);
     try {
       const lvDesc = level==="low"?"초등학교 고학년~중학교 초급":level==="mid"?"중학교 중급":level==="high"?"중학교 고급~고등학교":"고등학교 심화~수능/토익 수준";
@@ -189,13 +254,20 @@ ${topicNote}
 ${wordList}
 주제: ${topic}. 매번 새롭고 다양한 문제를 내주세요. 정답 위치도 ①②③④ 중 랜덤하게 배치하세요.
 반드시 JSON만:
-{"type":"${qType}","question":"문제","options":["①보기","②보기","③보기","④보기"],"answer":"②보기(정답위치랜덤)","explanation":"왜 정답인지 + 오답 이유"}`);
-      if (data.question) setQuiz(data);
-    } catch(e) {}
-    setLoadingQuiz(false);
+{"type":"${qType}","question":"문제","options":["①보기","②보기","③보기","④보기"],"answer":"②보기(정답위치랜덤)","explanation":"왜 정답인지 + 오답 이유"}`, req.signal);
+      if (!req.current()) return;
+      if (!(typeof data.question === "string" && Array.isArray(data.options) && data.options.length === 4 && data.options.every(o => typeof o === "string") && typeof data.answer === "string" && data.options.filter(o => o === data.answer).length === 1)) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
+      setQuiz(data);
+    } catch(e) {
+      if (req.current()) setErrors(prev => ({...prev, quiz:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
+    } finally {
+      req.finish();
+      if (req.current()) setLoadingQuiz(false);
+    }
   };
 
   const loadStory = async () => {
+    const req = startRequest("story");
     setLoadingStory(true); setStory(null); setShowTranslation({});
     try {
       const lvDesc = level==="low"?"아주 쉬운 (초등 수준, 짧은 문장 4개)":level==="mid"?"중간 (중학교 수준, 5문장)":level==="high"?"조금 어려운 (고등 초급, 5-6문장)":"어려운 (수능/토익 수준, 6-7문장, 다양한 문법 구조 포함)";
@@ -206,21 +278,29 @@ ${wordList}
 장르: "${genre}", 주제 키워드: "${topic}".
 매번 완전히 다른 새로운 이야기를 만들고, 주인공 이름도 다양하게 바꿔주세요.
 반드시 JSON만:
-{"title":"이야기제목","title_kr":"한국어제목","sentences":[{"en":"영어문장","kr":"해석","key_word":"핵심단어","key_meaning":"뜻"}]}`);
-      if (data.sentences) setStory(data);
-    } catch(e) {}
-    setLoadingStory(false);
+{"title":"이야기제목","title_kr":"한국어제목","sentences":[{"en":"영어문장","kr":"해석","key_word":"핵심단어","key_meaning":"뜻"}]}`, req.signal);
+      if (!req.current()) return;
+      if (!(Array.isArray(data.sentences) && data.sentences.length > 0)) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
+      setStory(data);
+    } catch(e) {
+      if (req.current()) setErrors(prev => ({...prev, story:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
+    } finally {
+      req.finish();
+      if (req.current()) setLoadingStory(false);
+    }
   };
 
-  useEffect(() => { loadWords(); }, [level]);
   useEffect(() => {
-    if (activeTab==="talk" && !talk) loadTalk();
-    if (activeTab==="grammar" && !grammar) loadGrammar();
-    if (activeTab==="quiz" && !quiz) loadQuiz();
-    if (activeTab==="story" && !story) loadStory();
-  }, [activeTab]);
+    setErrors({});
+    if (activeTab === "words") loadWords();
+    if (activeTab === "talk") loadTalk();
+    if (activeTab === "grammar") loadGrammar();
+    if (activeTab === "quiz") loadQuiz();
+    if (activeTab === "story") loadStory();
+    return cancelRequests;
+  }, [activeTab, level]);
 
-  const toggleBookmark = (word) => setBookmarks(prev => prev.find(w=>w.word===word.word) ? prev.filter(w=>w.word!==word.word) : [...prev, word]);
+  const toggleBookmark = saveBookmark;
   const isBookmarked = (word) => bookmarks.some(w=>w.word===word.word);
 
   const handleQuizAnswer = (opt) => {
@@ -279,6 +359,8 @@ ${wordList}
           ))}
         </nav>
 
+        {bookmarkWarning && <p role="alert" style={{color:"#b45309", fontSize:13}}>{bookmarkWarning}</p>}
+        {errors[activeTab] && <div role="alert" className="card" style={{color:"#b91c1c"}}>{errors[activeTab]} <button type="button" onClick={() => ({words:loadWords, talk:loadTalk, grammar:()=>loadGrammar(grammarInput.trim()), quiz:loadQuiz, story:loadStory}[activeTab]?.())}>다시 시도</button></div>}
         {/* ── 오늘의 단어 ── */}
         {activeTab==="words" && (
           <div className="fade-up">

@@ -1,7 +1,10 @@
 {
   "functions": {
     "src/app/api/generate/route.js": {
-      "maxDuration": 60
+      "maxDuration": 120
+    },
+    "src/app/api/english/route.js": {
+      "maxDuration": 120
     }
   }
 }

@@ -19,12 +19,23 @@ const CSS = `
 export default function StudyStats({ onBack }) {
   const [stats, setStats] = useState(null);
   const [wrongItems, setWrongItems] = useState([]);
+  const [storageWarning, setStorageWarning] = useState('');
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('studyStats') || '{"totalQuiz":0,"totalCorrect":0,"totalQuestions":0,"subjectStats":{},"recentDates":[]}');
-    const wrong = JSON.parse(localStorage.getItem('wrongNote') || '[]');
-    setStats(saved);
-    setWrongItems(wrong);
+    const empty = { totalQuiz:0, totalCorrect:0, totalQuestions:0, subjectStats:{}, recentDates:[] };
+    const warnings = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem('studyStats') || JSON.stringify(empty));
+      const validNumber = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved) || !['totalQuiz','totalCorrect','totalQuestions'].every(k => validNumber(saved[k])) || !saved.subjectStats || typeof saved.subjectStats !== 'object' || Array.isArray(saved.subjectStats) || !Object.values(saved.subjectStats).every(v => v && typeof v === 'object' && validNumber(v.total) && validNumber(v.correct))) throw new Error('invalid');
+      setStats(saved);
+    } catch { setStats(empty); warnings.push('학습 통계를 불러오지 못했어요.'); }
+    try {
+      const wrong = JSON.parse(localStorage.getItem('wrongNote') || '[]');
+      if (!Array.isArray(wrong) || !wrong.every(item => item && typeof item === 'object' && typeof item.subject === 'string')) throw new Error('invalid');
+      setWrongItems(wrong);
+    } catch { warnings.push('오답 보관함을 불러오지 못했어요.'); }
+    if (warnings.length) setStorageWarning(warnings.join(' ') + ' 기존 데이터는 삭제하지 않았습니다.');
   }, []);
 
   if (!stats) return null;
@@ -36,7 +47,7 @@ export default function StudyStats({ onBack }) {
   }, {});
 
   const subjectEntries = Object.entries(stats.subjectStats || {}).sort((a, b) => b[1].total - a[1].total);
-  const maxTotal = subjectEntries.length > 0 ? Math.max(...subjectEntries.map(([,v]) => v.total)) : 1;
+  const maxTotal = subjectEntries.length > 0 ? Math.max(1, ...subjectEntries.map(([,v]) => v.total)) : 1;
 
   return (
     <div className="study-aux-screen" style={{ minHeight:'100vh', background:'#f4f6f9', fontFamily:"'Noto Sans KR','Apple SD Gothic Neo',sans-serif", paddingBottom:40 }}>
@@ -56,6 +67,7 @@ export default function StudyStats({ onBack }) {
 
       <div style={{ maxWidth:640, margin:'0 auto', padding:'16px' }}>
 
+        {storageWarning && <p role="alert" style={{ color:'#b45309', fontSize:13 }}>{storageWarning}</p>}
         {stats.totalQuiz === 0 ? (
           <div style={{ textAlign:'center', padding:'80px 24px' }} className="fade-up">
             <div style={{ fontSize:52, marginBottom:16 }}>📊</div>
@@ -120,10 +132,10 @@ export default function StudyStats({ onBack }) {
               </div>
             )}
 
-            {/* 오답 많은 과목 */}
+            {/* 보관 중인 오답 */}
             {Object.keys(wrongBySubject).length > 0 && (
               <div style={{ background:'#fff', borderRadius:20, border:'1.5px solid #fde68a', padding:20, marginBottom:14 }}>
-                <p style={{ margin:'0 0 4px', fontSize:14, fontWeight:800, color:'#172438' }}>⚠️ 오답 많은 과목</p>
+                <p style={{ margin:'0 0 4px', fontSize:14, fontWeight:800, color:'#172438' }}>⚠️ 보관 중인 오답</p>
                 <p style={{ margin:'0 0 14px', fontSize:12, color:'#66748a' }}>집중적으로 복습해보세요!</p>
                 {Object.entries(wrongBySubject).sort((a,b) => b[1]-a[1]).map(([subject, count]) => (
                   <div key={subject} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 14px', borderRadius:12, background:'#fffbeb', marginBottom:8, border:'1px solid #fde68a' }}>
@@ -137,8 +149,8 @@ export default function StudyStats({ onBack }) {
             {/* 초기화 */}
             <button onClick={()=>{
               if (confirm('학습 통계를 초기화할까요?')) {
-                localStorage.removeItem('studyStats');
-                setStats({ totalQuiz:0, totalCorrect:0, totalQuestions:0, subjectStats:{}, recentDates:[] });
+                try { localStorage.removeItem('studyStats'); setStats({ totalQuiz:0, totalCorrect:0, totalQuestions:0, subjectStats:{}, recentDates:[] }); setStorageWarning(''); }
+                catch { setStorageWarning('학습 통계를 초기화하지 못했어요. 다시 시도해주세요.'); }
               }
             }} style={{ width:'100%', padding:14, borderRadius:16, border:'1px solid #dce3ec', background:'#fff', color:'#68758a', fontSize:13, cursor:'pointer', fontFamily:'inherit' }}>
               통계 초기화
