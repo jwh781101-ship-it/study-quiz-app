@@ -9,7 +9,7 @@ export const metadata = {
   appleWebApp: { capable: true, title: 'AI시험도우미', statusBarStyle: 'default' },
 };
 
-export const viewport = { themeColor: '#f7f8f4' };
+export const viewport = { themeColor: '#f6f7fb' };
 
 export default function RootLayout({ children }) {
   return (

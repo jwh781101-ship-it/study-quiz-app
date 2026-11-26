@@ -1,15 +1,15 @@
 export const STORAGE_KEY = 'studyMate.v1';
 
 export const MATE_ITEMS = Object.freeze([
-  { id: 'sky', kind: 'background', name: '맑은 하늘', requiredXp: 0, description: '포근한 하늘빛 방' },
-  { id: 'mint', kind: 'background', name: '싱그러운 민트', requiredXp: 0, description: '기분 좋은 민트빛 방' },
-  { id: 'peach', kind: 'background', name: '복숭아 노을', requiredXp: 80, description: '따뜻한 복숭아빛 방' },
-  { id: 'night', kind: 'background', name: '별이 빛나는 밤', requiredXp: 180, description: '차분한 밤하늘 방' },
-  { id: 'none', kind: 'accessory', name: '그대로', requiredXp: 0, description: '있는 그대로의 메이트' },
-  { id: 'cap', kind: 'accessory', name: '말랑 모자', requiredXp: 60, description: '산뜻한 모자' },
-  { id: 'glasses', kind: 'accessory', name: '동글 안경', requiredXp: 120, description: '공부할 때 함께 쓰는 안경' },
-  { id: 'headphones', kind: 'accessory', name: '집중 헤드폰', requiredXp: 240, description: '집중을 돕는 멋진 헤드폰' },
-  { id: 'star', kind: 'accessory', name: '반짝 별핀', requiredXp: 400, description: '노력을 기념하는 별핀' },
+  { id: 'sky', kind: 'background', name: '라이트 스튜디오', requiredXp: 0, description: '밝고 차분한 기본 배경' },
+  { id: 'mint', kind: 'background', name: '세이지 스튜디오', requiredXp: 0, description: '그레이와 세이지를 섞은 배경' },
+  { id: 'peach', kind: 'background', name: '웜 스튜디오', requiredXp: 80, description: '따뜻한 뉴트럴 톤의 배경' },
+  { id: 'night', kind: 'background', name: '미드나잇', requiredXp: 180, description: '차분한 딥 네이비 배경' },
+  { id: 'none', kind: 'accessory', name: '기본 스타일', requiredXp: 0, description: '액세서리 없이 기본 모습으로' },
+  { id: 'cap', kind: 'accessory', name: '네이비 캡', requiredXp: 60, description: '차분한 네이비 톤의 캡' },
+  { id: 'glasses', kind: 'accessory', name: '라운드 프레임', requiredXp: 120, description: '슬림한 라운드 안경' },
+  { id: 'headphones', kind: 'accessory', name: '오버이어 헤드폰', requiredXp: 240, description: '메탈과 차콜 톤의 헤드폰' },
+  { id: 'star', kind: 'accessory', name: '스타 브로치', requiredXp: 400, description: '쌓아 온 학습을 기념하는 브로치' },
 ]);
 
 const MAX = Number.MAX_SAFE_INTEGER - 1000;
@@ -45,9 +45,9 @@ export function levelInfo(state) {
 }
 export function getPraise(state) {
   const mate = normalizeMate(state);
-  if (!mate.totalSessions) return '준비됐어! 오늘도 너의 속도로 함께 시작해 보자.';
-  if (mate.totalSessions === 1) return '첫 공부를 마쳤어. 시작한 너의 노력이 멋져!';
-  return '한 문제씩 쌓아 온 너의 노력이 멋져. 함께해서 든든해!';
+  if (!mate.totalSessions) return '오늘도 내 속도로. 한 세트부터 시작해요.';
+  if (mate.totalSessions === 1) return '첫 학습 완료. 좋은 시작이에요.';
+  return '꾸준히 쌓은 노력이 실력이 됩니다. 오늘도 함께해요.';
 }
 export function equipItem(state, id) {
   const mate = normalizeMate(state);
@@ -63,6 +63,6 @@ export function applyStudyReward(state, event) {
   const xp = Math.min(MAX, mate.xp + earned);
   const next = { ...mate, xp, totalSessions: Math.min(MAX, mate.totalSessions + 1), totalQuestions: Math.min(MAX, mate.totalQuestions + event.questionCount), lastStudyDate: event.date, studyDays: [...mate.studyDays.filter(day => day !== event.date), event.date].slice(-60), rewardedSessions: [...mate.rewardedSessions, event.id].slice(-200) };
   const unlocked = MATE_ITEMS.filter(item => item.requiredXp > mate.xp && item.requiredXp <= xp);
-  const praise = event.correctCount === 0 ? '끝까지 풀어 본 노력이 멋져! 틀린 문제도 배움의 발판이야.' : event.correctCount === event.questionCount ? '끝까지 집중했구나! 모든 문제를 맞혔어.' : '한 문제씩 도전한 네 노력이 멋져! 함께 차근차근 가자.';
+  const praise = event.correctCount === 0 ? '끝까지 풀어본 노력만큼 경험치가 쌓였어요. 오답에서 다음 힌트를 찾아봐요.' : event.correctCount === event.questionCount ? '모든 문제 정답. 집중한 만큼 좋은 결과를 얻었어요.' : '한 세트를 완료했어요. 쌓인 노력만큼 다음 학습도 이어가요.';
   return { state: next, earned, praise, unlocked };
 }
