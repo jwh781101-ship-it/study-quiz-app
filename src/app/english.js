@@ -179,7 +179,7 @@ export default function EnglishLearning({ onBack }) {
 {"theme":"오늘주제(${topic} 관련)","words":[{"word":"단어","pronunciation":"한글발음","meaning":"뜻","example":"자연스러운예문","example_kr":"예문해석","tip":"재미있는암기팁"}]}`, req.signal);
       if (!req.current()) return;
       if (!(Array.isArray(data.words) && data.words.length > 0 && data.words.every(w => w && typeof w.word === "string"))) throw new Error("생성된 학습 내용의 형식이 올바르지 않아요. 다시 시도해주세요.");
-      setWords(data.words);
+      setWords(data.words.map(w=>({...w,theme:data.theme||""})));
     } catch(e) {
       if (req.current()) setErrors(prev => ({...prev, words:req.timedOut() ? "요청 시간이 초과됐어요. 다시 시도해주세요." : (e.message || "불러오지 못했어요. 다시 시도해주세요.")}));
     } finally {

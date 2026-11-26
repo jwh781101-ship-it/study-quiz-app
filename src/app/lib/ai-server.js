@@ -7,7 +7,7 @@ export const text = v => typeof v === 'string' && v.trim().length > 0;
 export const obj = properties => ({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
 export const str = {type:'string'};
 export const arr = items => ({type:'array',items});
-export const errorResponse = e => Response.json({error:e instanceof AppError?e.message:'요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.'},{status:e instanceof AppError?e.status:500,headers:{'Cache-Control':'no-store'}});
+export const errorResponse = e => Response.json({error:e instanceof AppError?e.message:'요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',...(e.verificationFailed?{verificationIssues:(e.reviewIssues||[]).map(i=>({id:i.id,reason:/https?:|token|secret|password|[a-zA-Z0-9_-]{24,}/i.test(i.reason)?'검수 결과 불일치':i.reason.slice(0,240)}))}:{})},{status:e instanceof AppError?e.status:500,headers:{'Cache-Control':'no-store'}});
 
 export async function readBody(request,maxBytes=14*1024*1024){
   const origin=request.headers.get('origin');

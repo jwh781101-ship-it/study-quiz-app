@@ -16,7 +16,7 @@ function images(v){if(!Array.isArray(v)||v.length<1||v.length>5)throw new AppErr
 async function review(sourceText,candidate,count,signal,kind='quiz'){
  const result=await ask({schema:reviewSchema,signal,maxTokens:1800,system:SYSTEM,content:JSON.stringify({task:kind==='quiz'?'독립 검수자입니다. 원문을 먼저 읽고 각 문제의 답을 직접 확인한 뒤 후보 정답/해설과 비교하세요. 정확한 원문 인용, 자료 범위, 질문의 전제, 객관식 5개 보기 각각의 참거짓과 유일정답, 수학 계산/단위/조건, 해설의 모든 문장을 하나씩 독립적으로 참거짓 판단하고, 틀린 보기의 설명이 그 보기의 실제 내용과 맞는지 확인하세요. 특히 광합성과 호흡처럼 반대 반응을 설명할 때 뒤바뀌었다고 잘못 단정하지 마세요. 해설의 보기 번호 일치, 중복 출제를 엄격히 점검하세요. 하나라도 오류/모호함/원문 오류/근거 부족이면 ok false, issues에 id와 이유. 문제마다 확인된 id를 verified_ids에 기록. 단순히 후보 해설을 믿지 마세요.':'독립 검수자입니다. 원문 문제를 직접 풀어 후보 답과 학습용 풀이의 계산/단위/조건/논리/수식 전사를 검산하세요. 하나라도 오류나 모호함이면 ok false. 검수가 완료되면 verified_ids [1], 문제 있으면 issues [{id:1,reason:이유}].',source:sourceText,candidate})});
  const ids=kind==='quiz'?candidate.questions.map(q=>q.id):[1];
- if(!result.ok||result.issues.length||result.verified_ids.length!==count||new Set(result.verified_ids).size!==count||!ids.every(id=>result.verified_ids.includes(id)))throw new AppError('정답 또는 자료 근거를 검증하지 못해 결과를 표시하지 않았습니다. 자료를 더 명확히 하거나 문제 수를 줄여 다시 시도해 주세요.',422);
+ if(!result.ok||result.issues.length||result.verified_ids.length!==count||new Set(result.verified_ids).size!==count||!ids.every(id=>result.verified_ids.includes(id))){const e=new AppError('정답 또는 자료 근거를 검증하지 못해 결과를 표시하지 않았습니다. 원문과 조건을 확인해 다시 시도해 주세요.',422);e.reviewIssues=result.issues;e.verificationFailed=true;throw e;}
 }
 export async function POST(request){
  const start=Date.now();const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),90000);const onAbort=()=>controller.abort();request.signal?.addEventListener('abort',onAbort,{once:true});
@@ -39,14 +39,22 @@ export async function POST(request){
  if(!validQuiz(result,s.questionCount,sourceText,s.scope==='image_only'))throw new AppError('문제 개수·정답·자료 인용을 확인하지 못했습니다. 범위를 더 명확히 해 주세요.',422);
  if(s.subject==='영어'&&s.englishType==='multiple'&&result.questions.some(q=>q.type!=='객관식'))throw new AppError('요청한 문제 형식과 결과가 다릅니다. 다시 시도해 주세요.',422);
  if(s.subject==='영어'&&s.englishType==='essay'&&result.questions.some(q=>q.type!=='서술형'))throw new AppError('요청한 문제 형식과 결과가 다릅니다. 다시 시도해 주세요.',422);
+ try{await review(JSON.stringify({source:sourceText,scope:s.scope,direction:s.direction}),result,s.questionCount,controller.signal);}catch(e){if(!e.verificationFailed)throw e;
+ result=await ask({schema:quizSchema,signal:controller.signal,maxTokens:Math.min(10000,1500+s.questionCount*700),system:SYSTEM,content:JSON.stringify({task:'한 번의 교정 단계입니다. 검수에서 지적한 부분을 직접 재계산/대조하여 원문 범위 안에서 정확하게 수정하세요. 검수 의견도 틀릴 수 있으니 맹신하지 말고 직접 확인. 조건이 부족하거나 원문에 오류가 있으면 error에 사유, questions 빈배열. 문제 수/유형/인용/유일정답을 유지하고 해설은 원문에 근거한 1~2문장만. 오류없으면 error 빈문자열.',source:sourceText,settings:s,candidate:result,issues:e.reviewIssues})});
+ if(result.error||!validQuiz(result,s.questionCount,sourceText,s.scope==='image_only'))throw new AppError('문제의 정확성을 확정하지 못했습니다. 원문과 출제 범위를 확인해 주세요.',422);
  await review(JSON.stringify({source:sourceText,scope:s.scope,direction:s.direction}),result,s.questionCount,controller.signal);
+ }
  delete result.error;result.meta={elapsedMs:Date.now()-start,model:MODEL,verified:true};
  }
  if(operation==='solve'){
  const {sourceText,grade,hintOnly}=payload;
  result=await ask({schema:hintOnly?hintSchema:solutionSchema,signal:controller.signal,maxTokens:4500,system:SYSTEM,content:JSON.stringify({task:hintOnly?'학습 문제에 정답을 직접 공개하지 않는 단계별 힌트 3개를 주세요.':'학습 문제를 정확하게 풀고 최종 답과 간결한 교육용 풀이 단계를 주세요. 계산/대입/단위/조건을 검산하세요.',rules:'문제가 흐리거나 조건 부족, 답이 결정되지 않음, 잘린 지문, 비학습 요청이면 is_valid false와 reject_reason. 해당 학년이 이해할 수 있는 설명으로. 수학은 가능하면 답을 원문 조건에 대입하여 검산하세요. 거절시 나머지 문자열은 빈문자, steps 빈배열.',grade,source:sourceText})});
  if(!result.is_valid||!text(result.problem)||(!hintOnly&&(!text(result.answer)||!result.steps.length||result.steps.some(s=>!text(s.title)||!text(s.content))))||(hintOnly&&![result.hint1,result.hint2,result.hint3].every(text)))throw new AppError('문제의 조건이 부족하거나 풀이를 확정할 수 없습니다. 지문과 수치·도형 조건을 확인해 주세요.',422);
- if(!hintOnly)await review(sourceText,result,1,controller.signal,'solve');
+ if(!hintOnly){try{await review(sourceText,result,1,controller.signal,'solve');}catch(e){if(!e.verificationFailed)throw e;
+ result=await ask({schema:solutionSchema,signal:controller.signal,maxTokens:4500,system:SYSTEM,content:JSON.stringify({task:'한 번의 재계산 단계입니다. 원문을 처음부터 다시 풀고 해를 원래 조건에 대입해 검산한 간결한 교육용 풀이를 주세요. 검수 의견도 틀릴 수 있으므로 맹신하지 마세요. 분수방정식은 모든 항에 공통분모를 곱하고 상수항의 부호를 확인. 오류가 없으면 기존 답을 유지해도 됩니다. 조건 부족이면 is_valid false. 그 외 빈 문자열 필드는 비워두세요.',grade,source:sourceText,candidate:result,issues:e.reviewIssues})});
+ if(!result.is_valid||!text(result.answer)||!text(result.problem)||!result.steps.length||result.steps.some(s=>!text(s.title)||!text(s.content)))throw new AppError('풀이를 확정하지 못했습니다. 원문과 조건을 확인해 주세요.',422);
+ await review(sourceText,result,1,controller.signal,'solve');
+ }}
  result.meta={elapsedMs:Date.now()-start,model:MODEL,verified:!hintOnly};
  }
  if(operation==='grade'){
