@@ -19,7 +19,6 @@ const TABS = [
 ];
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
   .eng-root, .eng-root * { box-sizing: border-box; }
   .eng-root { color:#1e293b; line-height:1.6; overflow-wrap:anywhere; }
   .eng-root button, .eng-root input { font-family:inherit; }

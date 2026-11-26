@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
   .study-aux-screen, .study-aux-screen * { box-sizing: border-box; }
   .study-aux-screen { color: #172438; }
   .study-aux-screen button { font-family: inherit; touch-action: manipulation; }
