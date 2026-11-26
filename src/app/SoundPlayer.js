@@ -4,7 +4,6 @@ import { useRef, useState, useEffect } from 'react';
 const SOUNDS = [
   { id:'rain', emoji:'🌧️', label:'빗소리', src:'/sounds/rain.mp3' },
   { id:'cafe', emoji:'☕', label:'카페소음', src:'/sounds/cafe.mp3' },
-  { id:'wave', emoji:'🌊', label:'파도소리', src:'/sounds/wave.mp3' },
   { id:'waterfall', emoji:'💧', label:'폭포소리', src:'/sounds/waterfall.mp3' },
   { id:'fire', emoji:'🔥', label:'장작소리', src:'/sounds/fire.mp3' },
 ];
@@ -62,7 +61,7 @@ export default function SoundPlayer() {
   return (
     <div style={{ width:"100%", boxSizing:"border-box" }}>
       <p style={{ margin:"0 0 10px", fontSize:13, fontWeight:800, color:"#6366f1" }}>🎧 집중 사운드</p>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:4, marginBottom:12 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:4, marginBottom:12 }}>
         {SOUNDS.map(s => (
           <button key={s.id} onClick={()=>selectSound(s.id)}
             style={{ border:`1.5px solid ${current===s.id?"#6366f1":"#e8e9ef"}`, borderRadius:10, background: current===s.id?"#eef2ff":"#fff", padding:"7px 2px", cursor:"pointer", textAlign:"center", fontFamily:"inherit", transition:"all 0.15s", minWidth:0, boxSizing:"border-box" }}>
@@ -72,13 +71,13 @@ export default function SoundPlayer() {
         ))}
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:6, width:"100%", boxSizing:"border-box", overflow:"hidden" }}>
-        <button onClick={togglePlay} aria-label={isPlaying || pending ? "사운드 정지" : "사운드 재생"} style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }}>
+        <button onClick={togglePlay} aria-label={isPlaying || pending ? "사운드 정지" : "사운드 재생"} style={{ width:48, height:48, borderRadius:"50%", background:"linear-gradient(135deg,#6366f1,#8b5cf6)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, boxShadow:"0 4px 12px rgba(99,102,241,0.3)" }}>
           {isPlaying
             ? <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             : <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>}
         </button>
         <span style={{ fontSize:10, color:"#bbb", flexShrink:0 }}>🔈</span>
-        <input type="range" min={0} max={100} value={volume} onChange={e=>handleVolume(Number(e.target.value))} style={{ flex:1, accentColor:"#6366f1", minWidth:0 }} />
+        <input type="range" aria-label="집중 사운드 음량" min={0} max={100} value={volume} onChange={e=>handleVolume(Number(e.target.value))} style={{ flex:1, accentColor:"#6366f1", minWidth:0 }} />
         <span style={{ fontSize:10, color:"#bbb", flexShrink:0 }}>🔊</span>
         <span style={{ fontSize:10, fontWeight:700, color: isPlaying?"#6366f1":"#bbb", flexShrink:0, whiteSpace:"nowrap" }}>{pending?"재생 준비 중":isPlaying?"재생중":"정지"}</span>
       </div>
