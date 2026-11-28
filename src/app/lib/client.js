@@ -80,7 +80,7 @@ function loadDetailSource(file, signal) {
     img.src = url;
   });
 }
-// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 상·하 타일에 배분한다.
+// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 겹치는 4분할 타일에 배분한다.
 export async function addDetailImages(body, selectedImages, signal) {
   if (!['solve_photos', 'quiz_photos'].includes(body.operation) || !selectedImages.length) return body;
   const base = { ...body }; delete base.detailImages;
@@ -92,25 +92,30 @@ export async function addDetailImages(body, selectedImages, signal) {
     let img;
     try { img = await loadDetailSource(selectedImages[i].source, signal); }
     catch (err) { if (err.name === 'AbortError') throw err; continue; }
-    for (const part of ['top', 'bottom']) {
+    const parts = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    for (let tile = 0; tile < parts.length; tile++) {
+      const part = parts[tile];
       throwIfAborted(signal);
-      const remaining = (selectedImages.length - i - 1) * 2 + (part === 'top' ? 2 : 1);
+      const remaining = (selectedImages.length - i - 1) * parts.length + parts.length - tile;
       const room = Math.floor((MAX_REQUEST - bytes({ ...base, detailImages: details })) / remaining) - 128;
       if (room < 2048) continue;
-      const sy = part === 'top' ? 0 : Math.floor(img.naturalHeight * 0.4);
-      const sh = part === 'top' ? Math.ceil(img.naturalHeight * 0.6) : img.naturalHeight - sy;
+      const right = part.endsWith('right'), bottom = part.startsWith('bottom');
+      const sx = right ? Math.floor(img.naturalWidth * 0.4) : 0;
+      const sy = bottom ? Math.floor(img.naturalHeight * 0.4) : 0;
+      const sw = right ? img.naturalWidth - sx : Math.ceil(img.naturalWidth * 0.6);
+      const sh = bottom ? img.naturalHeight - sy : Math.ceil(img.naturalHeight * 0.6);
       // 원본 전체 이미지의 정규화 크기보다 1.4배 확대. 과도한 캔버스 크기는 제한한다.
       const normalScale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
-      const initial = Math.min(normalScale * 1.4, 2560 / Math.max(img.naturalWidth, sh));
+      const initial = Math.min(normalScale * 1.4, 2560 / Math.max(sw, sh));
       const canvas = document.createElement('canvas');
       try {
         for (const factor of [1, 0.85, 0.7, 0.55, 0.4, 0.3, 0.2]) {
           throwIfAborted(signal);
-          canvas.width = Math.max(1, Math.round(img.naturalWidth * initial * factor));
+          canvas.width = Math.max(1, Math.round(sw * initial * factor));
           canvas.height = Math.max(1, Math.round(sh * initial * factor));
           const ctx = canvas.getContext('2d'); if (!ctx) break;
           ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, sy, img.naturalWidth, sh, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
           const data = await canvasJpeg(canvas, 0.78);
           throwIfAborted(signal);
           const detail = { page: i + 1, part, base64: data.slice(data.indexOf(',') + 1), type: 'image/jpeg' };
