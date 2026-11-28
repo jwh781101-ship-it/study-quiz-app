@@ -2,7 +2,9 @@ import { supabase } from '../supabase';
 
 export const MAX_IMAGES = 5;
 const MAX_FILE = 20 * 1024 * 1024;
+// 장당 상한을 유지해 5장 base64 합계가 요청 제한 안에 들도록 한다.
 const MAX_OUTPUT = 560 * 1024;
+const MAX_EDGE = 1792;
 const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export async function processImages(files, existingCount = 0) {
@@ -23,15 +25,20 @@ function processImage(file) {
     img.onload = () => {
       try {
         if (img.naturalWidth < 100 || img.naturalHeight < 100) throw new Error('사진이 너무 작아요. 가로와 세로가 각각 100픽셀 이상인 사진을 선택해 주세요.');
-        let scale = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+        const longest = Math.max(img.naturalWidth, img.naturalHeight);
+        const initial = Math.min(1, MAX_EDGE / longest);
+        const oldInitial = Math.min(1, 1568 / longest);
+        // 기존 크기 후보도 보존해 같은 품질과 용량에서 해상도 회귀를 피한다.
+        const scales = Array.from({ length: 10 }, (_, i) => oldInitial * 0.8 ** i)
+          .concat(Array.from({ length: 12 }, (_, i) => initial * 0.9 ** i))
+          .sort((a, b) => b - a);
         const canvas = document.createElement('canvas'); let data;
-        for (let i = 0; i < 10; i++) {
+        for (const scale of scales) {
           canvas.width = Math.max(1, Math.round(img.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
           const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('사진을 처리할 수 없어요.');
           ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           data = canvas.toDataURL('image/jpeg', 0.88);
           if ((data.length - data.indexOf(',') - 1) * 3 / 4 <= MAX_OUTPUT) break;
-          scale *= 0.8;
         }
         if ((data.length - data.indexOf(',') - 1) * 3 / 4 > MAX_OUTPUT) throw new Error('사진 용량을 충분히 줄이지 못했어요. 다른 사진을 선택해 주세요.');
         finish(null, { preview: data, base64: data.split(',')[1], type: 'image/jpeg' });
