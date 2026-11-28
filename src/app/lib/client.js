@@ -143,6 +143,23 @@ async function readPhotoStream(response, onCandidate, signal) {
     reader.releaseLock();
   }
 }
+// Photo chat NDJSON contract: text_delta.delta is NEW text only (never cumulative),
+// complete carries reviewed:false and truncated; error terminates the stream.
+// aiRequest resolves {response,reviewed:false,truncated}. On failure error.partialResponse
+// contains all text already delivered so the caller can preserve it.
+async function readTextStream(response,onTextChunk,signal){
+ if(!response.body?.getReader)throw new Error('스트리밍 응답을 읽을 수 없어요.');
+ const reader=response.body.getReader(),decoder=new TextDecoder('utf-8',{fatal:true});let buffer='',full='',terminal=null,total=0,ended=false;
+ const invalid=()=>{throw new Error('사진 답변 스트림 형식이 올바르지 않아요.');};
+ const consume=line=>{if(line.endsWith('\r'))line=line.slice(0,-1);if(!line||terminal)invalid();let e;try{e=JSON.parse(line);}catch{invalid();}if(!e||typeof e!=='object'||Array.isArray(e))invalid();
+  if(e.type==='text_delta'){if(typeof e.delta!=='string'||!e.delta)invalid();full+=e.delta;onTextChunk(e.delta);}
+  else if(e.type==='complete'){if(e.reviewed!==false||typeof e.truncated!=='boolean'||!full.trim())invalid();terminal=e;}
+  else if(e.type==='error'){if(typeof e.message!=='string'||!e.message.trim())invalid();terminal=e;}
+  else invalid();};
+ try{while(true){throwIfAborted(signal);const part=await reader.read();throwIfAborted(signal);if(part.done){buffer+=decoder.decode();ended=true;break;}total+=part.value.byteLength;if(total>8*1024*1024)throw new Error('사진 답변이 너무 커요.');buffer+=decoder.decode(part.value,{stream:true});let n;while((n=buffer.indexOf('\n'))>=0){consume(buffer.slice(0,n));buffer=buffer.slice(n+1);}if(buffer.length>1024*1024)invalid();}if(buffer)invalid();if(!terminal)throw new Error('응답이 완료되기 전에 연결이 끊겼어요.');if(terminal.type==='error')throw new Error(terminal.message);return {response:full,reviewed:false,truncated:terminal.truncated};}
+ catch(e){if(e&&typeof e==='object')e.partialResponse=full;throw e;}
+ finally{if(!ended)try{await reader.cancel();}catch{}reader.releaseLock();}
+}
 export async function aiRequest(body, signal, options = {}) {
   const controller = new AbortController();
   let timedOut = false;
@@ -155,7 +172,8 @@ export async function aiRequest(body, signal, options = {}) {
     if (controller.signal.aborted) throw new DOMException('Aborted', 'AbortError');
     const headers = { 'Content-Type': 'application/json' };
     const photoStream = body.operation === 'solve_photos' && typeof options.onCandidate === 'function';
-    if (photoStream) headers.Accept = 'application/x-ndjson';
+    const textStream = ['photo_chat_solve','photo_chat_quiz'].includes(body.operation) && typeof options.onTextChunk === 'function';
+    if (photoStream || textStream) headers.Accept = 'application/x-ndjson';
     if (data?.session?.access_token) headers.Authorization = 'Bearer ' + data.session.access_token;
     let payload = JSON.stringify(body);
     // 여러 원본 사진의 합계가 요청 제한을 넘으면 그때만 기존 축소 방식으로 대체한다.
@@ -179,11 +197,12 @@ export async function aiRequest(body, signal, options = {}) {
     if (new TextEncoder().encode(payload).length > MAX_REQUEST) throw new Error('전송할 자료가 너무 커요. 사진 수를 줄이거나 텍스트 범위를 줄여 주세요.');
     const response = await fetch('/api/generate', { method:'POST', headers, body:payload, signal:controller.signal });
     const contentType = (response.headers?.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (response.ok && textStream && contentType === 'application/x-ndjson') return await readTextStream(response, options.onTextChunk, controller.signal);
     if (response.ok && photoStream && contentType === 'application/x-ndjson') return await readPhotoStream(response, options.onCandidate, controller.signal);
     let result; try { result = await response.json(); } catch { throw new Error('서버 응답을 읽을 수 없어요. 다시 시도해 주세요.'); }
     if (!response.ok || result?.error) throw new Error(typeof result?.error === 'string' ? result.error : '요청을 처리하지 못했어요. 다시 시도해 주세요.');
     return result;
-  } catch (err) { if (timedOut) throw new Error('요청 시간이 초과됐어요. 입력은 유지되니 다시 시도해 주세요.'); throw err; }
+  } catch (err) { if (timedOut) { const timeoutError = new Error('요청 시간이 초과됐어요. 입력은 유지되니 다시 시도해 주세요.'); if (typeof err?.partialResponse === 'string') timeoutError.partialResponse = err.partialResponse; throw timeoutError; } throw err; }
   finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
 }
 export function readStored(key, fallback) { try { const value = localStorage.getItem(key); return value === null ? fallback : JSON.parse(value); } catch { return fallback; } }
