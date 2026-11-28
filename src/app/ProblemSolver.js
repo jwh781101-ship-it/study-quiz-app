@@ -1,20 +1,40 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { processImages, aiRequest } from './lib/client';
-// 마크다운 기호까지 원문을 보존하며 HTML, 이미지, 링크를 실행하지 않는다.
+// 문자열만 React 텍스트로 렌더링한다. HTML, URL, 이미지 문법은 실행하지 않는다.
 function inline(text) {
  const parts=text.split(/(\*\*[^*\n]+\*\*|__[^_\n]+__|\*[^*\n]+\*|_[^_\n]+_)/g);
- return parts.map((part,i)=>/^(\*\*|__)/.test(part)?<strong key={i}>{part}</strong>:/^(\*|_)/.test(part)&&part.length>1?<em key={i}>{part}</em>:part);
+ return parts.map((part,i)=>/^(\*\*|__)[\s\S]+\1$/.test(part)?<strong key={i}>{part.slice(2,-2)}</strong>:/^(\*|_)[\s\S]+\1$/.test(part)?<em key={i}>{part.slice(1,-1)}</em>:part);
+}
+// 해석이 모호한 표는 변환하지 않아 텍스트를 그대로 보여준다.
+function tableCells(line) {
+ if(!line.includes('|')||line.includes('\\|')||line.includes('`'))return null;
+ let value=line.trim();
+ if(value.startsWith('|'))value=value.slice(1);
+ if(value.endsWith('|'))value=value.slice(0,-1);
+ return value.split('|').map(cell=>cell.trim());
 }
 function NaturalResponse({text}) {
- const lines=text.match(/[^\n]*\n|[^\n]+$/g)||[];
- return <div aria-label="AI 답변 원문" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',lineHeight:1.75}}>{lines.map((line,i)=>{const heading=/^ {0,3}#{1,6}\s/.test(line);const list=/^\s*(?:[-+*]|\d+[.)])\s/.test(line);return <span key={i} style={heading?{fontSize:'1.12em',fontWeight:700}:list?{fontWeight:500}:undefined}>{inline(line)}</span>})}</div>;
+ const lines=text.split(/\r\n|\n|\r/),blocks=[];
+ for(let i=0;i<lines.length;i++) {
+  const header=tableCells(lines[i]),separator=i+1<lines.length?tableCells(lines[i+1]):null;
+  if(header&&separator&&header.length===separator.length&&separator.every(cell=>/^:?-{3,}:?$/.test(cell))) {
+   const rows=[];let j=i+2;
+   while(j<lines.length){const row=tableCells(lines[j]);if(!row||row.length!==header.length)break;rows.push(row);j++}
+   blocks.push(<div key={i} style={{maxWidth:'100%',overflowX:'auto',margin:'12px 0'}}><table style={{borderCollapse:'collapse',minWidth:'100%',width:'max-content',textAlign:'left'}}><thead><tr>{header.map((cell,n)=><th key={n} style={{border:'1px solid #cbd5e1',padding:'8px 10px',verticalAlign:'top'}}>{inline(cell)}</th>)}</tr></thead><tbody>{rows.map((row,n)=><tr key={n}>{row.map((cell,k)=><td key={k} style={{border:'1px solid #cbd5e1',padding:'8px 10px',verticalAlign:'top'}}>{inline(cell)}</td>)}</tr>)}</tbody></table></div>);i=j-1;continue;
+  }
+  const heading=lines[i].match(/^ {0,3}(#{1,6})[ \t]+(.*)$/),item=lines[i].match(/^(\s*)([-+*]|\d+[.)])[ \t]+(.*)$/);
+  if(heading)blocks.push(<div role="heading" aria-level={heading[1].length} key={i} style={{fontSize:heading[1].length<=2?'1.2em':'1.08em',fontWeight:700,margin:'12px 0 4px'}}>{inline(heading[2])}</div>);
+  else if(item)blocks.push(<div key={i} style={{display:'flex',gap:8,paddingLeft:item[1].length?'1em':0}}><span>{/^\d/.test(item[2])?item[2]:'•'}</span><span>{inline(item[3])}</span></div>);
+  else blocks.push(<div key={i} style={{minHeight:'1.75em'}}>{inline(lines[i])}</div>);
+ }
+ return <div aria-label="AI 답변" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',lineHeight:1.75}}>{blocks}</div>;
 }
 export function AttachedPhotos({images}) {
  return images.length>0&&<details className="card"><summary style={{cursor:'pointer',fontWeight:700}}>첨부한 사진 보기 ({images.length}장)</summary><div style={{display:'grid',gap:12,marginTop:12}}>{images.map((im,i)=><img key={i} src={im.preview} alt={'첨부한 사진 '+(i+1)} style={{display:'block',width:'100%',height:'auto'}}/>)}</div></details>;
 }
 export function PhotoResponse({result,images,hint}) {
- return <><AttachedPhotos images={images}/>{hint&&<div className="notice" role="status">AI가 만든 힌트에도 정답이 드러날 수 있어요. 스스로 풀고 싶다면 주의해서 확인해 주세요.</div>}<div className="notice" role="status">이 사진 답변은 별도로 재검토하지 않았어요. AI가 사진을 잘못 읽거나 답이 틀릴 수 있으니 원본과 교과서, 선생님의 설명을 함께 확인해 주세요.</div>{result.truncated&&<div className="error" role="alert">답변이 길어 일부가 잘렸을 수 있어요. 사진이나 요청을 나누어 다시 시도해 주세요.</div>}<section className="card"><h2>클로드 답변 그대로</h2><NaturalResponse text={result.response}/></section></>;
+ return <><AttachedPhotos images={images}/>{hint&&<div className="notice" role="status">AI가 만든 힌트에도 정답이 드러날 수 있어요. 스스로 풀고 싶다면 주의해서 확인해 주세요.</div>}<div className="notice" role="status">이 사진 답변은 별도로 재검토하지 않았어요. AI가 사진을 잘못 읽거나 답이 틀릴 수 있으니 원본과 교과서, 선생님의 설명을 함께 확인해 주세요.</div>{result.truncated&&<div className="error" role="alert">답변이 길어 일부가 잘렸을 수 있어요. 사진이나 요청을 나누어 다시 시도해 주세요.</div>}<section className="card"><h2>클로드 답변 그대로</h2><NaturalResponse text={result.response}/><details style={{marginTop:16}}><summary style={{cursor:'pointer'}}>원문 보기</summary><div style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',marginTop:8}}>{result.response}</div></details></section></>;
 }
 
 function Solution({ solution, hintOnly, numbered, index }) {
