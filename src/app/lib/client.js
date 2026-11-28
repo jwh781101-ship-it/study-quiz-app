@@ -50,7 +50,7 @@ function processImage(file) {
 export async function aiRequest(body, signal) {
   const controller = new AbortController();
   let timedOut = false;
-  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 100000);
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, body.operation === 'solve_photos' ? 125000 : 100000);
   const abort = () => controller.abort();
   if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
   try {
@@ -72,3 +72,4 @@ export function readStored(key, fallback) { try { const value = localStorage.get
 export function writeStored(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
 export function safeTextRead(key, fallback = '') { try { return localStorage.getItem(key) || fallback; } catch { return fallback; } }
 export function safeTextWrite(key, value) { try { localStorage.setItem(key, value); return true; } catch { return false; } }
+
