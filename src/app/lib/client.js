@@ -53,14 +53,27 @@ function processImage(file) {
 }
 // toBlob와 작업 사이의 양보로 대형 사진 처리 중에도 화면이 갱신되도록 한다.
 function yieldToBrowser() { return new Promise(resolve => setTimeout(resolve, 0)); }
-function canvasJpeg(canvas, quality) {
-  return new Promise((resolve, reject) => canvas.toBlob(blob => {
-    if (!blob) { reject(new Error('사진을 처리할 수 없어요.')); return; }
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('사진을 처리할 수 없어요.'));
-    reader.readAsDataURL(blob);
-  }, 'image/jpeg', quality));
+function canvasJpeg(canvas, quality, signal) {
+  return new Promise((resolve, reject) => {
+    let done = false, reader;
+    const finish = (err, value) => {
+      if (done) return; done = true;
+      signal?.removeEventListener('abort', abort);
+      if (reader) { reader.onload = null; reader.onerror = null; }
+      err ? reject(err) : resolve(value);
+    };
+    const abort = () => { if (reader?.readyState === 1) reader.abort(); finish(new DOMException('Aborted', 'AbortError')); };
+    if (signal?.aborted) { abort(); return; }
+    signal?.addEventListener('abort', abort, { once: true });
+    try { canvas.toBlob(blob => {
+      if (done) return;
+      if (!blob) { finish(new Error('사진을 처리할 수 없어요.')); return; }
+      reader = new FileReader();
+      reader.onload = () => finish(null, reader.result);
+      reader.onerror = () => finish(new Error('사진을 처리할 수 없어요.'));
+      reader.readAsDataURL(blob);
+    }, 'image/jpeg', quality); } catch (err) { finish(err); }
+  });
 }
 function throwIfAborted(signal) { if (signal?.aborted) throw new DOMException('Aborted', 'AbortError'); }
 function loadDetailSource(file, signal) {
@@ -80,7 +93,7 @@ function loadDetailSource(file, signal) {
     img.src = url;
   });
 }
-// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 겹치는 4분할 타일에 배분한다.
+// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 겹치는 2열×3행 타일에 배분한다.
 export async function addDetailImages(body, selectedImages, signal) {
   if (body.operation !== 'solve_photos' || !selectedImages.length) return body;
   const base = { ...body }; delete base.detailImages;
@@ -92,20 +105,22 @@ export async function addDetailImages(body, selectedImages, signal) {
     let img;
     try { img = await loadDetailSource(selectedImages[i].source, signal); }
     catch (err) { if (err.name === 'AbortError') throw err; continue; }
-    const parts = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    const parts = ['top-left', 'top-right', 'middle-left', 'middle-right', 'bottom-left', 'bottom-right'];
     for (let tile = 0; tile < parts.length; tile++) {
       const part = parts[tile];
       throwIfAborted(signal);
       const remaining = (selectedImages.length - i - 1) * parts.length + parts.length - tile;
       const room = Math.floor((MAX_REQUEST - bytes({ ...base, detailImages: details })) / remaining) - 128;
       if (room < 2048) continue;
-      const right = part.endsWith('right'), bottom = part.startsWith('bottom');
+      const right = part.endsWith('right'), row = Math.floor(tile / 2);
+      // 원본 기준 좌우 20%, 상하 25% 겹쳐 경계에 걸친 문항도 이어서 볼 수 있다.
       const sx = right ? Math.floor(img.naturalWidth * 0.4) : 0;
-      const sy = bottom ? Math.floor(img.naturalHeight * 0.4) : 0;
-      const sw = right ? img.naturalWidth - sx : Math.ceil(img.naturalWidth * 0.6);
-      const sh = bottom ? img.naturalHeight - sy : Math.ceil(img.naturalHeight * 0.6);
-      const normalScale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
-      const initial = Math.min(normalScale * 1.4, 2560 / Math.max(sw, sh));
+      const ex = right ? img.naturalWidth : Math.ceil(img.naturalWidth * 0.6);
+      const sy = Math.floor(img.naturalHeight * [0, 0.25, 0.5][row]);
+      const ey = Math.ceil(img.naturalHeight * [0.5, 0.75, 1][row]);
+      const sw = ex - sx, sh = ey - sy;
+      // 업스케일은 없는 디테일을 만들지 않는다. 다수 이미지 요청에도 2000px 이하.
+      const initial = Math.min(1, 2000 / Math.max(sw, sh));
       const canvas = document.createElement('canvas');
       try {
         for (const factor of [1, 0.85, 0.7, 0.55, 0.4, 0.3, 0.2]) {
@@ -115,7 +130,7 @@ export async function addDetailImages(body, selectedImages, signal) {
           const ctx = canvas.getContext('2d'); if (!ctx) break;
           ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-          const data = await canvasJpeg(canvas, 0.78);
+          const data = await canvasJpeg(canvas, 0.82, signal);
           throwIfAborted(signal);
           const detail = { page: i + 1, part, base64: data.slice(data.indexOf(',') + 1), type: 'image/jpeg' };
           if (bytes(detail) <= room && bytes({ ...base, detailImages: [...details, detail] }) <= MAX_REQUEST) { details.push(detail); break; }
@@ -124,6 +139,7 @@ export async function addDetailImages(body, selectedImages, signal) {
       } catch (err) { if (err.name === 'AbortError') throw err; }
       finally { canvas.width = 1; canvas.height = 1; }
       await yieldToBrowser();
+      throwIfAborted(signal);
     }
   }
   throwIfAborted(signal);
