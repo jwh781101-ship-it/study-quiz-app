@@ -63,6 +63,72 @@ function canvasJpeg(canvas, quality) {
   }, 'image/jpeg', quality));
 }
 function throwIfAborted(signal) { if (signal?.aborted) throw new DOMException('Aborted', 'AbortError'); }
+function loadDetailSource(file, signal) {
+  return new Promise((resolve, reject) => {
+    throwIfAborted(signal);
+    const url = URL.createObjectURL(file), img = new Image();
+    let done = false;
+    const finish = (error) => {
+      if (done) return; done = true; clearTimeout(timer);
+      signal?.removeEventListener('abort', abort); img.onload = null; img.onerror = null;
+      URL.revokeObjectURL(url); error ? reject(error) : resolve(img);
+    };
+    const abort = () => finish(new DOMException('Aborted', 'AbortError'));
+    const timer = setTimeout(() => finish(new Error('사진을 읽지 못했어요.')), 15000);
+    signal?.addEventListener('abort', abort, { once: true });
+    img.onload = () => finish(); img.onerror = () => finish(new Error('사진을 읽지 못했어요.'));
+    img.src = url;
+  });
+}
+// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 겹치는 4분할 타일에 배분한다.
+export async function addDetailImages(body, selectedImages, signal) {
+  if (body.operation !== 'solve_photos' || !selectedImages.length) return body;
+  const base = { ...body }; delete base.detailImages;
+  const bytes = value => new TextEncoder().encode(JSON.stringify(value)).length;
+  if (bytes(base) >= MAX_REQUEST) return base;
+  const details = [];
+  for (let i = 0; i < selectedImages.length; i++) {
+    throwIfAborted(signal);
+    let img;
+    try { img = await loadDetailSource(selectedImages[i].source, signal); }
+    catch (err) { if (err.name === 'AbortError') throw err; continue; }
+    const parts = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+    for (let tile = 0; tile < parts.length; tile++) {
+      const part = parts[tile];
+      throwIfAborted(signal);
+      const remaining = (selectedImages.length - i - 1) * parts.length + parts.length - tile;
+      const room = Math.floor((MAX_REQUEST - bytes({ ...base, detailImages: details })) / remaining) - 128;
+      if (room < 2048) continue;
+      const right = part.endsWith('right'), bottom = part.startsWith('bottom');
+      const sx = right ? Math.floor(img.naturalWidth * 0.4) : 0;
+      const sy = bottom ? Math.floor(img.naturalHeight * 0.4) : 0;
+      const sw = right ? img.naturalWidth - sx : Math.ceil(img.naturalWidth * 0.6);
+      const sh = bottom ? img.naturalHeight - sy : Math.ceil(img.naturalHeight * 0.6);
+      const normalScale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+      const initial = Math.min(normalScale * 1.4, 2560 / Math.max(sw, sh));
+      const canvas = document.createElement('canvas');
+      try {
+        for (const factor of [1, 0.85, 0.7, 0.55, 0.4, 0.3, 0.2]) {
+          throwIfAborted(signal);
+          canvas.width = Math.max(1, Math.round(sw * initial * factor));
+          canvas.height = Math.max(1, Math.round(sh * initial * factor));
+          const ctx = canvas.getContext('2d'); if (!ctx) break;
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+          const data = await canvasJpeg(canvas, 0.78);
+          throwIfAborted(signal);
+          const detail = { page: i + 1, part, base64: data.slice(data.indexOf(',') + 1), type: 'image/jpeg' };
+          if (bytes(detail) <= room && bytes({ ...base, detailImages: [...details, detail] }) <= MAX_REQUEST) { details.push(detail); break; }
+          await yieldToBrowser();
+        }
+      } catch (err) { if (err.name === 'AbortError') throw err; }
+      finally { canvas.width = 1; canvas.height = 1; }
+      await yieldToBrowser();
+    }
+  }
+  throwIfAborted(signal);
+  return details.length ? { ...base, detailImages: details } : base;
+}
 // 사진 풀이 전용 NDJSON. 종결 이벤트 후 추가 데이터와 잘못된 UTF-8은 거부한다.
 async function readPhotoStream(response, onCandidate, signal) {
   if (!response.body?.getReader) throw new Error('스트리밍 응답을 읽을 수 없어요.');
