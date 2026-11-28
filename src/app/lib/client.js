@@ -5,12 +5,15 @@ const MAX_FILE = 20 * 1024 * 1024;
 // 장당 상한을 유지해 5장 base64 합계가 요청 제한 안에 들도록 한다.
 const MAX_OUTPUT = 560 * 1024;
 const MAX_EDGE = 1792;
+const MAX_REQUEST = Math.floor(3.9 * 1024 * 1024);
 const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export async function processImages(files, existingCount = 0) {
   const list = Array.from(files || []);
   if (existingCount + list.length > MAX_IMAGES) throw new Error('사진은 최대 5장까지 선택할 수 있어요.');
-  return Promise.all(list.map(processImage));
+  const result = [];
+  for (const file of list) { result.push(await processImage(file)); await yieldToBrowser(); }
+  return result;
 }
 function processImage(file) {
   if (/\.hei[cf]$/i.test(file.name) || /hei[cf]/i.test(file.type)) return Promise.reject(new Error('HEIC 사진은 지원하지 않아요. JPEG 또는 PNG로 변환해 주세요.'));
@@ -22,7 +25,7 @@ function processImage(file) {
     const finish = (err, value) => { if (done) return; done = true; clearTimeout(timer); img.onload = null; img.onerror = null; URL.revokeObjectURL(url); err ? reject(err) : resolve(value); };
     const timer = setTimeout(() => finish(new Error('사진을 불러오는 시간이 초과됐어요. 다른 사진을 선택해 주세요.')), 15000);
     img.onerror = () => finish(new Error('사진을 읽을 수 없어요. 파일을 확인해 주세요.'));
-    img.onload = () => {
+    img.onload = async () => {
       try {
         if (img.naturalWidth < 100 || img.naturalHeight < 100) throw new Error('사진이 너무 작아요. 가로와 세로가 각각 100픽셀 이상인 사진을 선택해 주세요.');
         const longest = Math.max(img.naturalWidth, img.naturalHeight);
@@ -37,20 +40,140 @@ function processImage(file) {
           canvas.width = Math.max(1, Math.round(img.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
           const ctx = canvas.getContext('2d'); if (!ctx) throw new Error('사진을 처리할 수 없어요.');
           ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          data = canvas.toDataURL('image/jpeg', 0.88);
+          data = await canvasJpeg(canvas, 0.88);
+          await yieldToBrowser();
           if ((data.length - data.indexOf(',') - 1) * 3 / 4 <= MAX_OUTPUT) break;
         }
         if ((data.length - data.indexOf(',') - 1) * 3 / 4 > MAX_OUTPUT) throw new Error('사진 용량을 충분히 줄이지 못했어요. 다른 사진을 선택해 주세요.');
-        finish(null, { preview: data, base64: data.split(',')[1], type: 'image/jpeg' });
+        finish(null, { preview: data, base64: data.split(',')[1], type: 'image/jpeg', source: file });
       } catch (err) { finish(err); }
     };
     img.src = url;
   });
 }
-export async function aiRequest(body, signal) {
+// toBlob와 작업 사이의 양보로 대형 사진 처리 중에도 화면이 갱신되도록 한다.
+function yieldToBrowser() { return new Promise(resolve => setTimeout(resolve, 0)); }
+function canvasJpeg(canvas, quality) {
+  return new Promise((resolve, reject) => canvas.toBlob(blob => {
+    if (!blob) { reject(new Error('사진을 처리할 수 없어요.')); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('사진을 처리할 수 없어요.'));
+    reader.readAsDataURL(blob);
+  }, 'image/jpeg', quality));
+}
+function throwIfAborted(signal) { if (signal?.aborted) throw new DOMException('Aborted', 'AbortError'); }
+function loadDetailSource(file, signal) {
+  return new Promise((resolve, reject) => {
+    throwIfAborted(signal);
+    const url = URL.createObjectURL(file), img = new Image();
+    let done = false;
+    const finish = (error) => {
+      if (done) return; done = true; clearTimeout(timer);
+      signal?.removeEventListener('abort', abort); img.onload = null; img.onerror = null;
+      URL.revokeObjectURL(url); error ? reject(error) : resolve(img);
+    };
+    const abort = () => finish(new DOMException('Aborted', 'AbortError'));
+    const timer = setTimeout(() => finish(new Error('사진을 읽지 못했어요.')), 15000);
+    signal?.addEventListener('abort', abort, { once: true });
+    img.onload = () => finish(); img.onerror = () => finish(new Error('사진을 읽지 못했어요.'));
+    img.src = url;
+  });
+}
+// 원본 요청을 보존하며 남은 UTF-8 JSON 예산을 모든 페이지의 상·하 타일에 배분한다.
+export async function addDetailImages(body, selectedImages, signal) {
+  if (!['solve_photos', 'quiz_photos'].includes(body.operation) || !selectedImages.length) return body;
+  const base = { ...body }; delete base.detailImages;
+  const bytes = value => new TextEncoder().encode(JSON.stringify(value)).length;
+  if (bytes(base) >= MAX_REQUEST) return base;
+  const details = [];
+  for (let i = 0; i < selectedImages.length; i++) {
+    throwIfAborted(signal);
+    let img;
+    try { img = await loadDetailSource(selectedImages[i].source, signal); }
+    catch (err) { if (err.name === 'AbortError') throw err; continue; }
+    for (const part of ['top', 'bottom']) {
+      throwIfAborted(signal);
+      const remaining = (selectedImages.length - i - 1) * 2 + (part === 'top' ? 2 : 1);
+      const room = Math.floor((MAX_REQUEST - bytes({ ...base, detailImages: details })) / remaining) - 128;
+      if (room < 2048) continue;
+      const sy = part === 'top' ? 0 : Math.floor(img.naturalHeight * 0.4);
+      const sh = part === 'top' ? Math.ceil(img.naturalHeight * 0.6) : img.naturalHeight - sy;
+      // 원본 전체 이미지의 정규화 크기보다 1.4배 확대. 과도한 캔버스 크기는 제한한다.
+      const normalScale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+      const initial = Math.min(normalScale * 1.4, 2560 / Math.max(img.naturalWidth, sh));
+      const canvas = document.createElement('canvas');
+      try {
+        for (const factor of [1, 0.85, 0.7, 0.55, 0.4, 0.3, 0.2]) {
+          throwIfAborted(signal);
+          canvas.width = Math.max(1, Math.round(img.naturalWidth * initial * factor));
+          canvas.height = Math.max(1, Math.round(sh * initial * factor));
+          const ctx = canvas.getContext('2d'); if (!ctx) break;
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, sy, img.naturalWidth, sh, 0, 0, canvas.width, canvas.height);
+          const data = await canvasJpeg(canvas, 0.78);
+          throwIfAborted(signal);
+          const detail = { page: i + 1, part, base64: data.slice(data.indexOf(',') + 1), type: 'image/jpeg' };
+          if (bytes(detail) <= room && bytes({ ...base, detailImages: [...details, detail] }) <= MAX_REQUEST) { details.push(detail); break; }
+          await yieldToBrowser();
+        }
+      } catch (err) { if (err.name === 'AbortError') throw err; }
+      finally { canvas.width = 1; canvas.height = 1; }
+      await yieldToBrowser();
+    }
+  }
+  throwIfAborted(signal);
+  return details.length ? { ...base, detailImages: details } : base;
+}
+// 사진 풀이 전용 NDJSON. 종결 이벤트 후 추가 데이터와 잘못된 UTF-8은 거부한다.
+async function readPhotoStream(response, onCandidate, signal) {
+  if (!response.body?.getReader) throw new Error('스트리밍 응답을 읽을 수 없어요.');
+  const reader = response.body.getReader(), decoder = new TextDecoder('utf-8', { fatal: true });
+  const maxTotal = 4 * 1024 * 1024, maxLine = 2 * 1024 * 1024;
+  let buffer = '', total = 0, terminal = null, candidateSeen = false, ended = false;
+  const fail = () => { throw new Error('사진 풀이 응답 형식이 올바르지 않아요.'); };
+  const consume = line => {
+    if (line.endsWith('\r')) line = line.slice(0, -1);
+    if (!line || terminal || new TextEncoder().encode(line).length > maxLine) return fail();
+    let event; try { event = JSON.parse(line); } catch { return fail(); }
+    if (!event || typeof event !== 'object' || Array.isArray(event)) return fail();
+    if (event.type === 'candidate') {
+      if (candidateSeen || !event.data || !Array.isArray(event.data.solutions) || !event.data.solutions.length || event.data.solutions.some(x => !x || typeof x !== 'object' || Array.isArray(x))) return fail();
+      candidateSeen = true; onCandidate?.(event.data);
+    } else if (event.type === 'complete') {
+      if (!event.data || !Array.isArray(event.data.solutions) || !event.data.solutions.length || event.data.solutions.some(x => !x || typeof x !== 'object' || Array.isArray(x)) || !event.data.verification || typeof event.data.verification !== 'object' || Array.isArray(event.data.verification)) return fail();
+      terminal = event;
+    } else if (event.type === 'error') {
+      if (typeof event.message !== 'string' || !event.message.trim()) return fail();
+      terminal = event;
+    } else return fail();
+  };
+  try {
+    while (true) {
+      throwIfAborted(signal);
+      const { value, done } = await reader.read();
+      throwIfAborted(signal);
+      if (done) { buffer += decoder.decode(); ended = true; break; }
+      total += value.byteLength;
+      if (total > maxTotal) throw new Error('사진 풀이 응답이 너무 커요.');
+      buffer += decoder.decode(value, { stream: true });
+      let pos;
+      while ((pos = buffer.indexOf('\n')) !== -1) { consume(buffer.slice(0, pos)); buffer = buffer.slice(pos + 1); }
+      if (new TextEncoder().encode(buffer).length > maxLine) throw new Error('사진 풀이 응답이 너무 커요.');
+    }
+    if (buffer) consume(buffer);
+    if (!terminal) throw new Error('검토가 완료되기 전에 연결이 끊겼어요.');
+    if (terminal.type === 'error') throw new Error(terminal.message);
+    return terminal.data;
+  } finally {
+    if (!ended) { try { await reader.cancel(); } catch {} }
+    reader.releaseLock();
+  }
+}
+export async function aiRequest(body, signal, options = {}) {
   const controller = new AbortController();
   let timedOut = false;
-  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, body.operation === 'solve_photos' ? 125000 : 100000);
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, ['solve_photos', 'quiz_photos'].includes(body.operation) ? 125000 : 100000);
   const abort = () => controller.abort();
   if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
   try {
@@ -58,12 +181,16 @@ export async function aiRequest(body, signal) {
     if (error) throw error;
     if (controller.signal.aborted) throw new DOMException('Aborted', 'AbortError');
     const headers = { 'Content-Type': 'application/json' };
+    const photoStream = body.operation === 'solve_photos' && typeof options.onCandidate === 'function';
+    if (photoStream) headers.Accept = 'application/x-ndjson';
     if (data?.session?.access_token) headers.Authorization = 'Bearer ' + data.session.access_token;
     const payload = JSON.stringify(body);
-    if (new TextEncoder().encode(payload).length > 3.9 * 1024 * 1024) throw new Error('전송할 자료가 너무 커요. 사진 수를 줄이거나 텍스트 범위를 줄여 주세요.');
+    if (new TextEncoder().encode(payload).length > MAX_REQUEST) throw new Error('전송할 자료가 너무 커요. 사진 수를 줄이거나 텍스트 범위를 줄여 주세요.');
     const response = await fetch('/api/generate', { method:'POST', headers, body:payload, signal:controller.signal });
+    const contentType = (response.headers?.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (response.ok && photoStream && contentType === 'application/x-ndjson') return await readPhotoStream(response, options.onCandidate, controller.signal);
     let result; try { result = await response.json(); } catch { throw new Error('서버 응답을 읽을 수 없어요. 다시 시도해 주세요.'); }
-    if (!response.ok || result.error) throw new Error(result.error || '요청을 처리하지 못했어요. 다시 시도해 주세요.');
+    if (!response.ok || result?.error) throw new Error(typeof result?.error === 'string' ? result.error : '요청을 처리하지 못했어요. 다시 시도해 주세요.');
     return result;
   } catch (err) { if (timedOut) throw new Error('요청 시간이 초과됐어요. 입력은 유지되니 다시 시도해 주세요.'); throw err; }
   finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
